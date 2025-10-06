@@ -162,13 +162,19 @@ class CartService:
             # Remove item
             items = [i for i in items if i['variant_id'] != variant_id]
         else:
-            # Check stock
+            # Check available stock
             variant = await self.product_repo.get_variant_by_id(variant_id)
-            if variant and variant.get('stock_qty', 0) < quantity:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Insufficient stock"
-                )
+            if variant:
+                on_hand = variant.get('on_hand', variant.get('stock_qty', 0))
+                allocated = variant.get('allocated', 0)
+                safety_stock = variant.get('safety_stock', 0)
+                available = on_hand - allocated - safety_stock
+                
+                if quantity > available:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Insufficient stock. Available: {max(0, available)}"
+                    )
             
             # Update quantity and price
             item['quantity'] = quantity
