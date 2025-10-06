@@ -59,6 +59,8 @@ class ProductUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     category: Optional[str] = None
+    color: Optional[str] = None
+    type: Optional[str] = None
     images: Optional[List[str]] = None
     specifications: Optional[Dict[str, str]] = None
     seo_title: Optional[str] = None
