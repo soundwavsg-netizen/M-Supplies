@@ -78,3 +78,23 @@ class ProductListItem(BaseModel):
     price_range: Dict[str, float]  # {"min": 10.50, "max": 25.00}
     in_stock: bool
     featured: bool
+
+# Product filtering and sorting schemas
+class ProductFilters(BaseModel):
+    categories: Optional[List[str]] = None  # ["polymailers", "accessories"]
+    colors: Optional[List[str]] = None  # ["white", "pastel pink", "milktea"]
+    sizes: Optional[List[str]] = None  # ["25x35", "17x30", "32x43"]
+    type: Optional[str] = None  # "normal" or "bubble wrap"
+    price_min: Optional[float] = None
+    price_max: Optional[float] = None
+    in_stock_only: Optional[bool] = False
+    search: Optional[str] = None  # Keyword search
+
+class ProductSortOptions(BaseModel):
+    sort_by: Literal["best_sellers", "price_low_high", "price_high_low", "newest"] = "best_sellers"
+
+class ProductListRequest(BaseModel):
+    filters: Optional[ProductFilters] = None
+    sort: Optional[ProductSortOptions] = None
+    page: int = 1
+    limit: int = 20
