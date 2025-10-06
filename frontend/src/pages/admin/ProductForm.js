@@ -187,7 +187,7 @@ const ProductForm = () => {
       height_cm: '',
       size_code: '',
       price_tiers: [
-        { min_quantity: 1, price: '' },
+        { min_quantity: 25, price: '' },
         { min_quantity: 50, price: '' },
         { min_quantity: 100, price: '' }
       ],
