@@ -446,7 +446,7 @@ const ProductForm = () => {
             {/* Add New Variant */}
             <div className="border rounded-lg p-4 mb-4 bg-gray-50">
               <h3 className="font-medium text-slate-900 mb-3">Add New Variant</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <Label>Type *</Label>
                   <Select 
