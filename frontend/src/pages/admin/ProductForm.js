@@ -85,9 +85,59 @@ const ProductForm = () => {
     }
   };
 
+  // Image upload handlers
+  const handleImageUpload = async (event) => {
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
+
+    try {
+      setImageUploading(true);
+      const token = localStorage.getItem('access_token');
+      
+      const formData = new FormData();
+      files.forEach(file => formData.append('files', file));
+      
+      const response = await axios.post(
+        `${BACKEND_URL}/api/admin/upload/images`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      const newImageUrls = response.data.urls;
+      setProduct(prev => ({
+        ...prev,
+        images: [...prev.images, ...newImageUrls]
+      }));
+      
+      toast.success(`${newImageUrls.length} image(s) uploaded successfully`);
+    } catch (err) {
+      toast.error('Failed to upload images');
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  const removeImage = (index) => {
+    setProduct(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
   const addVariant = () => {
-    if (!newVariant.width_cm || !newVariant.height_cm || !newVariant.price) {
-      toast.error('Please fill all required variant fields');
+    if (!newVariant.width_cm || !newVariant.height_cm) {
+      toast.error('Please fill width and height fields');
+      return;
+    }
+    
+    // Check if at least the first price tier has a price
+    if (!newVariant.price_tiers[0].price) {
+      toast.error('Please set at least the base price (1 pc)');
       return;
     }
 
