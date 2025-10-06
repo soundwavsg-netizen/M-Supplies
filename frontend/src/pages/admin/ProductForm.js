@@ -553,56 +553,7 @@ const ProductForm = () => {
             {/* Add New Variant */}
             <div className="border rounded-lg p-4 mb-4 bg-gray-50">
               <h3 className="font-medium text-slate-900 mb-3">Add New Variant</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                  <Label>Type *</Label>
-                  <Select 
-                    value={newVariant.type} 
-                    onValueChange={(value) => {
-                      handleVariantChange('type', value);
-                      // If bubble wrap is selected, set color to white
-                      if (value === 'bubble wrap') {
-                        handleVariantChange('color', 'white');
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="normal">Normal</SelectItem>
-                      <SelectItem value="bubble wrap">Bubble Wrap</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label>Color *</Label>
-                  <Select 
-                    value={newVariant.color} 
-                    onValueChange={(value) => handleVariantChange('color', value)}
-                    disabled={newVariant.type === 'bubble wrap'}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {colorOptions.map(color => (
-                        <SelectItem 
-                          key={color} 
-                          value={color}
-                          disabled={newVariant.type === 'bubble wrap' && color !== 'white'}
-                        >
-                          {color}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {newVariant.type === 'bubble wrap' && (
-                    <p className="text-xs text-gray-500 mt-1">Bubble wrap only available in white</p>
-                  )}
-                </div>
-
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <Label>Width (cm) *</Label>
                   <Input
