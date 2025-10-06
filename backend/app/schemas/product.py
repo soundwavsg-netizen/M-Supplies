@@ -49,6 +49,7 @@ class ProductBase(BaseModel):
     specifications: Dict[str, str] = {}  # e.g., {"material": "LDPE", "feature": "Self-sealing"}
     seo_title: Optional[str] = None
     seo_description: Optional[str] = None
+    seo_keywords: List[str] = []
     is_active: bool = True
     featured: bool = False
 
