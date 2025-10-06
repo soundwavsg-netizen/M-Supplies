@@ -149,7 +149,7 @@ function AppContent() {
             path="/admin/products"
             element={
               <AdminRoute>
-                <Products />
+                <AdminProducts />
               </AdminRoute>
             }
           />
