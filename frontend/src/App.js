@@ -116,6 +116,14 @@ function AppContent() {
               </AdminRoute>
             }
           />
+          <Route
+            path="/admin/inventory"
+            element={
+              <AdminRoute>
+                <Inventory />
+              </AdminRoute>
+            }
+          />
 
           {/* 404 */}
           <Route path="*" element={<Navigate to="/" replace />} />
