@@ -9,9 +9,9 @@ const Logo = ({
   showText = true 
 }) => {
   const sizes = {
-    small: 'h-6',
-    medium: 'h-8',
-    large: 'h-12'
+    small: 'h-8',
+    medium: 'h-12',
+    large: 'h-16'
   };
 
   const logoSrc = variant === 'white' 
