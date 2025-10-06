@@ -1,7 +1,7 @@
 import stripe
 from app.core.config import settings
 from fastapi import HTTPException, status
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 stripe.api_key = settings.stripe_secret_key
 
