@@ -341,6 +341,63 @@ const ProductForm = () => {
             </div>
           </div>
 
+          {/* Product Images */}
+          <div className="bg-white rounded-lg p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">Product Images</h2>
+            
+            {/* Image Upload */}
+            <div className="mb-4">
+              <Label>Upload Images</Label>
+              <div className="mt-2">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Upload className="w-8 h-8 mb-4 text-gray-500" />
+                    <p className="mb-2 text-sm text-gray-500">
+                      <span className="font-semibold">Click to upload</span> product images
+                    </p>
+                    <p className="text-xs text-gray-500">PNG, JPG up to 10MB each</p>
+                  </div>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={imageUploading}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+              {imageUploading && (
+                <p className="text-sm text-blue-600 mt-2">Uploading images...</p>
+              )}
+            </div>
+
+            {/* Current Images */}
+            {product.images.length > 0 && (
+              <div>
+                <Label>Current Images ({product.images.length})</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                  {product.images.map((imageUrl, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={imageUrl}
+                        alt={`Product image ${index + 1}`}
+                        className="w-full h-24 object-cover rounded border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* SEO */}
           <div className="bg-white rounded-lg p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">SEO</h2>
