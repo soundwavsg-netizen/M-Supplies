@@ -23,6 +23,8 @@ import Contact from '@/pages/customer/Contact';
 // Admin Pages
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import Inventory from '@/pages/admin/Inventory';
+import Products from '@/pages/admin/Products';
+import ProductForm from '@/pages/admin/ProductForm';
 
 import '@/App.css';
 
