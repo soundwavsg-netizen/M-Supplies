@@ -12,7 +12,7 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <div className="mb-4">
-              <Logo variant="white" size="medium" linkTo="/" showText={true} />
+              <Logo variant="white" size="large" linkTo="/" showText={true} />
             </div>
             <p className="text-gray-400 text-sm">
               Your trusted partner for high-quality polymailer bags. Fast shipping, competitive prices, and exceptional service.
