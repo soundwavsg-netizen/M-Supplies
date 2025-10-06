@@ -76,9 +76,10 @@ const Header = () => {
             {/* User Menu */}
             {user ? (
               <div className="hidden md:flex items-center space-x-2">
-                <Link to="/orders">
-                  <Button variant="ghost" size="sm" data-testid="orders-link">
-                    My Orders
+                <Link to="/account">
+                  <Button variant="ghost" size="sm" data-testid="account-link">
+                    <User className="w-4 h-4 mr-2" />
+                    Account
                   </Button>
                 </Link>
                 {user.role !== 'customer' && (
