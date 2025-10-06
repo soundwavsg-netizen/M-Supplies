@@ -241,7 +241,8 @@ async def create_order(
     cart_repo = CartRepository(db)
     product_repo = ProductRepository(db)
     coupon_repo = CouponRepository(db)
-    order_service = OrderService(order_repo, cart_repo, product_repo, coupon_repo)
+    ledger_repo = InventoryLedgerRepository(db)
+    order_service = OrderService(order_repo, cart_repo, product_repo, coupon_repo, ledger_repo)
     
     return await order_service.create_order(order_data, user_id, x_session_id)
 
@@ -258,7 +259,8 @@ async def list_my_orders(
     cart_repo = CartRepository(db)
     product_repo = ProductRepository(db)
     coupon_repo = CouponRepository(db)
-    order_service = OrderService(order_repo, cart_repo, product_repo, coupon_repo)
+    ledger_repo = InventoryLedgerRepository(db)
+    order_service = OrderService(order_repo, cart_repo, product_repo, coupon_repo, ledger_repo)
     
     return await order_service.list_user_orders(user_id, skip, limit)
 
@@ -271,7 +273,8 @@ async def get_order(order_id: str, user_id: str = Depends(get_current_user_id)):
     cart_repo = CartRepository(db)
     product_repo = ProductRepository(db)
     coupon_repo = CouponRepository(db)
-    order_service = OrderService(order_repo, cart_repo, product_repo, coupon_repo)
+    ledger_repo = InventoryLedgerRepository(db)
+    order_service = OrderService(order_repo, cart_repo, product_repo, coupon_repo, ledger_repo)
     
     order = await order_service.get_order(order_id)
     
@@ -388,7 +391,8 @@ async def admin_list_orders(
     cart_repo = CartRepository(db)
     product_repo = ProductRepository(db)
     coupon_repo = CouponRepository(db)
-    order_service = OrderService(order_repo, cart_repo, product_repo, coupon_repo)
+    ledger_repo = InventoryLedgerRepository(db)
+    order_service = OrderService(order_repo, cart_repo, product_repo, coupon_repo, ledger_repo)
     
     return await order_service.list_orders(skip, limit, status, search)
 
@@ -406,7 +410,8 @@ async def admin_update_order_status(
     cart_repo = CartRepository(db)
     product_repo = ProductRepository(db)
     coupon_repo = CouponRepository(db)
-    order_service = OrderService(order_repo, cart_repo, product_repo, coupon_repo)
+    ledger_repo = InventoryLedgerRepository(db)
+    order_service = OrderService(order_repo, cart_repo, product_repo, coupon_repo, ledger_repo)
     
     return await order_service.update_order_status(order_id, status_update)
 
