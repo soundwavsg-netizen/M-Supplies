@@ -7,9 +7,15 @@ class PriceTier(BaseModel):
     price: float
 
 class VariantAttributes(BaseModel):
-    size: str  # e.g., "25x35", "17x30"
+    # New explicit dimensions for filtering
+    width_cm: int  # Width in centimeters
+    height_cm: int  # Height in centimeters
+    size_code: str  # e.g., "25x35", "17x30" 
+    type: str  # "normal" or "bubble wrap"
+    color: str  # e.g., "white", "pastel pink", "champagne pink", "milktea"
+    
+    # Optional legacy fields
     thickness: Optional[str] = None  # e.g., "60 micron"
-    color: str  # e.g., "Pastel Pink"
 
 class VariantBase(BaseModel):
     sku: str
