@@ -286,7 +286,7 @@ const Products = () => {
               {/* Type */}
               <div>
                 <h4 className="font-medium text-slate-800 mb-3">Type</h4>
-                <Select value={filters.type} onValueChange={(value) => updateFilter('type', value)}>
+                <Select value={filters.type || "all"} onValueChange={(value) => updateFilter('type', value === "all" ? "" : value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="All types" />
                   </SelectTrigger>
