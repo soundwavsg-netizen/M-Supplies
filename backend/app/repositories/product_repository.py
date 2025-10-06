@@ -2,6 +2,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 import uuid
+from app.schemas.product import ProductFilters, ProductSortOptions
 
 class ProductRepository:
     def __init__(self, db: AsyncIOMotorDatabase):
