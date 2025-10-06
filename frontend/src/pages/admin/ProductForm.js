@@ -579,39 +579,30 @@ const ProductForm = () => {
 
                 <div className="md:col-span-3">
                   <Label>Pricing Tiers *</Label>
-                  <div className="grid grid-cols-3 gap-2 mt-2">
-                    <div>
-                      <Label className="text-xs text-gray-600">25 pcs ($)</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={newVariant.price_tiers[0].price}
-                        onChange={(e) => handlePriceTierChange(0, e.target.value)}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-gray-600">50 pcs ($)</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={newVariant.price_tiers[1].price}
-                        onChange={(e) => handlePriceTierChange(1, e.target.value)}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-gray-600">100 pcs ($)</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={newVariant.price_tiers[2].price}
-                        onChange={(e) => handlePriceTierChange(2, e.target.value)}
-                        placeholder="0.00"
-                      />
-                    </div>
+                  <div className={`grid gap-2 mt-2 ${newVariant.price_tiers.length === 1 ? 'grid-cols-1' : newVariant.price_tiers.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                    {newVariant.price_tiers.map((tier, index) => (
+                      <div key={tier.min_quantity}>
+                        <Label className="text-xs text-gray-600">
+                          {tier.min_quantity === 1 ? 'Each ($)' : `${tier.min_quantity} pcs ($)`}
+                        </Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={tier.price}
+                          onChange={(e) => handlePriceTierChange(index, e.target.value)}
+                          placeholder="0.00"
+                        />
+                      </div>
+                    ))}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Minimum order: 25 pcs. Set bulk pricing with volume discounts for 50+ and 100+ pcs</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {product.category === 'accessories' 
+                      ? 'Accessories sold individually' 
+                      : product.name.toLowerCase().includes('premium')
+                        ? 'Premium polymailers: Minimum 50 pcs with volume discount at 100+ pcs'
+                        : 'Regular polymailers: Minimum 25 pcs with volume discounts'
+                    }
+                  </p>
                 </div>
 
                 <div>
