@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Package } from 'lucide-react';
+import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
