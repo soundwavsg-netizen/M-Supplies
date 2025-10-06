@@ -171,7 +171,7 @@ class CartService:
                 item['price'] = self._get_price_for_quantity(variant, quantity)
         
         await self.cart_repo.update_cart(cart['id'], items)
-        return await self.get_cart_with_details(cart['id'])
+        return await self.get_cart_with_details(cart['id'], user_id, session_id)
     
     async def clear_cart(self, user_id: Optional[str] = None, session_id: Optional[str] = None) -> bool:
         cart = await self.cart_repo.get_cart(user_id, session_id)
