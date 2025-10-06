@@ -287,7 +287,8 @@ const ProductForm = () => {
   };
 
   const deleteVariant = (index, variant) => {
-    const variantName = `${variant.attributes?.type || variant.type} ${variant.attributes?.color || variant.color} ${variant.attributes?.size_code || variant.size_code}`;
+    const dimensions = `${variant.attributes?.width_cm || variant.width_cm}×${variant.attributes?.height_cm || variant.height_cm}cm`;
+    const variantName = `${product.color} ${product.type} ${dimensions}`;
     
     if (!window.confirm(`Are you sure you want to delete variant "${variantName}" (SKU: ${variant.sku})? This action cannot be undone.`)) {
       return;
@@ -298,7 +299,7 @@ const ProductForm = () => {
       variants: prev.variants.filter((_, i) => i !== index)
     }));
     
-    toast.success(`Variant "${variantName}" removed successfully`);
+    toast.success(`Variant "${dimensions}" removed successfully`);
   };
 
   const removeVariant = (index) => {
