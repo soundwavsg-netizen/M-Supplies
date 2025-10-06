@@ -25,6 +25,9 @@ from app.repositories.product_repository import ProductRepository
 from app.repositories.cart_repository import CartRepository
 from app.repositories.order_repository import OrderRepository
 from app.repositories.coupon_repository import CouponRepository
+from app.repositories.inventory_repository import (
+    InventoryLedgerRepository, ChannelMappingRepository, SettingsRepository
+)
 
 # Services
 from app.services.auth_service import AuthService
