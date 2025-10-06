@@ -65,8 +65,10 @@ class ProductUpdate(BaseModel):
     specifications: Optional[Dict[str, str]] = None
     seo_title: Optional[str] = None
     seo_description: Optional[str] = None
+    seo_keywords: Optional[List[str]] = None
     is_active: Optional[bool] = None
     featured: Optional[bool] = None
+    variants: Optional[List[VariantCreate]] = None
 
 class ProductResponse(ProductBase):
     id: str
