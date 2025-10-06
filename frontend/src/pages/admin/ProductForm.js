@@ -217,7 +217,7 @@ const ProductForm = () => {
     const variant = {
       ...newVariant,
       variant_id: `var_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      sku: `${product.category.toUpperCase()}_${newVariant.type.toUpperCase()}_${newVariant.color.toUpperCase()}_${newVariant.size_code}`,
+      sku: `${product.category.toUpperCase()}_${product.type.toUpperCase()}_${product.color.toUpperCase()}_${newVariant.size_code}`,
       width_cm: parseInt(newVariant.width_cm),
       height_cm: parseInt(newVariant.height_cm),
       price_tiers: validPriceTiers,
