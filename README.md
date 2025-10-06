@@ -23,10 +23,19 @@ A production-ready e-commerce platform with centralized multi-channel inventory 
 
 ### ✅ Admin Features (MVP)
 - Admin dashboard with statistics
+- **Centralized Multi-Channel Inventory Management**
+  - Single source of truth per SKU
+  - Real-time stock tracking (on_hand, allocated, available)
+  - Safety stock and low-stock alerts
+  - Channel buffers (website, Shopee, Lazada)
+  - Immutable inventory ledger (audit trail)
+  - Multi-channel order import (CSV/API)
+  - Shopee webhook stub (ready for integration)
 - Product management (view products and variants)
 - Order management (view and update status)
 - Coupon management (create and edit discount codes)
 - User management (view customers)
+- Business settings (brand name, GST, channel buffers)
 
 ## 🏗 Architecture
 
