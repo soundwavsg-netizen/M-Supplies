@@ -138,16 +138,6 @@ async def list_products(
     return await product_service.list_products(skip, limit, category, search, is_active)
 
 
-@api_router.get("/products/{product_id}", response_model=ProductResponse, tags=["Products"])
-async def get_product(product_id: str):
-    """Get product by ID"""
-    db = get_database()
-    product_repo = ProductRepository(db)
-    product_service = ProductService(product_repo)
-    
-    return await product_service.get_product(product_id)
-
-
 @api_router.post("/products/filter", tags=["Products"])
 async def filter_products(request: ProductListRequest):
     """Advanced product filtering with support for colors, sizes, types, price ranges, etc."""
@@ -172,6 +162,16 @@ async def get_filter_options():
     product_service = ProductService(product_repo)
     
     return await product_service.get_filter_options()
+
+
+@api_router.get("/products/{product_id}", response_model=ProductResponse, tags=["Products"])
+async def get_product(product_id: str):
+    """Get product by ID"""
+    db = get_database()
+    product_repo = ProductRepository(db)
+    product_service = ProductService(product_repo)
+    
+    return await product_service.get_product(product_id)
 
 
 @api_router.get("/categories", response_model=List[str], tags=["Products"])
