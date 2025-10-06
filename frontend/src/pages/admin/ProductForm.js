@@ -54,7 +54,7 @@ const ProductForm = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setProduct(response.data);
-    } catch (error) {
+    } catch (err) {
       toast.error('Failed to load product');
       navigate('/admin/products');
     } finally {
@@ -157,7 +157,7 @@ const ProductForm = () => {
       }
       
       navigate('/admin/products');
-    } catch (error) {
+    } catch (err) {
       toast.error(error.response?.data?.detail || 'Failed to save product');
     } finally {
       setLoading(false);
