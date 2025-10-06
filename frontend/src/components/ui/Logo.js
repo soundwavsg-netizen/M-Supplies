@@ -15,8 +15,8 @@ const Logo = ({
   };
 
   const logoSrc = variant === 'white' 
-    ? '/assets/placeholder-logo-white.svg'
-    : '/assets/placeholder-logo.svg';
+    ? '/assets/m-supplies-logo-white.png'
+    : '/assets/m-supplies-logo-transparent.png';
 
   const logoContent = (
     <div className={`flex items-center space-x-2 ${className}`}>
