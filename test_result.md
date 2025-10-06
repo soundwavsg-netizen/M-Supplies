@@ -162,8 +162,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Advanced Product Filtering Implementation"
-    - "Product Schema Updates for filtering"
+    - "Advanced Product Filtering Backend API"
+    - "Frontend Product Filtering UI Implementation"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
