@@ -107,8 +107,9 @@ const Products = () => {
                   </span>
                   <div className="flex gap-2">
                     <Link to={`/admin/products/${product.id}/edit`}>
-                      <Button size="sm" variant="outline">
-                        <Edit className="w-4 h-4" />
+                      <Button size="sm" variant="outline" className="text-blue-600 hover:text-blue-700 border-blue-200 hover:border-blue-300">
+                        <Edit className="w-4 h-4 mr-1" />
+                        Edit
                       </Button>
                     </Link>
                   </div>
