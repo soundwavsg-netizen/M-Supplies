@@ -392,10 +392,10 @@ const ProductForm = () => {
                 {product.variants.map((variant, index) => (
                   <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex-1 grid grid-cols-1 md:grid-cols-6 gap-2 text-sm">
-                      <span><strong>Type:</strong> {variant.type}</span>
-                      <span><strong>Color:</strong> {variant.color}</span>
-                      <span><strong>Size:</strong> {variant.width_cm}×{variant.height_cm} cm</span>
-                      <span><strong>Price:</strong> ${variant.price}</span>
+                      <span><strong>Type:</strong> {variant.attributes?.type || variant.type}</span>
+                      <span><strong>Color:</strong> {variant.attributes?.color || variant.color}</span>
+                      <span><strong>Size:</strong> {variant.attributes?.width_cm || variant.width_cm}×{variant.attributes?.height_cm || variant.height_cm} cm</span>
+                      <span><strong>Price:</strong> ${variant.price_tiers?.[0]?.price || variant.price}</span>
                       <span><strong>Stock:</strong> {variant.on_hand}</span>
                       <span><strong>SKU:</strong> {variant.sku}</span>
                     </div>
