@@ -213,7 +213,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Advanced Product Filtering Backend API"
     - "Frontend Product Filtering UI Implementation"
   stuck_tasks: []
   test_all: false
