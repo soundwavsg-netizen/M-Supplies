@@ -530,7 +530,7 @@ const ProductForm = () => {
                   <Label>Pricing Tiers *</Label>
                   <div className="grid grid-cols-3 gap-2 mt-2">
                     <div>
-                      <Label className="text-xs text-gray-600">1 pc ($)</Label>
+                      <Label className="text-xs text-gray-600">25 pcs ($)</Label>
                       <Input
                         type="number"
                         step="0.01"
