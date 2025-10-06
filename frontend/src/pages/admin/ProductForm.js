@@ -36,7 +36,11 @@ const ProductForm = () => {
     width_cm: '',
     height_cm: '',
     size_code: '',
-    price: '',
+    price_tiers: [
+      { min_quantity: 1, price: '' },
+      { min_quantity: 50, price: '' },
+      { min_quantity: 100, price: '' }
+    ],
     on_hand: '',
     safety_stock: 0
   });
