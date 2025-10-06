@@ -208,6 +208,27 @@ async def seed_database():
     
     print(f"✅ Created product: {product2['name']} with {variant_count2} variants")
     
+    # Create business settings
+    print("\nCreating business settings...")
+    await db.settings.delete_many({})
+    settings = {
+        'id': str(uuid.uuid4()),
+        'type': 'business',
+        'business_name': 'M Supplies',
+        'currency': 'SGD',
+        'gst_percent': 9.0,
+        'default_safety_stock': 5,
+        'low_stock_threshold': 10,
+        'channel_buffers': {
+            'website': 0,
+            'shopee': 2,
+            'lazada': 2
+        },
+        'created_at': datetime.now(timezone.utc)
+    }
+    await db.settings.insert_one(settings)
+    print("✅ Business settings created: M Supplies")
+    
     # Create sample coupons
     print("\nCreating sample coupons...")
     
