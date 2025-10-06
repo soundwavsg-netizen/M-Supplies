@@ -1,6 +1,6 @@
-# PolyMailer E-commerce Platform
+# M Supplies - Multi-Channel E-commerce Platform
 
-A production-ready e-commerce platform for selling polymailer products, built with FastAPI (Python), React, and MongoDB.
+A production-ready e-commerce platform with centralized multi-channel inventory management, built with FastAPI (Python), React, and MongoDB.
 
 ## 🎯 Live Demo
 
