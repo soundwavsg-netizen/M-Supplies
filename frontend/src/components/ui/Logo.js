@@ -11,7 +11,8 @@ const Logo = ({
   const sizes = {
     small: 'h-8',
     medium: 'h-12',
-    large: 'h-16'
+    large: 'h-16',
+    xl: 'h-32'
   };
 
   const logoSrc = variant === 'white' 
