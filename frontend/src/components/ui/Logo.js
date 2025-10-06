@@ -24,7 +24,7 @@ const Logo = ({
       <img
         src={logoSrc}
         alt="M Supplies"
-        className={`${sizes[size]} w-auto`}
+        className={`${size === 'xl' ? 'h-24 md:h-32' : sizes[size]} w-auto`}
         onError={(e) => {
           // Fallback to text if image fails to load
           e.target.style.display = 'none';
