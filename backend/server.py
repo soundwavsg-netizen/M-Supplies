@@ -148,6 +148,32 @@ async def get_product(product_id: str):
     return await product_service.get_product(product_id)
 
 
+@api_router.post("/products/filter", tags=["Products"])
+async def filter_products(request: ProductListRequest):
+    """Advanced product filtering with support for colors, sizes, types, price ranges, etc."""
+    db = get_database()
+    product_repo = ProductRepository(db)
+    product_service = ProductService(product_repo)
+    
+    skip = (request.page - 1) * request.limit
+    return await product_service.list_products_filtered(
+        filters=request.filters,
+        sort=request.sort,
+        skip=skip,
+        limit=request.limit
+    )
+
+
+@api_router.get("/products/filter-options", tags=["Products"])
+async def get_filter_options():
+    """Get available filter options (colors, sizes, types, categories, price range)"""
+    db = get_database()
+    product_repo = ProductRepository(db)
+    product_service = ProductService(product_repo)
+    
+    return await product_service.get_filter_options()
+
+
 @api_router.get("/categories", response_model=List[str], tags=["Products"])
 async def get_categories():
     """Get all product categories"""
