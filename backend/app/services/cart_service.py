@@ -84,9 +84,9 @@ class CartService:
         # If no tier matches, return the lowest tier price
         return sorted_tiers[-1]['price']
     
-    async def get_cart_with_details(self, cart_id: str) -> Dict[str, Any]:
+    async def get_cart_with_details(self, cart_id: str, user_id: Optional[str] = None, session_id: Optional[str] = None) -> Dict[str, Any]:
         """Get cart with full product details and calculated totals"""
-        cart = await self.cart_repo.get_cart()
+        cart = await self.cart_repo.get_cart(user_id, session_id)
         if not cart:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
