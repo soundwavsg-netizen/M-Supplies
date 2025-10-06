@@ -23,7 +23,7 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Logo variant="primary" size="medium" linkTo="/" showText={false} />
+          <Logo variant="primary" size="large" linkTo="/" showText={false} />
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
