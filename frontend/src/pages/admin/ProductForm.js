@@ -17,6 +17,7 @@ const ProductForm = () => {
   const isEdit = !!id;
   
   const [loading, setLoading] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
   const [product, setProduct] = useState({
     name: '',
     description: '',
@@ -25,6 +26,7 @@ const ProductForm = () => {
     seo_title: '',
     seo_description: '',
     seo_keywords: [],
+    images: [],
     variants: []
   });
   
