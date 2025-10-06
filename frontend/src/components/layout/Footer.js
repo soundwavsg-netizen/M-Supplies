@@ -11,9 +11,8 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div>
-            <div className="flex items-center space-x-2 mb-4">
-              <Package className="w-8 h-8" style={{ color: theme.colors.primary }} />
-              <span className="text-xl font-bold">M Supplies</span>
+            <div className="mb-4">
+              <Logo variant="white" size="medium" linkTo="/" showText={true} />
             </div>
             <p className="text-gray-400 text-sm">
               Your trusted partner for high-quality polymailer bags. Fast shipping, competitive prices, and exceptional service.
