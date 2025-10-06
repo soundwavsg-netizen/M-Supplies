@@ -145,6 +145,22 @@ function AppContent() {
               </AdminRoute>
             }
           />
+          <Route
+            path="/admin/products"
+            element={
+              <AdminRoute>
+                <Products />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/products/new"
+            element={
+              <AdminRoute>
+                <ProductForm />
+              </AdminRoute>
+            }
+          />
 
           {/* 404 */}
           <Route path="*" element={<Navigate to="/" replace />} />
