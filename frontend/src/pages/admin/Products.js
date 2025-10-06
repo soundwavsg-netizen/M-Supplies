@@ -19,6 +19,24 @@ const Products = () => {
     fetchProducts();
   }, []);
 
+  const deleteProduct = async (productId, productName) => {
+    if (!window.confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone and will also delete all associated variants.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('access_token');
+      await axios.delete(`${BACKEND_URL}/api/admin/products/${productId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success(`Product "${productName}" deleted successfully`);
+      fetchProducts(); // Refresh the list
+    } catch (error) {
+      toast.error(`Failed to delete product: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
   const fetchProducts = async () => {
     try {
       setLoading(true);
