@@ -367,19 +367,42 @@ const ProductForm = () => {
 
   // Fixed variant deletion function
   const deleteVariant = (index, variant) => {
-    const dimensions = `${variant.attributes?.width_cm || variant.width_cm}×${variant.attributes?.height_cm || variant.height_cm}cm`;
-    const variantName = `${product.color} ${product.type} ${dimensions}`;
+    console.log('Delete variant called with:', { index, variant }); // Debug log
     
-    if (!window.confirm(`Are you sure you want to delete variant "${variantName}" (SKU: ${variant.sku})? This action cannot be undone.`)) {
-      return;
-    }
+    try {
+      const width = variant.attributes?.width_cm || variant.width_cm || 'Unknown';
+      const height = variant.attributes?.height_cm || variant.height_cm || 'Unknown';
+      const dimensions = `${width}×${height}cm`;
+      const sku = variant.sku || 'Unknown SKU';
+      const variantName = `${product.color} ${product.type} ${dimensions}`;
+      
+      console.log('Attempting to delete variant:', variantName); // Debug log
+      
+      const confirmMessage = `Are you sure you want to delete variant "${variantName}" (SKU: ${sku})?\n\nThis action cannot be undone.`;
+      
+      if (!window.confirm(confirmMessage)) {
+        console.log('User cancelled deletion'); // Debug log
+        return;
+      }
 
-    setProduct(prev => ({
-      ...prev,
-      variants: prev.variants.filter((_, i) => i !== index)
-    }));
-    
-    toast.success(`Variant "${dimensions}" removed successfully`);
+      console.log('User confirmed deletion, removing variant at index:', index); // Debug log
+
+      setProduct(prev => {
+        const newVariants = prev.variants.filter((_, i) => i !== index);
+        console.log('Variants before:', prev.variants.length, 'Variants after:', newVariants.length);
+        return {
+          ...prev,
+          variants: newVariants
+        };
+      });
+      
+      toast.success(`Variant "${dimensions}" removed successfully`);
+      console.log('Variant deletion completed'); // Debug log
+      
+    } catch (error) {
+      console.error('Error in deleteVariant:', error);
+      toast.error('Failed to delete variant');
+    }
   };
 
   const removeVariant = (index) => {
