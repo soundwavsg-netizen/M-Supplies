@@ -7,7 +7,7 @@ A production-ready e-commerce platform with centralized multi-channel inventory 
 **Application URL**: https://packnship.preview.emergentagent.com
 
 **Test Accounts**:
-- **Admin**: admin@polymailer.com / admin123
+- **Admin**: admin@polymailer.com / admin123 (use admin@msupplies.sg for new signups)
 - **Customer**: customer@example.com / customer123
 
 ## ✨ Features Implemented
