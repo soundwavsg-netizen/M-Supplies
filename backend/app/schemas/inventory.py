@@ -9,7 +9,7 @@ class InventoryMovementReason(str, Enum):
     order_shipped = "order_shipped"
     manual_adjustment = "manual_adjustment"
     purchase_received = "purchase_received"
-    return = "return"
+    customer_return = "return"
     damaged = "damaged"
     lost = "lost"
     found = "found"
