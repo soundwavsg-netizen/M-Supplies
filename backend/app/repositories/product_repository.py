@@ -190,6 +190,7 @@ class ProductRepository:
         # Project final fields
         pipeline.append({
             '$project': {
+                '_id': 0,  # Exclude MongoDB ObjectId
                 'id': 1,
                 'name': 1,
                 'description': 1,
