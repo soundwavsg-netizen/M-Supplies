@@ -141,13 +141,26 @@ const ProductForm = () => {
       return;
     }
 
+    // Filter out empty price tiers and convert to numbers
+    const validPriceTiers = newVariant.price_tiers
+      .filter(tier => tier.price && tier.price !== '')
+      .map(tier => ({
+        min_quantity: parseInt(tier.min_quantity),
+        price: parseFloat(tier.price)
+      }));
+
+    if (validPriceTiers.length === 0) {
+      toast.error('Please set at least one price tier');
+      return;
+    }
+
     const variant = {
       ...newVariant,
       variant_id: `var_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       sku: `${product.category.toUpperCase()}_${newVariant.type.toUpperCase()}_${newVariant.color.toUpperCase()}_${newVariant.size_code}`,
       width_cm: parseInt(newVariant.width_cm),
       height_cm: parseInt(newVariant.height_cm),
-      price: parseFloat(newVariant.price),
+      price_tiers: validPriceTiers,
       on_hand: parseInt(newVariant.on_hand) || 0,
       safety_stock: parseInt(newVariant.safety_stock) || 0
     };
