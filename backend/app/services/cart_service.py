@@ -28,11 +28,16 @@ class CartService:
                 detail="Product variant not found"
             )
         
-        # Check stock
-        if variant.get('stock_qty', 0) < quantity:
+        # Check available stock (on_hand - allocated - safety_stock)
+        on_hand = variant.get('on_hand', variant.get('stock_qty', 0))
+        allocated = variant.get('allocated', 0)
+        safety_stock = variant.get('safety_stock', 0)
+        available = on_hand - allocated - safety_stock
+        
+        if quantity > available:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Insufficient stock"
+                detail=f"Insufficient stock. Available: {max(0, available)}"
             )
         
         # Get product details
