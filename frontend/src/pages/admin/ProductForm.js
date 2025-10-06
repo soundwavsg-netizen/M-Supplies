@@ -106,6 +106,36 @@ const ProductForm = () => {
     }
   };
 
+  // Update pricing tiers when product name or category changes
+  const handleProductChange = (field, value) => {
+    setProduct(prev => ({ ...prev, [field]: value }));
+    
+    // Reset variant pricing tiers based on product type
+    if (field === 'name' || field === 'category') {
+      const newProduct = { ...product, [field]: value };
+      const isAccessory = newProduct.category === 'accessories';
+      const isPremiumPolymailer = newProduct.name.toLowerCase().includes('premium') && newProduct.category === 'polymailers';
+      
+      let newPriceTiers;
+      if (isAccessory) {
+        newPriceTiers = [{ min_quantity: 1, price: '' }];
+      } else if (isPremiumPolymailer) {
+        newPriceTiers = [
+          { min_quantity: 50, price: '' },
+          { min_quantity: 100, price: '' }
+        ];
+      } else {
+        newPriceTiers = [
+          { min_quantity: 25, price: '' },
+          { min_quantity: 50, price: '' },
+          { min_quantity: 100, price: '' }
+        ];
+      }
+      
+      setNewVariant(prev => ({ ...prev, price_tiers: newPriceTiers }));
+    }
+  };
+
   const handlePriceTierChange = (tierIndex, price) => {
     setNewVariant(prev => ({
       ...prev,
