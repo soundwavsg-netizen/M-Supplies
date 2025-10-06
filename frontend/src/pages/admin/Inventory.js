@@ -193,6 +193,17 @@ const Inventory = () => {
           </div>
         )}
       </div>
+
+      {selectedVariant && (
+        <StockAdjustmentModal
+          variant={selectedVariant}
+          onClose={() => setSelectedVariant(null)}
+          onSuccess={() => {
+            setSelectedVariant(null);
+            fetchInventory();
+          }}
+        />
+      )}
     </div>
   );
 };
