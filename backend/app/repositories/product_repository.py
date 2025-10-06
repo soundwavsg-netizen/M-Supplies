@@ -143,12 +143,7 @@ class ProductRepository:
                                 '$map': {
                                     'input': '$variants',
                                     'as': 'variant',
-                                    'in': {
-                                        '$arrayElemAt': [
-                                            '$$variant.price_tiers.price', 
-                                            0
-                                        ]
-                                    }
+                                    'in': '$$variant.price_tiers.0.price'
                                 }
                             }
                         },
