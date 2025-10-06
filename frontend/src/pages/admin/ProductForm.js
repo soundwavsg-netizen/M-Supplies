@@ -298,6 +298,74 @@ const ProductForm = () => {
     }));
   };
 
+  // Color and Type management functions
+  const addNewColor = () => {
+    if (!newColorName.trim()) {
+      toast.error('Please enter a color name');
+      return;
+    }
+    
+    const colorName = newColorName.trim().toLowerCase();
+    if (availableColors.includes(colorName)) {
+      toast.error('Color already exists');
+      return;
+    }
+    
+    setAvailableColors(prev => [...prev, colorName]);
+    setProduct(prev => ({ ...prev, color: colorName }));
+    setNewColorName('');
+    setShowAddColor(false);
+    toast.success(`Color "${colorName}" added successfully`);
+  };
+
+  const deleteColor = (colorToDelete) => {
+    if (colorToDelete === product.color) {
+      toast.error('Cannot delete the currently selected color');
+      return;
+    }
+    
+    if (!window.confirm(`Are you sure you want to delete color "${colorToDelete}"?`)) {
+      return;
+    }
+    
+    setAvailableColors(prev => prev.filter(color => color !== colorToDelete));
+    toast.success(`Color "${colorToDelete}" deleted`);
+  };
+
+  const addNewType = () => {
+    if (!newTypeName.trim()) {
+      toast.error('Please enter a type name');
+      return;
+    }
+    
+    const typeName = newTypeName.trim().toLowerCase();
+    if (availableTypes.includes(typeName)) {
+      toast.error('Type already exists');
+      return;
+    }
+    
+    setAvailableTypes(prev => [...prev, typeName]);
+    setProduct(prev => ({ ...prev, type: typeName }));
+    setNewTypeName('');
+    setShowAddType(false);
+    toast.success(`Type "${typeName}" added successfully`);
+  };
+
+  const deleteType = (typeToDelete) => {
+    if (typeToDelete === product.type) {
+      toast.error('Cannot delete the currently selected type');
+      return;
+    }
+    
+    if (!window.confirm(`Are you sure you want to delete type "${typeToDelete}"?`)) {
+      return;
+    }
+    
+    setAvailableTypes(prev => prev.filter(type => type !== typeToDelete));
+    toast.success(`Type "${typeToDelete}" deleted`);
+  };
+
+  // Fixed variant deletion function
   const deleteVariant = (index, variant) => {
     const dimensions = `${variant.attributes?.width_cm || variant.width_cm}×${variant.attributes?.height_cm || variant.height_cm}cm`;
     const variantName = `${product.color} ${product.type} ${dimensions}`;
