@@ -131,6 +131,16 @@ const Products = () => {
                         Edit
                       </Button>
                     </Link>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                      onClick={() => deleteProduct(product.id, product.name)}
+                      data-testid={`delete-product-${product.id}`}
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Delete
+                    </Button>
                   </div>
                 </div>
               </div>
