@@ -701,8 +701,9 @@ const ProductForm = () => {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => removeVariant(index)}
+                            onClick={() => deleteVariant(index, variant)}
                             className="text-red-600 hover:text-red-700 px-2"
+                            title="Delete this variant"
                           >
                             <X className="w-3 h-3" />
                           </Button>
