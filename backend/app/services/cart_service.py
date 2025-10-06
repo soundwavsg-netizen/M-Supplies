@@ -65,7 +65,7 @@ class CartService:
         await self.cart_repo.update_cart(cart['id'], items)
         
         # Return cart with full details
-        return await self.get_cart_with_details(cart['id'])
+        return await self.get_cart_with_details(cart['id'], user_id, session_id)
     
     def _get_price_for_quantity(self, variant: Dict[str, Any], quantity: int) -> float:
         """Get the appropriate price based on quantity and price tiers"""
