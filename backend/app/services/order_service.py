@@ -98,12 +98,48 @@ class OrderService:
         
         order = await self.order_repo.create(order_dict)
         
-        # Reduce stock (we'll do this after payment confirmation in production)
+        # Allocate stock using new inventory system
         for item in order_items:
             variant = await self.product_repo.get_variant_by_id(item['variant_id'])
             if variant:
-                new_stock = variant['stock_qty'] - item['quantity']
-                await self.product_repo.update_variant(item['variant_id'], {'stock_qty': new_stock})
+                # Get current inventory values
+                on_hand = variant.get('on_hand', variant.get('stock_qty', 0))
+                allocated = variant.get('allocated', 0)
+                safety_stock = variant.get('safety_stock', 0)
+                available = on_hand - allocated - safety_stock
+                
+                if item['quantity'] > available:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Insufficient stock for {item['product_name']}"
+                    )
+                
+                # Allocate stock (increase allocated count)
+                new_allocated = allocated + item['quantity']
+                await self.product_repo.update_variant(item['variant_id'], {
+                    'allocated': new_allocated,
+                    'stock_qty': on_hand  # Keep legacy field in sync
+                })
+                
+                # Create ledger entry if ledger_repo is available
+                if self.ledger_repo:
+                    ledger_entry = {
+                        'variant_id': item['variant_id'],
+                        'sku': item['sku'],
+                        'reason': 'order_created',
+                        'channel': 'website',
+                        'on_hand_before': on_hand,
+                        'on_hand_after': on_hand,
+                        'on_hand_change': 0,
+                        'allocated_before': allocated,
+                        'allocated_after': new_allocated,
+                        'allocated_change': item['quantity'],
+                        'reference_id': order['id'],
+                        'reference_type': 'order',
+                        'notes': f"Order {order['order_number']} created",
+                        'created_by': user_id
+                    }
+                    await self.ledger_repo.create_entry(ledger_entry)
         
         # Clear cart
         await self.cart_repo.clear_cart(cart['id'])
