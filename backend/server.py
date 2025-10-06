@@ -14,6 +14,10 @@ from app.schemas.product import ProductCreate, ProductUpdate, ProductResponse, P
 from app.schemas.cart import AddToCartRequest, UpdateCartItemRequest, CartResponse
 from app.schemas.order import OrderCreate, OrderResponse, OrderStatusUpdate
 from app.schemas.coupon import CouponCreate, CouponUpdate, CouponResponse, CouponValidation
+from app.schemas.inventory import (
+    InventoryStatus, StockAdjustment, ExternalOrderImport, 
+    ChannelMappingCreate, InventoryLedgerEntry, BusinessSettings
+)
 
 # Repositories
 from app.repositories.user_repository import UserRepository
