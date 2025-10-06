@@ -88,13 +88,10 @@ const ProductForm = () => {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('access_token');
-      const response = await axios.get(
-        `${BACKEND_URL}/api/products/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await productsAPI.get(id);
       setProduct(response.data);
     } catch (err) {
+      console.error('Failed to load product:', err);
       toast.error('Failed to load product');
       navigate('/admin/products');
     } finally {
