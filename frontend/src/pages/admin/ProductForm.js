@@ -539,7 +539,33 @@ const ProductForm = () => {
                 </Select>
               </div>
               <div>
-                <Label>Type *</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Type *</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAddType(true)}
+                    className="text-teal-600 hover:text-teal-700"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Type
+                  </Button>
+                </div>
+                
+                {showAddType ? (
+                  <div className="flex gap-2 mb-2">
+                    <Input
+                      value={newTypeName}
+                      onChange={(e) => setNewTypeName(e.target.value)}
+                      placeholder="Enter type name"
+                      onKeyPress={(e) => e.key === 'Enter' && addNewType()}
+                    />
+                    <Button type="button" onClick={addNewType} size="sm">Add</Button>
+                    <Button type="button" variant="outline" onClick={() => setShowAddType(false)} size="sm">Cancel</Button>
+                  </div>
+                ) : null}
+                
                 <Select 
                   value={product.type} 
                   onValueChange={(value) => {
@@ -554,10 +580,26 @@ const ProductForm = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="bubble wrap">Bubble Wrap</SelectItem>
-                    <SelectItem value="tool">Tool</SelectItem>
-                    <SelectItem value="consumable">Consumable</SelectItem>
+                    {availableTypes.map(type => (
+                      <div key={type} className="flex items-center justify-between group px-2 py-1.5 hover:bg-gray-50">
+                        <SelectItem value={type} className="flex-1 capitalize">
+                          {type}
+                        </SelectItem>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            deleteType(type);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 text-red-500 hover:text-red-700 ml-2"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
                   </SelectContent>
                 </Select>
                 {product.type === 'bubble wrap' && (
