@@ -560,7 +560,7 @@ const ProductForm = () => {
                       />
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Set bulk pricing - higher quantities should have lower unit prices</p>
+                  <p className="text-xs text-gray-500 mt-1">Minimum order: 25 pcs. Set bulk pricing with volume discounts for 50+ and 100+ pcs</p>
                 </div>
 
                 <div>
