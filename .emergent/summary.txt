@@ -1,0 +1,91 @@
+<analysis>
+The AI engineer successfully navigated initial tech stack discrepancies, agreeing to FastAPI+React+MongoDB and focusing on a strategic MVP. The development progressed through several key phases: establishing the core backend (authentication, products, cart, orders) with Pydantic models and a layered architecture; building out the frontend with essential customer pages and basic admin views, integrating Shadcn UI and Tailwind CSS; implementing a centralized, multi-channel inventory system, including an immutable ledger and order allocation logic; and re-branding the application to M Supplies. The work included detailed seeding and API testing for backend components. Currently, the engineer is resolving compilation errors in the newly developed admin product management and stock adjustment UI due to syntax issues, and is also preparing to implement advanced product filtering and sorting as per the latest user request.
+</analysis>
+
+<product_requirements>
+The user, Sean, requested a production-ready e-commerce website for M Supplies (formerly Polymailer), featuring both customer and admin portals. The primary goal is to sell polymailer products with multiple variants, optional custom printing, and subscription services, ensuring a smooth shopping experience and powerful admin management.
+
+**Key MVP Features Implemented/Planned:**
+*   **Customer Portal**: Email+password (JWT) and Google OAuth (post-MVP), product catalog with variants (size, thickness, color), images, tiered pricing, stock status. Cart & checkout with Stripe (Cards, PayNow/GrabPay if feasible), 9% GST calculation visible at checkout and on invoices (PDF defered). Order history, status tracking, and basic content pages (About, FAQ, Shipping & Returns, Contact).
+*   **Admin Portal**: User list/search/view/edit/disable, password reset, CSV export. Product CRUD with variants, images, specs, SEO fields. Discount coupon codes (percent/fixed), usage limits. Orders list/filter/view/update status, resend emails, invoice/packing slip (PDF defered).
+*   **Centralized Multi-channel Inventory**: Single source of truth per SKU/variant with , , , and . Support for channels (website, Shopee) and SKU mapping. Immutable  for all stock movements. Order creation/cancellation/fulfillment updates allocation. Admin UI for inventory management (view, adjust stock, import external orders).
+*   **Rebranding**: Application name changed to M Supplies, reflected in headers, emails, and invoices.
+*   **Technical Preferences**: FastAPI (backend), React (frontend), MongoDB (DB), Pydantic, Tailwind CSS, Shadcn UI. Layered architecture (api → services → repositories → schemas) for future migration. JWT for auth, Stripe for payments, SendGrid/Postmark for emails. S3-compatible storage for images (starting with local). Deep-linkable routes for all main pages.
+
+</product_requirements>
+
+<key_technical_concepts>
+-   **Full-stack**: FastAPI (Python) backend, React frontend.
+-   **Database**: MongoDB with UUIDs for object IDs.
+-   **Frontend**: React, Tailwind CSS, Shadcn UI, React Router, Context API (Auth, Cart).
+-   **Backend**: FastAPI, Pydantic (models), layered architecture (schemas, repositories, services, API routers), JWT (authentication), Passlib (password hashing).
+-   **Payments**: Stripe integration (planned).
+-   **Emails**: SendGrid/Postmark (planned).
+-   **Inventory**: Centralized system (, , , ), , multi-channel support.
+-   **File Storage**: Local file storage for images (S3/R2 migration planned).
+-   **Environment Management**:  files, protected variables.
+</key_technical_concepts>
+
+<code_architecture>
+The application follows a standard full-stack architecture with a React frontend and a FastAPI backend, both containerized.
+
+
+
+**Key Files and Changes:**
+-   : Updated with , , , , , , , , , , , . Crucial for environment-specific configuration.
+-   : Main FastAPI app. Defines API routes (, , , , , ) and dependencies. Manages CORS and static file serving for uploaded images. Was rewritten and edited multiple times to integrate new services and routes.
+-   : Creates initial data for admin/customer users, business settings (), and polymailer products with variants and inventory. Essential for quick setup and testing.
+-   : Defines Pydantic models for , , , . Central to the new inventory system.
+-   : Contains business logic for managing centralized inventory, processing adjustments, and interacting with the .
+-   : Handles file uploads (currently to local storage ), creating a clean abstraction for future S3/R2 migration.
+-   : Core React component setting up  for all navigation. Integrates  and . Updated repeatedly to add new routes for customer and admin pages.
+-   : Centralizes Tailwind CSS configuration, enabling easy theme switching and adherence to design tokens.
+-   : The application's navigation bar, updated to reflect M Supplies branding and provide links to customer and admin sections.
+-   : Displays the centralized inventory with SKU details, , ,  stock, and a button to trigger .
+-   : The new admin page for listing and managing products (CRUD operations).
+-   : Component for creating and editing product details, including variant management and image upload functionality.
+-   : A modal for performing manual inventory adjustments with a reason and notes.
+-   : Product listing page, updated to support query parameters for filtering/sorting by attributes like size and color.
+-   : Provides comprehensive project documentation including setup, seed data, and deployment instructions.
+-   : Documents all deep-linkable routes for both customer and admin portals.
+
+</code_architecture>
+
+<pending_tasks>
+-   Full implementation of Google OAuth.
+-   PDF invoice/packing slip generation.
+-   Storybook component documentation.
+-   Playwright E2E tests.
+-   Stripe PayNow/GrabPay integration.
+-   Image processing/resizing after upload.
+-   Full settings page for business configuration beyond just the name.
+-   Complete Shopee integration (beyond CSV import/webhook stub).
+-   User interface for editing existing products and managing coupon codes.
+-   Fixing frontend compilation errors in newly added admin product/inventory pages.
+-   Implementing viewing/sorting by colors, dimensions, or types on the product listing page.
+</pending_tasks>
+
+<current_work>
+The AI engineer has been working on integrating a centralized multi-channel inventory system and rebranding the application to M Supplies.
+
+**Backend progress includes:**
+-   **Inventory System**: Implemented  and  schemas,  (for MongoDB), and  (for business logic).
+-   **Order and Cart Updates**: Modified  to use  and  quantities,  to check  stock.
+-   **File Upload**: Created  and added routes in  for local image storage.
+-   **Seeding**: Updated  to populate initial business settings (e.g., ) and product variants with inventory fields.
+-   **Routing**: Added new API routes for admin inventory management (, ).
+
+**Frontend progress includes:**
+-   **Rebranding**: Updated , , , , , and  to reflect M Supplies branding.
+-   **Routing**: Added new routes in  for  and  and deep-linkable customer routes like  and .
+-   **Admin UI**: Created  to display inventory,  for product listing, and  for product creation/editing with image upload.
+-   **Stock Adjustment**: Implemented  to allow manual stock changes.
+-   **Product Filtering**: Started updating  to support query parameters for filtering/sorting.
+
+**Current Challenges**:
+The most immediate task is to fix syntax errors (specifically related to escaped quotes) in frontend files like  and potentially others, which are causing compilation issues and preventing the application preview from rendering correctly. The user explicitly reported that the preview is not working.
+</current_work>
+
+<optional_next_step>
+Fix the frontend compilation errors, particularly addressing the escaped quotes in  and other related files, to restore the application preview.
+</optional_next_step>
