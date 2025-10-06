@@ -708,9 +708,38 @@ async def shopee_order_webhook(request: dict):
 
 
 
+# ==================== FILE UPLOAD ROUTES ====================
+
+@api_router.post("/admin/upload/image", tags=["Admin - Upload"])
+async def upload_image(
+    file: UploadFile = File(...),
+    user_id: str = Depends(get_current_user_id)
+):
+    """Upload a product image (Admin only)"""
+    # TODO: Add role check
+    image_url = await UploadService.upload_product_image(file)
+    return {"url": image_url}
+
+
+@api_router.post("/admin/upload/images", tags=["Admin - Upload"])
+async def upload_images(
+    files: List[UploadFile] = File(...),
+    user_id: str = Depends(get_current_user_id)
+):
+    """Upload multiple product images (Admin only)"""
+    # TODO: Add role check
+    image_urls = await UploadService.upload_multiple_images(files)
+    return {"urls": image_urls}
+
+
 # Include router
 app.include_router(api_router)
 
+# Serve uploaded files
+import os
+upload_dir = os.getenv('UPLOAD_DIR', '/app/backend/uploads')
+if os.path.exists(upload_dir):
+    app.mount("/uploads", StaticFiles(directory=upload_dir), name="uploads")
 
 # Health check
 @app.get("/health")
