@@ -16,6 +16,11 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || null);
   const [sizeFilter, setSizeFilter] = useState(searchParams.get('size') || '');
   const [colorFilter, setColorFilter] = useState(searchParams.get('color') || '');
+  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'name');
+  
+  // Available filter options (extracted from products)
+  const [availableSizes, setAvailableSizes] = useState([]);
+  const [availableColors, setAvailableColors] = useState([]);
 
   useEffect(() => {
     // Update URL when filters change
