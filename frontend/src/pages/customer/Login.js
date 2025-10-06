@@ -54,7 +54,7 @@ const Login = () => {
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome to PolyMailer</h1>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome to M Supplies</h1>
             <p className="text-gray-600">Login or create an account to continue</p>
           </div>
 
