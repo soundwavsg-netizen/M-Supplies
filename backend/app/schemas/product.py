@@ -43,6 +43,8 @@ class ProductBase(BaseModel):
     name: str
     description: str
     category: str  # e.g., "Polymailers", "Custom Printing"
+    color: Optional[str] = "white"  # Product-level color
+    type: Optional[str] = "normal"  # Product-level type
     images: List[str] = []
     specifications: Dict[str, str] = {}  # e.g., {"material": "LDPE", "feature": "Self-sealing"}
     seo_title: Optional[str] = None
