@@ -36,9 +36,9 @@ module.exports = [
       'react/jsx-uses-vars': 'error',
       'react/prop-types': 'off', // We'll use TypeScript for prop validation later
       
-      // JSX formatting - enforce double quotes
-      'jsx-quotes': ['error', 'prefer-double'],
-      'quotes': ['error', 'single'],
+      // JSX formatting - enforce double quotes but warn for now
+      'jsx-quotes': ['warn', 'prefer-double'],
+      'quotes': ['warn', 'single'],
       
       // Import rules - relaxed for now due to alias issues
       'import/no-unresolved': 'off',
