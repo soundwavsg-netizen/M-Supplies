@@ -31,6 +31,18 @@ const ProductForm = () => {
     images: [],
     variants: []
   });
+
+  // Dynamic options management
+  const [availableColors, setAvailableColors] = useState([
+    'white', 'pastel pink', 'champagne pink', 'milktea', 'black', 'clear'
+  ]);
+  const [availableTypes, setAvailableTypes] = useState([
+    'normal', 'bubble wrap', 'tool', 'consumable'
+  ]);
+  const [showAddColor, setShowAddColor] = useState(false);
+  const [showAddType, setShowAddType] = useState(false);
+  const [newColorName, setNewColorName] = useState('');
+  const [newTypeName, setNewTypeName] = useState('');
   
   const [newVariant, setNewVariant] = useState({
     width_cm: '',
