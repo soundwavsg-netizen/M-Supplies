@@ -61,13 +61,15 @@ app = FastAPI(title="Polymailer E-commerce API", lifespan=lifespan)
 # Create router with /api prefix
 api_router = APIRouter(prefix="/api")
 
-# CORS
+# CORS - Allow both shop.m-supplies.sg and www.m-supplies.sg
+cors_origins = settings.cors_origins.split(',') if settings.cors_origins != '*' else ['*']
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=settings.cors_origins.split(',') if settings.cors_origins != '*' else ['*'],
+    allow_origins=cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 
