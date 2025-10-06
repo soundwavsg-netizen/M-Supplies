@@ -25,7 +25,7 @@ const Header = () => {
           <Link to="/" className="flex items-center space-x-2" data-testid="logo-link">
             <Package className="w-8 h-8" style={{ color: theme.colors.primary }} />
             <span className="text-xl font-bold" style={{ color: theme.colors.dark }}>
-              PolyMailer
+              M Supplies
             </span>
           </Link>
 
