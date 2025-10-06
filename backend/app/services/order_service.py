@@ -2,6 +2,7 @@ from app.repositories.order_repository import OrderRepository
 from app.repositories.cart_repository import CartRepository
 from app.repositories.product_repository import ProductRepository
 from app.repositories.coupon_repository import CouponRepository
+from app.repositories.inventory_repository import InventoryLedgerRepository
 from app.schemas.order import OrderCreate, OrderStatusUpdate
 from app.core.config import settings
 from fastapi import HTTPException, status
