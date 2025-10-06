@@ -215,9 +215,20 @@ class ProductRepository:
         price_result = await self.variants.aggregate(price_pipeline).to_list(length=1)
         price_range = price_result[0] if price_result else {'min_price': 0, 'max_price': 100}
         
+        # Safe size sorting - handle different formats
+        def safe_size_sort(size_str):
+            try:
+                if 'x' in size_str:
+                    return tuple(map(int, size_str.split('x')))
+                else:
+                    # For non-standard formats, just use string sorting
+                    return (0, 0)
+            except:
+                return (0, 0)
+        
         return {
             'colors': sorted(colors),
-            'sizes': sorted(sizes, key=lambda x: tuple(map(int, x.split('x')))),  # Sort by dimensions
+            'sizes': sorted(sizes, key=safe_size_sort),
             'types': sorted(types),
             'categories': sorted(categories),
             'price_range': {
