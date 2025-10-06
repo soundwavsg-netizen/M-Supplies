@@ -81,152 +81,111 @@ class ProductRepository:
     async def list_products_filtered(self, filters: Optional[ProductFilters] = None,
                                    sort_options: Optional[ProductSortOptions] = None,
                                    skip: int = 0, limit: int = 50) -> Dict[str, Any]:
-        """Advanced product filtering with aggregation pipeline"""
+        """Advanced product filtering - simplified approach"""
         
-        # Build aggregation pipeline
-        pipeline = []
+        # First, get all products with variants
+        products_with_variants = []
         
-        # Match products
-        match_stage = {'is_active': True}
-        if filters:
-            if filters.categories:
-                match_stage['category'] = {'$in': filters.categories}
-            if filters.search:
-                match_stage['$or'] = [
-                    {'name': {'$regex': filters.search, '$options': 'i'}},
-                    {'description': {'$regex': filters.search, '$options': 'i'}},
-                    {'seo_keywords': {'$in': [filters.search]}}
-                ]
+        # Build product query
+        product_query = {'is_active': True}
+        if filters and filters.categories:
+            product_query['category'] = {'$in': filters.categories}
+        if filters and filters.search:
+            product_query['$or'] = [
+                {'name': {'$regex': filters.search, '$options': 'i'}},
+                {'description': {'$regex': filters.search, '$options': 'i'}}
+            ]
         
-        pipeline.append({'$match': match_stage})
+        # Get products
+        products = await self.products.find(product_query).to_list(length=None)
         
-        # Join with variants
-        pipeline.append({
-            '$lookup': {
-                'from': 'variants',
-                'localField': 'id',
-                'foreignField': 'product_id',
-                'as': 'variants'
-            }
-        })
-        
-        # Filter variants based on criteria
-        variant_filters = []
-        if filters:
-            if filters.colors:
-                variant_filters.append({'variants.attributes.color': {'$in': filters.colors}})
-            if filters.sizes:
-                variant_filters.append({'variants.attributes.size_code': {'$in': filters.sizes}})
-            if filters.type:
-                variant_filters.append({'variants.attributes.type': filters.type})
-            if filters.price_min is not None or filters.price_max is not None:
-                price_filter = {}
-                if filters.price_min is not None:
-                    price_filter['$gte'] = filters.price_min
-                if filters.price_max is not None:
-                    price_filter['$lte'] = filters.price_max
-                variant_filters.append({'variants.price_tiers.0.price': price_filter})
-            if filters.in_stock_only:
-                variant_filters.append({'variants.on_hand': {'$gt': 0}})
-        
-        # Apply variant filters
-        if variant_filters:
-            pipeline.append({'$match': {'$and': variant_filters}})
-        
-        # Add computed fields
-        pipeline.append({
-            '$addFields': {
+        for product in products:
+            # Get variants for this product
+            variant_query = {'product_id': product['id']}
+            
+            # Apply variant filters
+            if filters:
+                if filters.colors:
+                    variant_query['attributes.color'] = {'$in': filters.colors}
+                if filters.sizes:
+                    variant_query['attributes.size_code'] = {'$in': filters.sizes}
+                if filters.type:
+                    variant_query['attributes.type'] = filters.type
+                if filters.in_stock_only:
+                    variant_query['on_hand'] = {'$gt': 0}
+            
+            variants = await self.variants.find(variant_query).to_list(length=None)
+            
+            # Apply price filter if specified
+            if filters and (filters.price_min is not None or filters.price_max is not None):
+                filtered_variants = []
+                for variant in variants:
+                    price = variant['price_tiers'][0]['price']
+                    if filters.price_min is not None and price < filters.price_min:
+                        continue
+                    if filters.price_max is not None and price > filters.price_max:
+                        continue
+                    filtered_variants.append(variant)
+                variants = filtered_variants
+            
+            # Skip products with no matching variants
+            if not variants:
+                continue
+            
+            # Calculate price range and stock status
+            prices = [v['price_tiers'][0]['price'] for v in variants]
+            in_stock = any(v['on_hand'] > 0 for v in variants)
+            
+            # Transform variant data
+            variant_data = []
+            for v in variants:
+                variant_data.append({
+                    'id': v['id'],
+                    'sku': v['sku'],
+                    'attributes': v['attributes'],
+                    'price': v['price_tiers'][0]['price'],
+                    'on_hand': v['on_hand'],
+                    'available': v['on_hand'] - v.get('allocated', 0)
+                })
+            
+            # Build product result
+            product_result = {
+                'id': product['id'],
+                'name': product['name'],
+                'description': product['description'],
+                'category': product['category'],
+                'images': product.get('images', []),
                 'price_range': {
-                    '$let': {
-                        'vars': {
-                            'prices': {
-                                '$map': {
-                                    'input': '$variants',
-                                    'as': 'variant',
-                                    'in': '$$variant.price_tiers.0.price'
-                                }
-                            }
-                        },
-                        'in': {
-                            'min': {'$min': '$$prices'},
-                            'max': {'$max': '$$prices'}
-                        }
-                    }
+                    'min': min(prices) if prices else 0,
+                    'max': max(prices) if prices else 0
                 },
-                'in_stock': {
-                    '$anyElementTrue': {
-                        '$map': {
-                            'input': '$variants',
-                            'as': 'variant',
-                            'in': {'$gt': ['$$variant.on_hand', 0]}
-                        }
-                    }
-                },
-                'best_seller_score': {'$rand': {}}  # Mock best seller score
+                'in_stock': in_stock,
+                'featured': product.get('featured', False),
+                'variants': variant_data,
+                'best_seller_score': hash(product['id']) % 1000  # Mock score for sorting
             }
-        })
+            
+            products_with_variants.append(product_result)
         
-        # Sort
-        sort_stage = {}
+        # Sort products
         if sort_options:
             if sort_options.sort_by == 'price_low_high':
-                sort_stage = {'price_range.min': 1}
+                products_with_variants.sort(key=lambda p: p['price_range']['min'])
             elif sort_options.sort_by == 'price_high_low':
-                sort_stage = {'price_range.max': -1}
+                products_with_variants.sort(key=lambda p: p['price_range']['max'], reverse=True)
             elif sort_options.sort_by == 'newest':
-                sort_stage = {'created_at': -1}
+                products_with_variants.sort(key=lambda p: p['id'], reverse=True)  # Use ID as proxy for newest
             else:  # best_sellers (default)
-                sort_stage = {'best_seller_score': -1, 'featured': -1}
+                products_with_variants.sort(key=lambda p: (p['featured'], p['best_seller_score']), reverse=True)
         else:
-            sort_stage = {'featured': -1, 'created_at': -1}
+            products_with_variants.sort(key=lambda p: (p['featured'], p['id']), reverse=True)
         
-        pipeline.append({'$sort': sort_stage})
-        
-        # Count total (before pagination)
-        count_pipeline = pipeline + [{'$count': 'total'}]
-        count_result = await self.products.aggregate(count_pipeline).to_list(length=1)
-        total = count_result[0]['total'] if count_result else 0
-        
-        # Add pagination
-        pipeline.extend([
-            {'$skip': skip},
-            {'$limit': limit}
-        ])
-        
-        # Project final fields
-        pipeline.append({
-            '$project': {
-                '_id': 0,  # Exclude MongoDB ObjectId
-                'id': 1,
-                'name': 1,
-                'description': 1,
-                'category': 1,
-                'images': 1,
-                'price_range': 1,
-                'in_stock': 1,
-                'featured': 1,
-                'variants': {
-                    '$map': {
-                        'input': '$variants',
-                        'as': 'variant',
-                        'in': {
-                            'id': '$$variant.id',
-                            'sku': '$$variant.sku',
-                            'attributes': '$$variant.attributes',
-                            'price': '$$variant.price_tiers.0.price',
-                            'on_hand': '$$variant.on_hand',
-                            'available': {'$subtract': ['$$variant.on_hand', '$$variant.allocated']}
-                        }
-                    }
-                }
-            }
-        })
-        
-        # Execute pipeline
-        products = await self.products.aggregate(pipeline).to_list(length=limit)
+        # Pagination
+        total = len(products_with_variants)
+        paginated_products = products_with_variants[skip:skip + limit]
         
         return {
-            'products': products,
+            'products': paginated_products,
             'total': total
         }
     
