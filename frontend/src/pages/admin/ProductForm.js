@@ -165,7 +165,6 @@ const ProductForm = () => {
   };
 
   const colorOptions = ['white', 'pastel pink', 'champagne pink', 'milktea'];
-  const sizeOptions = ['25x35', '17x30', '32x43', '45x60'];
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
