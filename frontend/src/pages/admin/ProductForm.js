@@ -378,7 +378,7 @@ const ProductForm = () => {
                 <Label>Category *</Label>
                 <Select 
                   value={product.category} 
-                  onValueChange={(value) => handleInputChange('category', value)}
+                  onValueChange={(value) => handleProductChange('category', value)}
                 >
                   <SelectTrigger>
                     <SelectValue />
