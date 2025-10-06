@@ -380,9 +380,10 @@ const ProductForm = () => {
                 <Input
                   value={product.name}
                   onChange={(e) => handleProductChange('name', e.target.value)}
-                  placeholder="e.g., Premium Polymailers"
+                  placeholder="e.g., Premium Polymailer - White"
                   required
                 />
+                <p className="text-xs text-gray-500 mt-1">Include color in product name (e.g., "Premium Polymailer - White")</p>
               </div>
               <div>
                 <Label>Category *</Label>
@@ -398,6 +399,51 @@ const ProductForm = () => {
                     <SelectItem value="accessories">Accessories</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <Label>Color *</Label>
+                <Select 
+                  value={product.color} 
+                  onValueChange={(value) => handleProductChange('color', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="white">White</SelectItem>
+                    <SelectItem value="pastel pink">Pastel Pink</SelectItem>
+                    <SelectItem value="champagne pink">Champagne Pink</SelectItem>
+                    <SelectItem value="milktea">Milktea</SelectItem>
+                    <SelectItem value="black">Black</SelectItem>
+                    <SelectItem value="clear">Clear</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Type *</Label>
+                <Select 
+                  value={product.type} 
+                  onValueChange={(value) => {
+                    handleProductChange('type', value);
+                    // Business rule: bubble wrap only in white
+                    if (value === 'bubble wrap') {
+                      handleProductChange('color', 'white');
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="bubble wrap">Bubble Wrap</SelectItem>
+                    <SelectItem value="tool">Tool</SelectItem>
+                    <SelectItem value="consumable">Consumable</SelectItem>
+                  </SelectContent>
+                </Select>
+                {product.type === 'bubble wrap' && (
+                  <p className="text-xs text-amber-600 mt-1">⚠️ Bubble wrap only available in white</p>
+                )}
               </div>
             </div>
             <div className="mt-4">
