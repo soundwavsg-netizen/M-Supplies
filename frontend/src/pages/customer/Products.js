@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Search, Filter } from 'lucide-react';
 import { productsAPI } from '@/lib/api';
 import { formatPrice } from '@/lib/utils';
@@ -8,16 +8,30 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
 const Products = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || null);
+  const [sizeFilter, setSizeFilter] = useState(searchParams.get('size') || '');
+  const [colorFilter, setColorFilter] = useState(searchParams.get('color') || '');
 
   useEffect(() => {
+    // Update URL when filters change
+    const params = {};
+    if (search) params.search = search;
+    if (selectedCategory) params.category = selectedCategory;
+    if (sizeFilter) params.size = sizeFilter;
+    if (colorFilter) params.color = colorFilter;
+    setSearchParams(params);
+    
     fetchProducts();
+  }, [selectedCategory, search, sizeFilter, colorFilter]);
+  
+  useEffect(() => {
     fetchCategories();
-  }, [selectedCategory, search]);
+  }, []);
 
   const fetchProducts = async () => {
     try {
