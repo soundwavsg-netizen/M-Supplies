@@ -16,7 +16,7 @@ const Contact = () => {
               <Mail className="w-6 h-6 text-teal-700 mt-1" />
               <div>
                 <h3 className="font-semibold text-slate-900 mb-1">Email</h3>
-                <p className="text-gray-600">orders@polymailer.com</p>
+                <p className="text-gray-600">orders@msupplies.sg</p>
               </div>
             </div>
             
