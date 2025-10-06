@@ -387,8 +387,8 @@ class BackendTester:
                         variant_id = data[0]['variant_id']
                         adjustment_data = {
                             "variant_id": variant_id,
-                            "adjustment_type": "manual",
-                            "quantity_change": 5,
+                            "adjustment_type": "change",
+                            "on_hand_change": 5,
                             "reason": "manual_adjustment",
                             "notes": "Backend testing"
                         }
