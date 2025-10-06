@@ -291,7 +291,7 @@ const Products = () => {
                     <SelectValue placeholder="All types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All types</SelectItem>
+                    <SelectItem value="all">All types</SelectItem>
                     {filterOptions.types.map(type => (
                       <SelectItem key={type} value={type}>
                         {type}
