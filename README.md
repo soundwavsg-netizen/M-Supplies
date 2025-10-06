@@ -4,7 +4,7 @@ A production-ready e-commerce platform with centralized multi-channel inventory 
 
 ## 🎯 Live Demo
 
-**Application URL**: https://inventory-central-3.preview.emergentagent.com
+**Application URL**: https://supply-manager-20.preview.emergentagent.com
 
 **Test Accounts**:
 - **Admin**: admin@polymailer.com / admin123 (use admin@msupplies.sg for new signups)
