@@ -1,5 +1,5 @@
 from app.repositories.product_repository import ProductRepository
-from app.schemas.product import ProductCreate, ProductUpdate
+from app.schemas.product import ProductCreate, ProductUpdate, ProductFilters, ProductSortOptions
 from fastapi import HTTPException, status
 from typing import Dict, Any, List, Optional
 
