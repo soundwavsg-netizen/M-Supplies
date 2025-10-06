@@ -517,15 +517,41 @@ const ProductForm = () => {
                   />
                 </div>
 
-                <div>
-                  <Label>Price ($) *</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={newVariant.price}
-                    onChange={(e) => handleVariantChange('price', e.target.value)}
-                    placeholder="0.00"
-                  />
+                <div className="md:col-span-3">
+                  <Label>Pricing Tiers *</Label>
+                  <div className="grid grid-cols-3 gap-2 mt-2">
+                    <div>
+                      <Label className="text-xs text-gray-600">1 pc ($)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={newVariant.price_tiers[0].price}
+                        onChange={(e) => handlePriceTierChange(0, e.target.value)}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">50 pcs ($)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={newVariant.price_tiers[1].price}
+                        onChange={(e) => handlePriceTierChange(1, e.target.value)}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">100 pcs ($)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={newVariant.price_tiers[2].price}
+                        onChange={(e) => handlePriceTierChange(2, e.target.value)}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Set bulk pricing - higher quantities should have lower unit prices</p>
                 </div>
 
                 <div>
