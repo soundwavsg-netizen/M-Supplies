@@ -14,7 +14,9 @@ import Cart from '@/pages/customer/Cart';
 import Checkout from '@/pages/customer/Checkout';
 import Login from '@/pages/customer/Login';
 import Orders from '@/pages/customer/Orders';
+import OrderDetail from '@/pages/customer/OrderDetail';
 import OrderSuccess from '@/pages/customer/OrderSuccess';
+import Account from '@/pages/customer/Account';
 import About from '@/pages/customer/About';
 import Contact from '@/pages/customer/Contact';
 
