@@ -162,21 +162,11 @@ const ProductForm = () => {
 
     try {
       setImageUploading(true);
-      const token = localStorage.getItem('access_token');
       
       const formData = new FormData();
       files.forEach(file => formData.append('files', file));
       
-      const response = await axios.post(
-        `${BACKEND_URL}/api/admin/upload/images`,
-        formData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
+      const response = await adminUploadAPI.images(formData);
       
       const newImageUrls = response.data.urls;
       setProduct(prev => ({
