@@ -213,12 +213,7 @@ class ProductRepository:
                             'id': '$$variant.id',
                             'sku': '$$variant.sku',
                             'attributes': '$$variant.attributes',
-                            'price': {
-                                '$getField': {
-                                    'field': 'price',
-                                    'input': {'$arrayElemAt': ['$$variant.price_tiers', 0]}
-                                }
-                            },
+                            'price': '$$variant.price_tiers.0.price',
                             'on_hand': '$$variant.on_hand',
                             'available': {'$subtract': ['$$variant.on_hand', '$$variant.allocated']}
                         }
