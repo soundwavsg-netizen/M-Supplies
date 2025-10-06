@@ -133,6 +133,9 @@ const Inventory = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -166,6 +169,16 @@ const Inventory = () => {
                           In Stock
                         </Badge>
                       )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setSelectedVariant(item)}
+                        data-testid={`adjust-stock-${item.sku}`}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
                     </td>
                   </tr>
                 ))}
