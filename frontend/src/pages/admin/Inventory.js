@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Package, AlertTriangle, TrendingUp, Edit } from 'lucide-react';
+import { Package, AlertTriangle, TrendingUp, Edit, Plus, ShoppingBag } from 'lucide-react';
 import StockAdjustmentModal from '@/components/admin/StockAdjustmentModal';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
