@@ -96,6 +96,30 @@ const Inventory = () => {
           </div>
         </div>
 
+        {/* Quick Actions */}
+        <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900 mb-1">Inventory Management</h2>
+              <p className="text-sm text-gray-600">Add new products or search existing inventory</p>
+            </div>
+            <div className="flex gap-3">
+              <Link to="/admin/products/new">
+                <Button className="bg-teal-700 hover:bg-teal-800">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add New Product
+                </Button>
+              </Link>
+              <Link to="/admin/products">
+                <Button variant="outline" className="border-teal-200 text-teal-700 hover:bg-teal-50">
+                  <ShoppingBag className="w-4 h-4 mr-2" />
+                  Manage Products
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* Search */}
         <div className="bg-white rounded-lg p-6 shadow-sm mb-6">
           <Input
