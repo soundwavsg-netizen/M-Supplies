@@ -389,7 +389,7 @@ class BackendTester:
                             "variant_id": variant_id,
                             "adjustment_type": "manual",
                             "quantity_change": 5,
-                            "reason": "Test adjustment",
+                            "reason": "manual_adjustment",
                             "notes": "Backend testing"
                         }
                         
