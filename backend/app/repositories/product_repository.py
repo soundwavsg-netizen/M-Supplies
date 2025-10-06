@@ -213,7 +213,7 @@ class ProductRepository:
                             'id': '$$variant.id',
                             'sku': '$$variant.sku',
                             'attributes': '$$variant.attributes',
-                            'price': {'$arrayElemAt': ['$$variant.price_tiers.price', 0]},
+                            'price': {'$arrayElemAt': ['$$variant.price_tiers', 0]},
                             'on_hand': '$$variant.on_hand',
                             'available': {'$subtract': ['$$variant.on_hand', '$$variant.allocated']}
                         }
