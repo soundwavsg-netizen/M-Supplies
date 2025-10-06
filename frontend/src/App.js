@@ -20,6 +20,7 @@ import Contact from '@/pages/customer/Contact';
 
 // Admin Pages
 import AdminDashboard from '@/pages/admin/AdminDashboard';
+import Inventory from '@/pages/admin/Inventory';
 
 import '@/App.css';
 
