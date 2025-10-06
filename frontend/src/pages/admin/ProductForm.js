@@ -158,7 +158,7 @@ const ProductForm = () => {
       
       navigate('/admin/products');
     } catch (err) {
-      toast.error(error.response?.data?.detail || 'Failed to save product');
+      toast.error(err.response?.data?.detail || 'Failed to save product');
     } finally {
       setLoading(false);
     }
