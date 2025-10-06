@@ -115,4 +115,11 @@ export const adminUsersAPI = {
   update: (id, data) => api.put(`/admin/users/${id}`, data),
 };
 
+// Admin - Upload
+export const adminUploadAPI = {
+  images: (formData) => api.post('/admin/upload/images', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+};
+
 export default api;
