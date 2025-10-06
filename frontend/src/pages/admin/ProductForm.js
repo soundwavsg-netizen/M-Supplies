@@ -423,7 +423,6 @@ const ProductForm = () => {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem('access_token');
       
       const payload = {
         ...product,
@@ -433,23 +432,16 @@ const ProductForm = () => {
       };
 
       if (isEdit) {
-        await axios.put(
-          `${BACKEND_URL}/api/admin/products/${id}`,
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await adminProductsAPI.update(id, payload);
         toast.success('Product updated successfully');
       } else {
-        await axios.post(
-          `${BACKEND_URL}/api/admin/products`,
-          payload,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await adminProductsAPI.create(payload);
         toast.success('Product created successfully');
       }
       
       navigate('/admin/products');
     } catch (err) {
+      console.error('Product save error:', err);
       toast.error(err.response?.data?.detail || 'Failed to save product');
     } finally {
       setLoading(false);
