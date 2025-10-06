@@ -85,6 +85,15 @@ const ProductForm = () => {
     }
   };
 
+  const handlePriceTierChange = (tierIndex, price) => {
+    setNewVariant(prev => ({
+      ...prev,
+      price_tiers: prev.price_tiers.map((tier, index) => 
+        index === tierIndex ? { ...tier, price: price } : tier
+      )
+    }));
+  };
+
   // Image upload handlers
   const handleImageUpload = async (event) => {
     const files = Array.from(event.target.files);
