@@ -11,10 +11,10 @@ const AdminDashboard = () => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
-            title="Products"
-            value="38"
+            title="Inventory"
+            value="38 SKUs"
             icon={<Package className="w-8 h-8 text-teal-700" />}
-            link="/admin/products"
+            link="/admin/inventory"
           />
           <StatCard
             title="Orders"
