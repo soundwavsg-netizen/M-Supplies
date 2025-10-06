@@ -146,7 +146,7 @@ const ProductForm = () => {
     
     // Check if at least the first price tier has a price
     if (!newVariant.price_tiers[0].price) {
-      toast.error('Please set at least the base price (1 pc)');
+      toast.error('Please set at least the base price (25 pcs)');
       return;
     }
 
