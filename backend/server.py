@@ -180,7 +180,7 @@ async def get_cart(
     cart_service = CartService(cart_repo, product_repo)
     
     cart = await cart_service.get_or_create_cart(user_id, x_session_id)
-    return await cart_service.get_cart_with_details(cart['id'])
+    return await cart_service.get_cart_with_details(cart['id'], user_id, x_session_id)
 
 
 @api_router.put("/cart/item/{variant_id}", response_model=CartResponse, tags=["Cart"])
