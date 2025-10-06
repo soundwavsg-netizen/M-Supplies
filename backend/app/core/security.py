@@ -44,7 +44,7 @@ def decode_token(token: str) -> Dict[str, Any]:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-async def get_current_user_id(authorization: Optional[HTTPAuthorizationCredential] = Depends(security)) -> str:
+async def get_current_user_id(authorization: Optional[HTTPAuthorizationCredentials] = Depends(security)) -> str:
     """Extract user_id from JWT token"""
     if not authorization:
         raise HTTPException(
