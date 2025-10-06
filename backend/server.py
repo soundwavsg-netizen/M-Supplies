@@ -516,6 +516,189 @@ async def admin_update_user(
     return UserResponse(**updated_user)
 
 
+
+# ==================== INVENTORY ADMIN ROUTES ====================
+
+@api_router.get("/admin/inventory", response_model=List[InventoryStatus], tags=["Admin - Inventory"])
+async def admin_list_inventory(
+    user_id: str = Depends(get_current_user_id)
+):
+    """List all inventory (Admin only)"""
+    # TODO: Add role check
+    db = get_database()
+    product_repo = ProductRepository(db)
+    ledger_repo = InventoryLedgerRepository(db)
+    mapping_repo = ChannelMappingRepository(db)
+    inventory_service = InventoryService(ledger_repo, product_repo, mapping_repo)
+    
+    # Get all products
+    products = await product_repo.list_products(skip=0, limit=1000, is_active=None)
+    inventory_list = []
+    
+    for product in products:
+        variants = await product_repo.get_variants_by_product(product['id'])
+        for variant in variants:
+            on_hand = variant.get('on_hand', variant.get('stock_qty', 0))
+            allocated = variant.get('allocated', 0)
+            safety_stock = variant.get('safety_stock', 0)
+            available = max(0, on_hand - allocated - safety_stock)
+            low_stock_threshold = variant.get('low_stock_threshold', 10)
+            
+            inventory_list.append(InventoryStatus(
+                variant_id=variant['id'],
+                sku=variant['sku'],
+                product_name=product['name'],
+                on_hand=on_hand,
+                allocated=allocated,
+                available=available,
+                safety_stock=safety_stock,
+                low_stock_threshold=low_stock_threshold,
+                is_low_stock=available < low_stock_threshold,
+                channel_buffers=variant.get('channel_buffers', {})
+            ))
+    
+    return inventory_list
+
+
+@api_router.get("/admin/inventory/{variant_id}", response_model=InventoryStatus, tags=["Admin - Inventory"])
+async def admin_get_variant_inventory(
+    variant_id: str,
+    user_id: str = Depends(get_current_user_id)
+):
+    """Get inventory status for a specific variant (Admin only)"""
+    # TODO: Add role check
+    db = get_database()
+    product_repo = ProductRepository(db)
+    ledger_repo = InventoryLedgerRepository(db)
+    mapping_repo = ChannelMappingRepository(db)
+    inventory_service = InventoryService(ledger_repo, product_repo, mapping_repo)
+    
+    return await inventory_service.get_variant_inventory(variant_id)
+
+
+@api_router.get("/admin/inventory/{variant_id}/ledger", response_model=List[InventoryLedgerEntry], tags=["Admin - Inventory"])
+async def admin_get_inventory_ledger(
+    variant_id: str,
+    skip: int = 0,
+    limit: int = 100,
+    user_id: str = Depends(get_current_user_id)
+):
+    """Get inventory ledger history for a variant (Admin only)"""
+    # TODO: Add role check
+    db = get_database()
+    product_repo = ProductRepository(db)
+    ledger_repo = InventoryLedgerRepository(db)
+    mapping_repo = ChannelMappingRepository(db)
+    inventory_service = InventoryService(ledger_repo, product_repo, mapping_repo)
+    
+    history = await inventory_service.get_ledger_history(variant_id, skip, limit)
+    return [InventoryLedgerEntry(**entry) for entry in history]
+
+
+@api_router.post("/admin/inventory/adjust", response_model=InventoryStatus, tags=["Admin - Inventory"])
+async def admin_adjust_stock(
+    adjustment: StockAdjustment,
+    user_id: str = Depends(get_current_user_id)
+):
+    """Manually adjust stock levels (Admin only)"""
+    # TODO: Add role check
+    db = get_database()
+    product_repo = ProductRepository(db)
+    ledger_repo = InventoryLedgerRepository(db)
+    mapping_repo = ChannelMappingRepository(db)
+    inventory_service = InventoryService(ledger_repo, product_repo, mapping_repo)
+    
+    return await inventory_service.adjust_stock(adjustment, user_id)
+
+
+@api_router.post("/admin/external-orders/import", tags=["Admin - Inventory"])
+async def admin_import_external_order(
+    external_order: ExternalOrderImport,
+    user_id: str = Depends(get_current_user_id)
+):
+    """Import external order from another channel (Admin only)"""
+    # TODO: Add role check
+    db = get_database()
+    product_repo = ProductRepository(db)
+    ledger_repo = InventoryLedgerRepository(db)
+    mapping_repo = ChannelMappingRepository(db)
+    inventory_service = InventoryService(ledger_repo, product_repo, mapping_repo)
+    
+    return await inventory_service.import_external_order(external_order, user_id)
+
+
+@api_router.post("/admin/channel-mappings", tags=["Admin - Inventory"])
+async def admin_create_channel_mapping(
+    mapping: ChannelMappingCreate,
+    user_id: str = Depends(get_current_user_id)
+):
+    """Create a new channel mapping (Admin only)"""
+    # TODO: Add role check
+    db = get_database()
+    product_repo = ProductRepository(db)
+    ledger_repo = InventoryLedgerRepository(db)
+    mapping_repo = ChannelMappingRepository(db)
+    inventory_service = InventoryService(ledger_repo, product_repo, mapping_repo)
+    
+    return await inventory_service.create_channel_mapping(mapping)
+
+
+@api_router.get("/admin/channel-mappings/{channel}", tags=["Admin - Inventory"])
+async def admin_list_channel_mappings(
+    channel: str,
+    user_id: str = Depends(get_current_user_id)
+):
+    """List all channel mappings for a specific channel (Admin only)"""
+    # TODO: Add role check
+    db = get_database()
+    mapping_repo = ChannelMappingRepository(db)
+    
+    return await mapping_repo.list_by_channel(channel)
+
+
+@api_router.get("/admin/settings", response_model=BusinessSettings, tags=["Admin - Settings"])
+async def admin_get_settings(
+    user_id: str = Depends(get_current_user_id)
+):
+    """Get business settings (Admin only)"""
+    # TODO: Add role check
+    db = get_database()
+    settings_repo = SettingsRepository(db)
+    
+    settings_data = await settings_repo.get_settings()
+    return BusinessSettings(**settings_data)
+
+
+@api_router.put("/admin/settings", response_model=BusinessSettings, tags=["Admin - Settings"])
+async def admin_update_settings(
+    settings_update: BusinessSettings,
+    user_id: str = Depends(get_current_user_id)
+):
+    """Update business settings (Admin only)"""
+    # TODO: Add role check
+    db = get_database()
+    settings_repo = SettingsRepository(db)
+    
+    update_data = settings_update.model_dump()
+    await settings_repo.update_settings(update_data)
+    
+    updated_settings = await settings_repo.get_settings()
+    return BusinessSettings(**updated_settings)
+
+
+# ==================== SHOPEE WEBHOOK (STUB) ====================
+
+@api_router.post("/webhooks/shopee/orders", tags=["Webhooks"])
+async def shopee_order_webhook(request: dict):
+    """Shopee order webhook (Stub - disabled until keys provided)"""
+    logger.info(f"Shopee webhook received: {request}")
+    return {
+        "status": "received",
+        "message": "Webhook endpoint ready. Integration pending Shopee API keys."
+    }
+
+
+
 # Include router
 app.include_router(api_router)
 
