@@ -291,6 +291,21 @@ const ProductForm = () => {
     }));
   };
 
+  const deleteVariant = (index, variant) => {
+    const variantName = `${variant.attributes?.type || variant.type} ${variant.attributes?.color || variant.color} ${variant.attributes?.size_code || variant.size_code}`;
+    
+    if (!window.confirm(`Are you sure you want to delete variant "${variantName}" (SKU: ${variant.sku})? This action cannot be undone.`)) {
+      return;
+    }
+
+    setProduct(prev => ({
+      ...prev,
+      variants: prev.variants.filter((_, i) => i !== index)
+    }));
+    
+    toast.success(`Variant "${variantName}" removed successfully`);
+  };
+
   const removeVariant = (index) => {
     setProduct(prev => ({
       ...prev,
