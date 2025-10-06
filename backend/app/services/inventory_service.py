@@ -185,9 +185,19 @@ class InventoryService:
         allocated = variant.get('allocated', 0)
         
         if adjustment.adjustment_type == 'set':
+            if adjustment.on_hand_value is None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="on_hand_value is required for 'set' adjustment type"
+                )
             new_on_hand = adjustment.on_hand_value
             on_hand_change = new_on_hand - on_hand
         else:  # change
+            if adjustment.on_hand_change is None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="on_hand_change is required for 'change' adjustment type"
+                )
             on_hand_change = adjustment.on_hand_change
             new_on_hand = on_hand + on_hand_change
         
