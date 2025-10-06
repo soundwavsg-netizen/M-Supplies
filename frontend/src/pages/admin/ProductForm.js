@@ -480,7 +480,33 @@ const ProductForm = () => {
                 </Select>
               </div>
               <div>
-                <Label>Color *</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Color *</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAddColor(true)}
+                    className="text-teal-600 hover:text-teal-700"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Color
+                  </Button>
+                </div>
+                
+                {showAddColor ? (
+                  <div className="flex gap-2 mb-2">
+                    <Input
+                      value={newColorName}
+                      onChange={(e) => setNewColorName(e.target.value)}
+                      placeholder="Enter color name"
+                      onKeyPress={(e) => e.key === 'Enter' && addNewColor()}
+                    />
+                    <Button type="button" onClick={addNewColor} size="sm">Add</Button>
+                    <Button type="button" variant="outline" onClick={() => setShowAddColor(false)} size="sm">Cancel</Button>
+                  </div>
+                ) : null}
+                
                 <Select 
                   value={product.color} 
                   onValueChange={(value) => handleProductChange('color', value)}
@@ -489,12 +515,26 @@ const ProductForm = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="white">White</SelectItem>
-                    <SelectItem value="pastel pink">Pastel Pink</SelectItem>
-                    <SelectItem value="champagne pink">Champagne Pink</SelectItem>
-                    <SelectItem value="milktea">Milktea</SelectItem>
-                    <SelectItem value="black">Black</SelectItem>
-                    <SelectItem value="clear">Clear</SelectItem>
+                    {availableColors.map(color => (
+                      <div key={color} className="flex items-center justify-between group px-2 py-1.5 hover:bg-gray-50">
+                        <SelectItem value={color} className="flex-1 capitalize">
+                          {color}
+                        </SelectItem>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            deleteColor(color);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 text-red-500 hover:text-red-700 ml-2"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
