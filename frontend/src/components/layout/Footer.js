@@ -12,7 +12,7 @@ const Footer = () => {
           <div>
             <div className="flex items-center space-x-2 mb-4">
               <Package className="w-8 h-8" style={{ color: theme.colors.primary }} />
-              <span className="text-xl font-bold">PolyMailer</span>
+              <span className="text-xl font-bold">M Supplies</span>
             </div>
             <p className="text-gray-400 text-sm">
               Your trusted partner for high-quality polymailer bags. Fast shipping, competitive prices, and exceptional service.
