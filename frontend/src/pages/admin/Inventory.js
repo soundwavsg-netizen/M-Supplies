@@ -4,7 +4,8 @@ import { formatPrice } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Package, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Package, AlertTriangle, TrendingUp, Edit } from 'lucide-react';
+import StockAdjustmentModal from '@/components/admin/StockAdjustmentModal';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -12,6 +13,7 @@ const Inventory = () => {
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedVariant, setSelectedVariant] = useState(null);
 
   useEffect(() => {
     fetchInventory();
