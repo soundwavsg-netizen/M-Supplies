@@ -114,6 +114,50 @@ const ProductForm = () => {
     });
   };
 
+  const updateVariant = (index, field, value) => {
+    setProduct(prev => ({
+      ...prev,
+      variants: prev.variants.map((variant, i) => {
+        if (i === index) {
+          if (field === 'price') {
+            // Update price in price_tiers structure
+            const updatedVariant = { ...variant };
+            if (!updatedVariant.price_tiers) {
+              updatedVariant.price_tiers = [{ min_quantity: 1, price: value }];
+            } else {
+              updatedVariant.price_tiers = updatedVariant.price_tiers.map((tier, tierIndex) => 
+                tierIndex === 0 ? { ...tier, price: value } : tier
+              );
+            }
+            return updatedVariant;
+          } else if (['type', 'color', 'width_cm', 'height_cm'].includes(field)) {
+            // Update attributes
+            const updatedVariant = { ...variant };
+            if (!updatedVariant.attributes) {
+              updatedVariant.attributes = {};
+            }
+            updatedVariant.attributes = { ...updatedVariant.attributes, [field]: value };
+            
+            // Also update size_code if width or height changes
+            if (field === 'width_cm' || field === 'height_cm') {
+              const width = field === 'width_cm' ? value : updatedVariant.attributes.width_cm;
+              const height = field === 'height_cm' ? value : updatedVariant.attributes.height_cm;
+              if (width && height) {
+                updatedVariant.attributes.size_code = `${width}x${height}`;
+              }
+            }
+            
+            return updatedVariant;
+          } else {
+            // Update direct properties (like on_hand, safety_stock)
+            return { ...variant, [field]: value };
+          }
+        }
+        return variant;
+      })
+    }));
+  };
+
   const removeVariant = (index) => {
     setProduct(prev => ({
       ...prev,
