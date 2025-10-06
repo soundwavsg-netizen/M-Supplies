@@ -70,7 +70,7 @@ async def get_current_user_id(authorization: Optional[HTTPAuthorizationCredentia
     
     return user_id
 
-async def get_current_user_optional(authorization: Optional[HTTPAuthorizationCredential] = Depends(security)) -> Optional[str]:
+async def get_current_user_optional(authorization: Optional[HTTPAuthorizationCredentials] = Depends(security)) -> Optional[str]:
     """Extract user_id from JWT token, but allow None (for guest checkout)"""
     if not authorization:
         return None
