@@ -39,6 +39,27 @@ class ProductService:
         
         return product
     
+    async def list_products_filtered(self, filters: Optional[ProductFilters] = None, 
+                                   sort: Optional[ProductSortOptions] = None,
+                                   skip: int = 0, limit: int = 50) -> Dict[str, Any]:
+        """Get products with advanced filtering and sorting"""
+        products_data = await self.product_repo.list_products_filtered(filters, sort, skip, limit)
+        
+        # Get filter options for frontend
+        filter_options = await self.get_filter_options()
+        
+        return {
+            'products': products_data['products'],
+            'total': products_data['total'],
+            'page': (skip // limit) + 1,
+            'pages': (products_data['total'] + limit - 1) // limit,
+            'filter_options': filter_options
+        }
+    
+    async def get_filter_options(self) -> Dict[str, Any]:
+        """Get available filter options from existing products"""
+        return await self.product_repo.get_filter_options()
+    
     async def list_products(self, skip: int = 0, limit: int = 50, category: Optional[str] = None,
                            search: Optional[str] = None, is_active: Optional[bool] = None) -> List[Dict[str, Any]]:
         products = await self.product_repo.list_products(skip, limit, category, search, is_active)
