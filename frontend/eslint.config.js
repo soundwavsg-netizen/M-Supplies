@@ -1,10 +1,10 @@
-import js from '@eslint/js';
-import globals from 'globals';
-import react from 'eslint-plugin-react';
-import reactJSXA11y from 'eslint-plugin-jsx-a11y';
-import reactImport from 'eslint-plugin-import';
+const js = require('@eslint/js');
+const globals = require('globals');
+const react = require('eslint-plugin-react');
+const reactJSXA11y = require('eslint-plugin-jsx-a11y');
+const reactImport = require('eslint-plugin-import');
 
-export default [
+module.exports = [
   js.configs.recommended,
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
