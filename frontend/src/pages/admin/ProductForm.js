@@ -45,6 +45,27 @@ const ProductForm = () => {
     safety_stock: 0
   });
 
+  // Get pricing tiers based on product name/category
+  const getPricingTiers = () => {
+    const isAccessory = product.category === 'accessories';
+    const isPremiumPolymailer = product.name.toLowerCase().includes('premium') && product.category === 'polymailers';
+    
+    if (isAccessory) {
+      return [{ min_quantity: 1, price: '' }]; // Accessories sold individually
+    } else if (isPremiumPolymailer) {
+      return [
+        { min_quantity: 50, price: '' },
+        { min_quantity: 100, price: '' }
+      ]; // Premium polymailers: 50 and 100 pcs only
+    } else {
+      return [
+        { min_quantity: 25, price: '' },
+        { min_quantity: 50, price: '' },
+        { min_quantity: 100, price: '' }
+      ]; // Regular polymailers: 25, 50, 100 pcs
+    }
+  };
+
   useEffect(() => {
     if (isEdit) {
       fetchProduct();
