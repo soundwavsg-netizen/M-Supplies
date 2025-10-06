@@ -33,8 +33,6 @@ const ProductForm = () => {
   });
   
   const [newVariant, setNewVariant] = useState({
-    type: 'normal',
-    color: 'white',
     width_cm: '',
     height_cm: '',
     size_code: '',
