@@ -123,7 +123,12 @@ async def seed_database():
                         {'min_quantity': 5, 'price': round(pack_price * 0.95, 2)},  # 5% off for 5+ packs
                         {'min_quantity': 10, 'price': round(pack_price * 0.90, 2)}  # 10% off for 10+ packs
                     ],
-                    'stock_qty': 150,
+                    'stock_qty': 150,  # Legacy field
+                    'on_hand': 150,
+                    'allocated': 0,
+                    'safety_stock': 5,
+                    'low_stock_threshold': 10,
+                    'channel_buffers': {'website': 0, 'shopee': 2},
                     'cost_price': round(pack_price * 0.6, 2),
                     'created_at': datetime.now(timezone.utc)
                 }
