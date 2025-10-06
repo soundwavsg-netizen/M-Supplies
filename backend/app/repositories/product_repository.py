@@ -139,7 +139,13 @@ class ProductRepository:
                 'price_range': {
                     '$let': {
                         'vars': {
-                            'prices': '$variants.price_tiers.0.price'
+                            'prices': {
+                                '$map': {
+                                    'input': '$variants',
+                                    'as': 'variant',
+                                    'in': {'$arrayElemAt': ['$$variant.price_tiers.price', 0]}
+                                }
+                            }
                         },
                         'in': {
                             'min': {'$min': '$$prices'},
