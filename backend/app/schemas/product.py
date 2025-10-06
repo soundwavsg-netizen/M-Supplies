@@ -15,8 +15,15 @@ class VariantBase(BaseModel):
     sku: str
     attributes: VariantAttributes
     price_tiers: List[PriceTier]
-    stock_qty: int = 0
+    stock_qty: int = 0  # Legacy field, use on_hand instead
     cost_price: Optional[float] = None
+    
+    # Centralized inventory fields
+    on_hand: int = 0
+    allocated: int = 0
+    safety_stock: int = 0
+    low_stock_threshold: int = 10
+    channel_buffers: Dict[str, int] = {}
 
 class VariantCreate(VariantBase):
     pass
