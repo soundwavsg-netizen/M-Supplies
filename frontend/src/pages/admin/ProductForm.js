@@ -369,7 +369,7 @@ const ProductForm = () => {
                 <Label>Product Name *</Label>
                 <Input
                   value={product.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  onChange={(e) => handleProductChange('name', e.target.value)}
                   placeholder="e.g., Premium Polymailers"
                   required
                 />
