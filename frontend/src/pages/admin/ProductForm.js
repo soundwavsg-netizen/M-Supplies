@@ -388,26 +388,79 @@ const ProductForm = () => {
             {/* Existing Variants */}
             {product.variants.length > 0 && (
               <div className="space-y-2">
-                <h3 className="font-medium text-slate-900">Current Variants</h3>
+                <h3 className="font-medium text-slate-900">Current Variants - Click to Edit</h3>
                 {product.variants.map((variant, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-6 gap-2 text-sm">
-                      <span><strong>Type:</strong> {variant.attributes?.type || variant.type}</span>
-                      <span><strong>Color:</strong> {variant.attributes?.color || variant.color}</span>
-                      <span><strong>Size:</strong> {variant.attributes?.width_cm || variant.width_cm}×{variant.attributes?.height_cm || variant.height_cm} cm</span>
-                      <span><strong>Price:</strong> ${variant.price_tiers?.[0]?.price || variant.price}</span>
-                      <span><strong>Stock:</strong> {variant.on_hand}</span>
-                      <span><strong>SKU:</strong> {variant.sku}</span>
+                  <div key={variant.id || index} className="p-4 border rounded-lg bg-white">
+                    <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                      <div>
+                        <Label className="text-xs text-gray-600">Type</Label>
+                        <Input
+                          value={variant.attributes?.type || variant.type || ''}
+                          onChange={(e) => updateVariant(index, 'type', e.target.value)}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-600">Color</Label>
+                        <Input
+                          value={variant.attributes?.color || variant.color || ''}
+                          onChange={(e) => updateVariant(index, 'color', e.target.value)}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-600">Width (cm)</Label>
+                        <Input
+                          type="number"
+                          value={variant.attributes?.width_cm || variant.width_cm || ''}
+                          onChange={(e) => updateVariant(index, 'width_cm', parseInt(e.target.value))}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-600">Height (cm)</Label>
+                        <Input
+                          type="number"
+                          value={variant.attributes?.height_cm || variant.height_cm || ''}
+                          onChange={(e) => updateVariant(index, 'height_cm', parseInt(e.target.value))}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-600">Price ($)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={variant.price_tiers?.[0]?.price || variant.price || ''}
+                          onChange={(e) => updateVariant(index, 'price', parseFloat(e.target.value))}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-600">Stock</Label>
+                        <div className="flex gap-1">
+                          <Input
+                            type="number"
+                            value={variant.on_hand || ''}
+                            onChange={(e) => updateVariant(index, 'on_hand', parseInt(e.target.value))}
+                            className="text-sm"
+                            placeholder="Stock"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeVariant(index)}
+                            className="text-red-600 hover:text-red-700 px-2"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeVariant(index)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
+                    <div className="mt-2 text-xs text-gray-500">
+                      <strong>SKU:</strong> {variant.sku}
+                    </div>
                   </div>
                 ))}
               </div>
