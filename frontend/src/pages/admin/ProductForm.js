@@ -22,6 +22,8 @@ const ProductForm = () => {
     name: '',
     description: '',
     category: 'polymailers',
+    color: 'white', // Color is now at product level
+    type: 'normal', // Type is also at product level
     specifications: {},
     seo_title: '',
     seo_description: '',
