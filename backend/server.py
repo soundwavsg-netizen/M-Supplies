@@ -11,7 +11,7 @@ from app.core.security import get_current_user_id, get_current_user_optional
 
 # Schemas
 from app.schemas.user import UserCreate, UserLogin, TokenResponse, UserResponse, UserUpdate
-from app.schemas.product import ProductCreate, ProductUpdate, ProductResponse, ProductListItem
+from app.schemas.product import ProductCreate, ProductUpdate, ProductResponse, ProductListItem, ProductListRequest
 from app.schemas.cart import AddToCartRequest, UpdateCartItemRequest, CartResponse
 from app.schemas.order import OrderCreate, OrderResponse, OrderStatusUpdate
 from app.schemas.coupon import CouponCreate, CouponUpdate, CouponResponse, CouponValidation
