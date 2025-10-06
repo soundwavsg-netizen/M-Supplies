@@ -230,18 +230,13 @@ const ProductForm = () => {
       variants: [...prev.variants, variant]
     }));
 
-    // Reset form
+    // Reset form (no color/type since they're at product level)
+    const newPriceTiers = getPricingTiers();
     setNewVariant({
-      type: 'normal',
-      color: 'white',
       width_cm: '',
       height_cm: '',
       size_code: '',
-      price_tiers: [
-        { min_quantity: 25, price: '' },
-        { min_quantity: 50, price: '' },
-        { min_quantity: 100, price: '' }
-      ],
+      price_tiers: newPriceTiers,
       on_hand: '',
       safety_stock: 0
     });
