@@ -215,12 +215,13 @@ const Promotions = () => {
             />
           </div>
           <div>
-            <Label htmlFor="valid_to">Valid To Date (Optional)</Label>
+            <Label htmlFor="valid_to">Valid To Date *</Label>
             <Input
               id="valid_to"
               type="date"
               value={formData.valid_to}
               onChange={(e) => setFormData(prev => ({ ...prev, valid_to: e.target.value }))}
+              required
             />
           </div>
         </div>
