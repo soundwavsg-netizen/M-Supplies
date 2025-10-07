@@ -124,23 +124,24 @@ const ProductForm = () => {
     }
   };
 
-  const updateSettings = async (colors, types) => {
+  const updateSettings = async (colors, types, categories) => {
     try {
       // Get current settings first
       const response = await adminSettingsAPI.get();
       const currentSettings = response.data;
       
-      // Update with new colors and types
+      // Update with new colors, types, and categories
       const updatedSettings = {
         ...currentSettings,
         available_colors: colors,
-        available_types: types
+        available_types: types,
+        available_categories: categories
       };
       
       await adminSettingsAPI.update(updatedSettings);
     } catch (err) {
       console.error('Failed to update settings:', err);
-      toast.error('Failed to save color/type changes');
+      toast.error('Failed to save changes');
     }
   };
 
