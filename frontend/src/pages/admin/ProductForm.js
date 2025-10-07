@@ -36,10 +36,13 @@ const ProductForm = () => {
   // Dynamic options management
   const [availableColors, setAvailableColors] = useState([]);
   const [availableTypes, setAvailableTypes] = useState([]);
+  const [availableCategories, setAvailableCategories] = useState([]);
   const [showAddColor, setShowAddColor] = useState(false);
   const [showAddType, setShowAddType] = useState(false);
+  const [showAddCategory, setShowAddCategory] = useState(false);
   const [newColorName, setNewColorName] = useState('');
   const [newTypeName, setNewTypeName] = useState('');
+  const [newCategoryName, setNewCategoryName] = useState('');
   
   const [newVariant, setNewVariant] = useState({
     width_cm: '',
