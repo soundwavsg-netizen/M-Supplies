@@ -13,6 +13,7 @@ class VariantAttributes(BaseModel):
     size_code: str  # e.g., "25x35", "17x30" 
     type: str  # "normal" or "bubble wrap"
     color: str  # e.g., "white", "pastel pink", "champagne pink", "milktea"
+    pack_size: int  # Number of pieces per pack - part of variant identity
     
     # Optional legacy fields
     thickness: Optional[str] = None  # e.g., "60 micron"
