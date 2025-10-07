@@ -189,7 +189,9 @@ const ProductForm = () => {
       
       toast.success(`${newImageUrls.length} image(s) uploaded successfully`);
     } catch (err) {
-      toast.error('Failed to upload images');
+      console.error('Image upload error:', err);
+      console.error('Error response:', err.response?.data);
+      toast.error(`Failed to upload images: ${err.response?.data?.detail || err.message}`);
     } finally {
       setImageUploading(false);
     }
