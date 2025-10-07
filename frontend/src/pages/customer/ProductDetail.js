@@ -159,16 +159,17 @@ const ProductDetail = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {product.variants.map((variant) => {
-                          const width = variant.attributes?.width_cm;
-                          const height = variant.attributes?.height_cm;
+                          const width = variant.attributes?.width_cm || variant.width_cm;
+                          const height = variant.attributes?.height_cm || variant.height_cm;
                           const size = variant.attributes?.size_code || `${width}×${height} cm`;
                           const packSize = variant.attributes?.pack_size || variant.pack_size || 50;
-                          const isOutOfStock = (variant.on_hand || variant.stock_qty || 0) === 0;
+                          const availableStock = variant.available || (variant.on_hand || variant.stock_qty || 0) - (variant.allocated || 0) - (variant.safety_stock || 0);
+                          const isOutOfStock = availableStock <= 0;
                           
                           return (
                             <SelectItem key={variant.id} value={variant.id}>
                               {size} - {packSize} {product.type === 'bubble wrap' ? 'pieces' : 'pcs/pack'}
-                              {isOutOfStock && ' (Out of Stock)'}
+                              {isOutOfStock ? ' (Out of Stock)' : ` (${availableStock} available)`}
                             </SelectItem>
                           );
                         })}
