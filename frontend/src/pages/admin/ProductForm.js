@@ -34,12 +34,8 @@ const ProductForm = () => {
   });
 
   // Dynamic options management
-  const [availableColors, setAvailableColors] = useState([
-    'white', 'pastel pink', 'champagne pink', 'milktea', 'black', 'clear'
-  ]);
-  const [availableTypes, setAvailableTypes] = useState([
-    'normal', 'bubble wrap', 'tool', 'consumable'
-  ]);
+  const [availableColors, setAvailableColors] = useState([]);
+  const [availableTypes, setAvailableTypes] = useState([]);
   const [showAddColor, setShowAddColor] = useState(false);
   const [showAddType, setShowAddType] = useState(false);
   const [newColorName, setNewColorName] = useState('');
