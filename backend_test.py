@@ -2908,16 +2908,19 @@ class BackendTester:
                 self.log_test("Test Product Cleanup", False, f"Exception during cleanup: {str(e)}")
 
 async def main():
-    """Run backend tests focused on safety stock management"""
-    print("🚀 Starting M Supplies Backend API Tests - Safety Stock Management")
+    """Run backend tests focused on duplicate categories issue"""
+    print("🚀 Starting M Supplies Backend API Tests - Duplicate Categories Investigation")
     print(f"Testing against: {API_BASE}")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Safety stock management functionality (as specifically requested)
-        await tester.test_safety_stock_management()
+        # PRIORITY TEST: Duplicate categories issue investigation (as specifically requested)
+        await tester.test_duplicate_categories_issue()
+        
+        # Additional test: Filter options endpoint
+        await tester.test_filter_options_endpoint()
         
         # Print summary
         passed, failed = tester.print_summary()
