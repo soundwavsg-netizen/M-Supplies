@@ -117,9 +117,7 @@ export const adminUsersAPI = {
 
 // Admin - Upload
 export const adminUploadAPI = {
-  images: (formData) => api.post('/admin/upload/images', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
+  images: (formData) => api.post('/admin/upload/images', formData),
 };
 
 // Admin - Settings
