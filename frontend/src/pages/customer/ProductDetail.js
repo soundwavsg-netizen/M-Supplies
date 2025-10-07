@@ -40,13 +40,20 @@ const ProductDetail = () => {
   };
 
   const handleAddToCart = async () => {
-    if (!selectedVariant) return;
+    if (!selectedVariant) {
+      toast.error('Please select a variant');
+      return;
+    }
+    
     try {
       setAdding(true);
+      console.log('Adding to cart:', { variantId: selectedVariant.id, quantity });
       await addToCart(selectedVariant.id, quantity);
+      toast.success(`Added ${quantity} item${quantity > 1 ? 's' : ''} to cart!`);
       navigate('/cart');
     } catch (error) {
       console.error('Error adding to cart:', error);
+      toast.error(error.response?.data?.detail || 'Failed to add to cart. Please try again.');
     } finally {
       setAdding(false);
     }
