@@ -224,6 +224,12 @@ async def seed_database():
             'shopee': 2,
             'lazada': 2
         },
+        'available_colors': [
+            'white', 'pastel pink', 'champagne pink', 'milktea', 'black', 'clear'
+        ],
+        'available_types': [
+            'normal', 'bubble wrap', 'tool', 'consumable'
+        ],
         'created_at': datetime.now(timezone.utc)
     }
     await db.settings.insert_one(settings)
