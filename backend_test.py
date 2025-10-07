@@ -2436,6 +2436,196 @@ class BackendTester:
         
         print("\n✅ Safety Stock Management Testing Complete")
     
+    async def test_packing_interface_inventory_loading(self):
+        """Test the specific packing interface inventory loading issue"""
+        print("\n📦 Testing Packing Interface Inventory Loading Issue...")
+        
+        if not self.admin_token:
+            self.log_test("Packing Interface Inventory Test", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Test 1: Admin Inventory API - Basic functionality
+        try:
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    self.log_test("Admin Inventory API - Basic Access", True, 
+                                f"Status 200 OK - Retrieved {len(data)} inventory items")
+                    
+                    # Test 2: API Response Format - Check structure
+                    if data:
+                        first_item = data[0]
+                        required_fields = [
+                            'variant_id', 'sku', 'product_name', 'on_hand', 
+                            'allocated', 'available', 'safety_stock', 
+                            'low_stock_threshold', 'is_low_stock'
+                        ]
+                        
+                        missing_fields = [field for field in required_fields if field not in first_item]
+                        
+                        if not missing_fields:
+                            self.log_test("Admin Inventory API - Response Format", True, 
+                                        "All required fields present in response")
+                            
+                            # Log sample data structure for debugging
+                            sample_item = {
+                                'variant_id': first_item.get('variant_id'),
+                                'sku': first_item.get('sku'),
+                                'product_name': first_item.get('product_name'),
+                                'on_hand': first_item.get('on_hand'),
+                                'available': first_item.get('available'),
+                                'safety_stock': first_item.get('safety_stock')
+                            }
+                            self.log_test("Sample Inventory Item Structure", True, 
+                                        f"Sample: {sample_item}")
+                        else:
+                            self.log_test("Admin Inventory API - Response Format", False, 
+                                        f"Missing required fields: {missing_fields}")
+                    else:
+                        self.log_test("Admin Inventory API - Response Content", False, 
+                                    "Empty inventory response - no items found")
+                        
+                elif resp.status == 401:
+                    error_text = await resp.text()
+                    self.log_test("Admin Inventory API - Authentication", False, 
+                                f"401 Unauthorized: {error_text}")
+                elif resp.status == 403:
+                    error_text = await resp.text()
+                    self.log_test("Admin Inventory API - Authorization", False, 
+                                f"403 Forbidden: {error_text}")
+                elif resp.status == 500:
+                    error_text = await resp.text()
+                    self.log_test("Admin Inventory API - Server Error", False, 
+                                f"500 Internal Server Error: {error_text}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Admin Inventory API - Basic Access", False, 
+                                f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Admin Inventory API - Basic Access", False, f"Exception: {str(e)}")
+            return
+        
+        # Test 3: Authentication Requirements - Test without token
+        try:
+            async with self.session.get(f"{API_BASE}/admin/inventory") as resp:
+                if resp.status == 401:
+                    self.log_test("Admin Inventory API - Auth Required", True, 
+                                "Correctly requires authentication (401 without token)")
+                else:
+                    self.log_test("Admin Inventory API - Auth Required", False, 
+                                f"Expected 401, got {resp.status} - authentication not properly enforced")
+        except Exception as e:
+            self.log_test("Admin Inventory API - Auth Required", False, f"Exception: {str(e)}")
+        
+        # Test 4: Test with invalid token
+        try:
+            invalid_headers = {"Authorization": "Bearer invalid_token_12345"}
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=invalid_headers) as resp:
+                if resp.status == 401:
+                    self.log_test("Admin Inventory API - Invalid Token", True, 
+                                "Correctly rejects invalid token (401)")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Admin Inventory API - Invalid Token", False, 
+                                f"Expected 401, got {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Admin Inventory API - Invalid Token", False, f"Exception: {str(e)}")
+        
+        # Test 5: Check for specific error patterns that might cause "Failed to load inventory"
+        try:
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                response_text = await resp.text()
+                
+                # Check for common error patterns
+                error_patterns = [
+                    "Internal Server Error",
+                    "Database connection",
+                    "MongoDB",
+                    "Timeout",
+                    "ValidationError",
+                    "KeyError",
+                    "AttributeError"
+                ]
+                
+                found_errors = [pattern for pattern in error_patterns if pattern.lower() in response_text.lower()]
+                
+                if found_errors:
+                    self.log_test("Admin Inventory API - Error Pattern Detection", False, 
+                                f"Found error patterns: {found_errors}")
+                else:
+                    self.log_test("Admin Inventory API - Error Pattern Detection", True, 
+                                "No common error patterns detected in response")
+                    
+        except Exception as e:
+            self.log_test("Admin Inventory API - Error Pattern Detection", False, f"Exception: {str(e)}")
+        
+        # Test 6: Test response time (packing interface might timeout)
+        import time
+        try:
+            start_time = time.time()
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                end_time = time.time()
+                response_time = end_time - start_time
+                
+                if response_time < 5.0:  # Less than 5 seconds
+                    self.log_test("Admin Inventory API - Response Time", True, 
+                                f"Response time: {response_time:.2f}s (acceptable)")
+                else:
+                    self.log_test("Admin Inventory API - Response Time", False, 
+                                f"Response time: {response_time:.2f}s (too slow, may cause timeouts)")
+                    
+        except Exception as e:
+            self.log_test("Admin Inventory API - Response Time", False, f"Exception: {str(e)}")
+        
+        # Test 7: Check if inventory data is consistent with products
+        if self.admin_token:
+            try:
+                # Get inventory
+                async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as inv_resp:
+                    if inv_resp.status == 200:
+                        inventory_data = await inv_resp.json()
+                        
+                        # Get products
+                        async with self.session.get(f"{API_BASE}/products") as prod_resp:
+                            if prod_resp.status == 200:
+                                products_data = await prod_resp.json()
+                                
+                                # Check consistency
+                                inventory_variant_ids = set(item.get('variant_id') for item in inventory_data)
+                                product_variant_ids = set()
+                                
+                                for product in products_data:
+                                    for variant in product.get('variants', []):
+                                        product_variant_ids.add(variant.get('id'))
+                                
+                                missing_in_inventory = product_variant_ids - inventory_variant_ids
+                                extra_in_inventory = inventory_variant_ids - product_variant_ids
+                                
+                                if not missing_in_inventory and not extra_in_inventory:
+                                    self.log_test("Inventory-Product Consistency", True, 
+                                                "Inventory and product variants are consistent")
+                                else:
+                                    issues = []
+                                    if missing_in_inventory:
+                                        issues.append(f"Missing in inventory: {len(missing_in_inventory)} variants")
+                                    if extra_in_inventory:
+                                        issues.append(f"Extra in inventory: {len(extra_in_inventory)} variants")
+                                    
+                                    self.log_test("Inventory-Product Consistency", False, 
+                                                f"Inconsistencies found: {'; '.join(issues)}")
+                            else:
+                                self.log_test("Inventory-Product Consistency", False, 
+                                            f"Could not fetch products for consistency check: {prod_resp.status}")
+                    else:
+                        self.log_test("Inventory-Product Consistency", False, 
+                                    f"Could not fetch inventory for consistency check: {inv_resp.status}")
+                        
+            except Exception as e:
+                self.log_test("Inventory-Product Consistency", False, f"Exception: {str(e)}")
+
     def print_summary(self):
         """Print test summary"""
         print("\n" + "="*60)
