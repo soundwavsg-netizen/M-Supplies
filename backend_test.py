@@ -6264,19 +6264,28 @@ class BackendTester:
                     "Identified schema mismatch between user data and backend expectations")
 
 async def main():
-    """Run backend tests focused on Champagne Pink Product Pricing Issue"""
-    print("🚀 Starting M Supplies Backend API Tests - Champagne Pink Product Pricing Fix")
+    """Run backend tests focused on Coupon Creation Validation Debug"""
+    print("🚀 Starting M Supplies Backend API Tests - Coupon Creation Debug")
     print(f"Testing against: {API_BASE}")
-    print("🎯 FOCUS: Fixing champagne pink product pricing issue")
-    print("User Issue: When selecting a variant for champagne pink product, the price is not shown")
-    print("Solution: Remove all $0.0 values from price_tiers and apply the same fix as Baby Blue and Apricot")
+    print("🎯 FOCUS: Debug coupon creation validation error")
+    print("User Issue: Getting 'field required, field required, field required' when creating coupon")
+    print("Sample data causing error:")
+    print(json.dumps({
+        "code": "VIP10",
+        "description": "VIP Customer 10% Discount", 
+        "discount_type": "percentage",
+        "discount_value": 10,
+        "usage_type": "unlimited",
+        "minimum_order_amount": 0,
+        "is_active": True
+    }, indent=2))
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Fix champagne pink pricing issue
-        await tester.test_champagne_pink_pricing_fix()
+        # PRIORITY TEST: Debug coupon creation validation error
+        await tester.test_coupon_creation_validation_debug()
         
         # Print summary
         passed, failed = tester.print_summary()
