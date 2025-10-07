@@ -950,33 +950,49 @@ const ProductForm = () => {
 
                 <div>
                   <Label>
-                    {product.type === 'bubble wrap' ? 'Quantity Options' : 'Pack Size (pcs)'} *
+                    {product.type === 'bubble wrap' ? 'Quantity Options' : 'Pack Sizes'} *
                   </Label>
-                  <Select 
-                    value={newVariant.pack_size?.toString()} 
-                    onValueChange={(value) => handleVariantChange('pack_size', parseInt(value))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {product.type === 'bubble wrap' ? (
-                        // For bubble wrap, show individual piece quantities
-                        availablePieceQuantities.map(qty => (
+                  {product.type === 'bubble wrap' ? (
+                    <Select 
+                      value={newVariant.selected_pack_sizes?.[0]?.toString() || ''} 
+                      onValueChange={(value) => handleVariantChange('selected_pack_sizes', [parseInt(value)])}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select quantity" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availablePieceQuantities.map(qty => (
                           <SelectItem key={qty} value={qty.toString()}>
                             {qty === 1 ? '1 piece' : `${qty} pieces`}
                           </SelectItem>
-                        ))
-                      ) : (
-                        // For regular products, show pack sizes
-                        availablePackSizes.map(size => (
-                          <SelectItem key={size} value={size.toString()}>
-                            {size} pieces per pack
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-xs text-gray-600">Select pack sizes (each creates a separate variant with its own stock):</p>
+                      <div className="flex flex-wrap gap-2">
+                        {availablePackSizes.map(size => (
+                          <label key={size} className="flex items-center space-x-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={newVariant.selected_pack_sizes?.includes(size) || false}
+                              onChange={(e) => {
+                                const currentSizes = newVariant.selected_pack_sizes || [];
+                                if (e.target.checked) {
+                                  handleVariantChange('selected_pack_sizes', [...currentSizes, size]);
+                                } else {
+                                  handleVariantChange('selected_pack_sizes', currentSizes.filter(s => s !== size));
+                                }
+                              }}
+                              className="rounded border-gray-300"
+                            />
+                            <span className="text-sm">{size} pcs/pack</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {product.type === 'bubble wrap' && (
                     <p className="text-xs text-blue-600 mt-1">💧 Bubble wrap sold by individual pieces</p>
                   )}
