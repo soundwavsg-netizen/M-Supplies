@@ -22,7 +22,6 @@ class VariantBase(BaseModel):
     sku: str
     attributes: VariantAttributes
     price_tiers: List[PriceTier]
-    pack_size: int = 50  # Number of pieces per pack (50, 100, etc.) - For bubble wrap, this represents individual pieces
     stock_qty: int = 0  # Legacy field, use on_hand instead
     cost_price: Optional[float] = None
     
