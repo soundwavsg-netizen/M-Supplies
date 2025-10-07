@@ -990,7 +990,7 @@ const ProductForm = () => {
                         <h4 className="font-medium text-slate-700">{variantTitle}</h4>
                         <span className="text-xs text-gray-500">SKU: {variant.sku || 'Auto-generated'}</span>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div>
                         <Label className="text-xs text-gray-600">Width (cm)</Label>
                         <Input
