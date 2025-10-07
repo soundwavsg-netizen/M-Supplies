@@ -330,13 +330,13 @@ const PackingInterface = () => {
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex gap-1">
                       {isLowStock && (
-                        <Badge variant="destructive" className="text-xs px-1">
+                        <Badge variant="destructive" className="text-xs px-2 py-1 shadow-md">
                           <AlertTriangle className="w-3 h-3 mr-1" />
                           Low
                         </Badge>
                       )}
                       {isWarningStock && (
-                        <Badge variant="secondary" className="text-xs px-1 bg-yellow-100 text-yellow-800">
+                        <Badge variant="secondary" className="text-xs px-2 py-1 bg-yellow-200 text-yellow-900 shadow-md">
                           Warning
                         </Badge>
                       )}
