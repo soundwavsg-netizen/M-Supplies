@@ -798,8 +798,9 @@ async def serve_image(filename: str):
     )
 
 
-# Include router
+# Include routers
 app.include_router(api_router)
+app.include_router(promotion.router, prefix="/api")
 
 # Serve uploaded files
 import os
