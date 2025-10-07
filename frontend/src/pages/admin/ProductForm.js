@@ -619,11 +619,12 @@ const ProductForm = () => {
                 </Select>
                 
                 {/* Category Management */}
-                {availableCategories.length > 0 && (
+                {Array.isArray(availableCategories) && availableCategories.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     <span className="text-xs text-gray-500">Manage categories:</span>
                     {availableCategories.map(category => {
-                      const categoryStr = typeof category === 'string' ? category : String(category);
+                      const categoryStr = typeof category === 'string' ? category : String(category || '');
+                      if (!categoryStr) return null;
                       return (
                         <div key={categoryStr} className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs">
                           <span className="capitalize">{categoryStr.replace(/([a-z])([A-Z])/g, '$1 $2')}</span>
