@@ -346,13 +346,13 @@ test_plan:
           agent: "testing"
           comment: "✅ VARIANT COLLECTION MANAGEMENT FULLY FUNCTIONAL: Comprehensive testing of variant array operations completed. ✅ Variant deletion working correctly (old variants properly removed) ✅ Variant addition working correctly (new variants properly created) ✅ Complete variant replacement working (old variants deleted, new ones created) ✅ All variant changes persist correctly ✅ Variant count changes as expected. The backend properly handles all variant collection operations."
 
-  - task: "Dynamic Color and Type Management"
+  - task: "Simplified Variant Creation Process"
     implemented: true
     working: true
     file: "ProductForm.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: "NA"
           agent: "main"
