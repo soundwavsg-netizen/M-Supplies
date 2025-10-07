@@ -1115,7 +1115,7 @@ const ProductForm = () => {
                           {product.type === 'bubble wrap' ? 'Quantity' : 'Pack Size'}
                         </Label>
                         <Select 
-                          value={(variant.pack_size || (product.type === 'bubble wrap' ? 1 : 50)).toString()} 
+                          value={(variant.attributes?.pack_size || variant.pack_size || (product.type === 'bubble wrap' ? 1 : 50)).toString()} 
                           onValueChange={(value) => updateVariant(index, 'pack_size', parseInt(value))}
                         >
                           <SelectTrigger className="text-sm">
