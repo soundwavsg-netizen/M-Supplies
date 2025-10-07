@@ -1240,6 +1240,327 @@ class BackendTester:
         except Exception as e:
             self.log_test("Filtered Products API", False, f"Exception: {str(e)}")
 
+    async def test_cart_api_endpoints(self):
+        """Test cart API endpoints comprehensively"""
+        print("\n🛒 Testing Cart API Endpoints...")
+        
+        # Step 1: Test Baby Blue variant ID specifically
+        baby_blue_variant_id = "612cad49-659f-4add-8084-595a9340b31b"
+        
+        # First, verify if this variant exists
+        await self._test_variant_exists(baby_blue_variant_id)
+        
+        # Test cart endpoints
+        await self._test_add_to_cart_endpoint()
+        await self._test_get_cart_endpoint()
+        await self._test_update_cart_endpoint()
+        await self._test_clear_cart_endpoint()
+        
+        # Test specific Baby Blue variant
+        await self._test_baby_blue_cart_scenario()
+    
+    async def _test_variant_exists(self, variant_id: str):
+        """Check if the Baby Blue variant exists in the database"""
+        try:
+            # Try to find the variant by searching all products
+            async with self.session.post(f"{API_BASE}/products/filter", json={"page": 1, "limit": 100}) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    products = data.get('products', [])
+                    
+                    variant_found = False
+                    for product in products:
+                        for variant in product.get('variants', []):
+                            if variant.get('id') == variant_id:
+                                variant_found = True
+                                self.log_test("Baby Blue Variant Exists", True, 
+                                            f"Found in product: {product.get('name')}, SKU: {variant.get('sku')}")
+                                
+                                # Log variant details
+                                attributes = variant.get('attributes', {})
+                                stock_info = f"on_hand: {variant.get('on_hand', 0)}, stock_qty: {variant.get('stock_qty', 0)}"
+                                self.log_test("Baby Blue Variant Details", True, 
+                                            f"Color: {attributes.get('color')}, Size: {attributes.get('size_code')}, Stock: {stock_info}")
+                                break
+                        if variant_found:
+                            break
+                    
+                    if not variant_found:
+                        self.log_test("Baby Blue Variant Exists", False, f"Variant ID {variant_id} not found in any product")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Variant Search", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Variant Search", False, f"Exception: {str(e)}")
+    
+    async def _test_add_to_cart_endpoint(self):
+        """Test POST /api/cart/add endpoint"""
+        print("\n  Testing Add to Cart Endpoint...")
+        
+        # Test 1: Add to cart without authentication (guest user)
+        test_payload = {
+            "variant_id": "612cad49-659f-4add-8084-595a9340b31b",
+            "quantity": 4
+        }
+        
+        headers = {"X-Session-ID": "test-session-123"}
+        
+        try:
+            async with self.session.post(f"{API_BASE}/cart/add", json=test_payload, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 200:
+                    data = await resp.json()
+                    self.log_test("Add to Cart - Guest User", True, f"Cart created with {len(data.get('items', []))} items")
+                    
+                    # Verify response structure
+                    required_fields = ['id', 'items', 'subtotal', 'gst', 'total']
+                    missing_fields = [field for field in required_fields if field not in data]
+                    
+                    if not missing_fields:
+                        self.log_test("Add to Cart Response Structure", True, "All required fields present")
+                    else:
+                        self.log_test("Add to Cart Response Structure", False, f"Missing fields: {missing_fields}")
+                    
+                elif resp.status == 404:
+                    self.log_test("Add to Cart - Guest User", False, f"Variant not found: {response_text}")
+                elif resp.status == 400:
+                    self.log_test("Add to Cart - Guest User", False, f"Bad request: {response_text}")
+                elif resp.status == 500:
+                    self.log_test("Add to Cart - Guest User", False, f"CRITICAL: Server error 500: {response_text}")
+                    
+                    # Log detailed error for debugging
+                    print(f"    🚨 DETAILED ERROR: {response_text}")
+                else:
+                    self.log_test("Add to Cart - Guest User", False, f"Status {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("Add to Cart - Guest User", False, f"Exception: {str(e)}")
+        
+        # Test 2: Add to cart with authentication
+        if self.customer_token:
+            headers_auth = {
+                "Authorization": f"Bearer {self.customer_token}",
+                "X-Session-ID": "test-session-auth-123"
+            }
+            
+            try:
+                async with self.session.post(f"{API_BASE}/cart/add", json=test_payload, headers=headers_auth) as resp:
+                    response_text = await resp.text()
+                    
+                    if resp.status == 200:
+                        data = await resp.json()
+                        self.log_test("Add to Cart - Authenticated User", True, f"Cart created with {len(data.get('items', []))} items")
+                    elif resp.status == 500:
+                        self.log_test("Add to Cart - Authenticated User", False, f"CRITICAL: Server error 500: {response_text}")
+                    else:
+                        self.log_test("Add to Cart - Authenticated User", False, f"Status {resp.status}: {response_text}")
+                        
+            except Exception as e:
+                self.log_test("Add to Cart - Authenticated User", False, f"Exception: {str(e)}")
+        
+        # Test 3: Test with different variant (if Baby Blue fails)
+        await self._test_add_to_cart_with_different_variant()
+    
+    async def _test_add_to_cart_with_different_variant(self):
+        """Test add to cart with a different variant to isolate the issue"""
+        try:
+            # Get any available variant from products
+            async with self.session.post(f"{API_BASE}/products/filter", json={"page": 1, "limit": 5}) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    products = data.get('products', [])
+                    
+                    if products and products[0].get('variants'):
+                        test_variant = products[0]['variants'][0]
+                        test_variant_id = test_variant.get('id')
+                        
+                        if test_variant_id:
+                            test_payload = {
+                                "variant_id": test_variant_id,
+                                "quantity": 1
+                            }
+                            
+                            headers = {"X-Session-ID": "test-session-different-variant"}
+                            
+                            async with self.session.post(f"{API_BASE}/cart/add", json=test_payload, headers=headers) as cart_resp:
+                                response_text = await cart_resp.text()
+                                
+                                if cart_resp.status == 200:
+                                    self.log_test("Add to Cart - Different Variant", True, f"Successfully added variant {test_variant_id}")
+                                elif cart_resp.status == 500:
+                                    self.log_test("Add to Cart - Different Variant", False, f"Server error with different variant: {response_text}")
+                                else:
+                                    self.log_test("Add to Cart - Different Variant", False, f"Status {cart_resp.status}: {response_text}")
+                        else:
+                            self.log_test("Add to Cart - Different Variant", False, "No variant ID found")
+                    else:
+                        self.log_test("Add to Cart - Different Variant", False, "No products with variants found")
+                else:
+                    self.log_test("Add to Cart - Different Variant", False, f"Failed to get products: {resp.status}")
+        except Exception as e:
+            self.log_test("Add to Cart - Different Variant", False, f"Exception: {str(e)}")
+    
+    async def _test_get_cart_endpoint(self):
+        """Test GET /api/cart endpoint"""
+        print("\n  Testing Get Cart Endpoint...")
+        
+        headers = {"X-Session-ID": "test-session-123"}
+        
+        try:
+            async with self.session.get(f"{API_BASE}/cart", headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 200:
+                    data = await resp.json()
+                    self.log_test("Get Cart", True, f"Retrieved cart with {len(data.get('items', []))} items")
+                elif resp.status == 500:
+                    self.log_test("Get Cart", False, f"Server error: {response_text}")
+                else:
+                    self.log_test("Get Cart", False, f"Status {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("Get Cart", False, f"Exception: {str(e)}")
+    
+    async def _test_update_cart_endpoint(self):
+        """Test PUT /api/cart/item/{variant_id} endpoint"""
+        print("\n  Testing Update Cart Item Endpoint...")
+        
+        # This test requires an existing cart item, so we'll test the endpoint structure
+        test_variant_id = "612cad49-659f-4add-8084-595a9340b31b"
+        headers = {"X-Session-ID": "test-session-123"}
+        update_payload = {"quantity": 2}
+        
+        try:
+            async with self.session.put(f"{API_BASE}/cart/item/{test_variant_id}", 
+                                      json=update_payload, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 200:
+                    self.log_test("Update Cart Item", True, "Cart item updated successfully")
+                elif resp.status == 404:
+                    self.log_test("Update Cart Item", True, "Expected 404 - item not in cart (endpoint working)")
+                elif resp.status == 500:
+                    self.log_test("Update Cart Item", False, f"Server error: {response_text}")
+                else:
+                    self.log_test("Update Cart Item", False, f"Status {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("Update Cart Item", False, f"Exception: {str(e)}")
+    
+    async def _test_clear_cart_endpoint(self):
+        """Test DELETE /api/cart endpoint"""
+        print("\n  Testing Clear Cart Endpoint...")
+        
+        headers = {"X-Session-ID": "test-session-123"}
+        
+        try:
+            async with self.session.delete(f"{API_BASE}/cart", headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 200:
+                    self.log_test("Clear Cart", True, "Cart cleared successfully")
+                elif resp.status == 500:
+                    self.log_test("Clear Cart", False, f"Server error: {response_text}")
+                else:
+                    self.log_test("Clear Cart", False, f"Status {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("Clear Cart", False, f"Exception: {str(e)}")
+    
+    async def _test_baby_blue_cart_scenario(self):
+        """Test the specific Baby Blue cart scenario reported by user"""
+        print("\n  Testing Baby Blue Cart Scenario...")
+        
+        # Exact payload from user report
+        baby_blue_payload = {
+            "variant_id": "612cad49-659f-4add-8084-595a9340b31b",
+            "quantity": 4
+        }
+        
+        # Test different session scenarios
+        test_scenarios = [
+            ("Guest User", {"X-Session-ID": "baby-blue-test-session"}),
+            ("No Session Header", {}),
+            ("Different Session", {"X-Session-ID": "different-session-id"})
+        ]
+        
+        if self.customer_token:
+            test_scenarios.append(("Authenticated User", {
+                "Authorization": f"Bearer {self.customer_token}",
+                "X-Session-ID": "auth-baby-blue-session"
+            }))
+        
+        for scenario_name, headers in test_scenarios:
+            try:
+                async with self.session.post(f"{API_BASE}/cart/add", json=baby_blue_payload, headers=headers) as resp:
+                    response_text = await resp.text()
+                    
+                    if resp.status == 200:
+                        data = await resp.json()
+                        self.log_test(f"Baby Blue Scenario - {scenario_name}", True, 
+                                    f"Successfully added to cart. Total: ${data.get('total', 0)}")
+                    elif resp.status == 404:
+                        self.log_test(f"Baby Blue Scenario - {scenario_name}", False, 
+                                    f"Variant not found: {response_text}")
+                    elif resp.status == 400:
+                        self.log_test(f"Baby Blue Scenario - {scenario_name}", False, 
+                                    f"Bad request (possibly stock issue): {response_text}")
+                    elif resp.status == 500:
+                        self.log_test(f"Baby Blue Scenario - {scenario_name}", False, 
+                                    f"🚨 CRITICAL 500 ERROR: {response_text}")
+                        
+                        # Try to get more detailed error information
+                        await self._debug_cart_error(baby_blue_payload, headers)
+                    else:
+                        self.log_test(f"Baby Blue Scenario - {scenario_name}", False, 
+                                    f"Status {resp.status}: {response_text}")
+                        
+            except Exception as e:
+                self.log_test(f"Baby Blue Scenario - {scenario_name}", False, f"Exception: {str(e)}")
+    
+    async def _debug_cart_error(self, payload: dict, headers: dict):
+        """Debug cart API errors by checking related endpoints"""
+        print("\n    🔍 Debugging Cart Error...")
+        
+        variant_id = payload.get('variant_id')
+        
+        # Check if variant exists via product API
+        try:
+            async with self.session.post(f"{API_BASE}/products/filter", json={"page": 1, "limit": 100}) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    products = data.get('products', [])
+                    
+                    variant_found = False
+                    for product in products:
+                        for variant in product.get('variants', []):
+                            if variant.get('id') == variant_id:
+                                variant_found = True
+                                print(f"    ✅ Variant found in product: {product.get('name')}")
+                                print(f"    📊 Variant stock: on_hand={variant.get('on_hand', 0)}, stock_qty={variant.get('stock_qty', 0)}")
+                                print(f"    💰 Variant price tiers: {variant.get('price_tiers', [])}")
+                                break
+                        if variant_found:
+                            break
+                    
+                    if not variant_found:
+                        print(f"    ❌ Variant {variant_id} not found in any product")
+                else:
+                    print(f"    ❌ Failed to search products: {resp.status}")
+        except Exception as e:
+            print(f"    ❌ Exception during variant debug: {str(e)}")
+        
+        # Check database connection by testing a simple endpoint
+        try:
+            async with self.session.get(f"{API_BASE}/products") as resp:
+                if resp.status == 200:
+                    print(f"    ✅ Database connection working (products endpoint responds)")
+                else:
+                    print(f"    ⚠️ Database connection issue? Products endpoint: {resp.status}")
+        except Exception as e:
+            print(f"    ❌ Database connection test failed: {str(e)}")
+
     async def test_baby_blue_product_debug(self):
         """Debug Baby Blue product stock and pricing issues"""
         print("\n🔍 Testing Baby Blue Product Stock and Pricing Issues...")
