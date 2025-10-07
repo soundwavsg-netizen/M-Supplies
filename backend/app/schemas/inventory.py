@@ -127,3 +127,4 @@ class BusinessSettings(BaseModel):
         "polymailers", "accessories", "custom printing", "packaging supplies"
     ]
     available_pack_sizes: List[int] = [25, 50, 100, 500, 1000]
+    available_piece_quantities: List[int] = [1, 5, 10, 25, 50, 100]  # For bubble wrap individual pieces
