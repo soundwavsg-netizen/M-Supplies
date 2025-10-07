@@ -64,7 +64,7 @@ const Promotions = () => {
       value: coupon?.value || '',
       min_order_amount: coupon?.min_order_amount || '',
       valid_from: coupon?.valid_from ? coupon.valid_from.split('T')[0] : new Date().toISOString().split('T')[0],
-      valid_to: coupon?.valid_to ? coupon.valid_to.split('T')[0] : '',
+      valid_to: coupon?.valid_to ? coupon.valid_to.split('T')[0] : new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0], // Default to 1 year from now
       is_active: coupon?.is_active ?? true
     });
 
