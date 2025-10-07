@@ -345,10 +345,10 @@ const PackingInterface = () => {
                   
                   {/* Product Info */}
                   <div className="text-center mb-3">
-                    <p className="text-sm font-semibold text-gray-900 leading-tight">{productInfo.color}</p>
-                    <p className="text-xs text-gray-600">{productInfo.size}</p>
+                    <p className="text-xs font-medium text-gray-800 leading-tight bg-white bg-opacity-80 rounded px-1">{productInfo.color}</p>
+                    <p className="text-lg font-bold text-gray-900 leading-tight mt-1 bg-white bg-opacity-90 rounded px-1">{productInfo.size}</p>
                     {productInfo.packSize && productInfo.packSize !== '0' && (
-                      <p className="text-xs text-gray-500">{productInfo.packSize} pcs</p>
+                      <p className="text-lg font-bold text-gray-900 bg-white bg-opacity-90 rounded px-1 mt-1">{productInfo.packSize} pcs</p>
                     )}
                   </div>
                   
