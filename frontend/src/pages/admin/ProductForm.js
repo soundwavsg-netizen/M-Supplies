@@ -552,7 +552,7 @@ const ProductForm = () => {
 
       if (isEdit) {
         await adminProductsAPI.update(id, payload);
-        toast.success('Product updated successfully');
+        toast.success('Product updated successfully! Price changes may take a moment to appear on customer pages.');
       } else {
         await adminProductsAPI.create(payload);
         toast.success('Product created successfully');
