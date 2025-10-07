@@ -1434,6 +1434,113 @@ class BackendTester:
                     
         except Exception as e:
             self.log_test("File Storage Test", False, f"Exception: {str(e)}")
+        
+        # TEST 7: Test frontend-like request format (simulating actual frontend request)
+        print("\n🔍 TEST 7: Frontend Request Format Simulation")
+        
+        try:
+            # Simulate the exact request format that frontend might be sending
+            test_image5 = Image.new('RGB', (300, 300), color='cyan')
+            image_buffer5 = io.BytesIO()
+            test_image5.save(image_buffer5, format='JPEG', quality=85)
+            image_buffer5.seek(0)
+            
+            # Test with different content-type headers that frontend might send
+            form_data = aiohttp.FormData()
+            form_data.add_field('files', image_buffer5, filename='frontend_test.jpg', content_type='image/jpeg')
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/images", 
+                                       data=form_data, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 200:
+                    try:
+                        data = json.loads(response_text)
+                        self.log_test("Frontend Request Format", True, f"Frontend-like request successful: {data}")
+                    except json.JSONDecodeError:
+                        self.log_test("Frontend Request Format", False, f"Invalid JSON response: {response_text}")
+                elif resp.status == 400:
+                    self.log_test("Frontend Request Format Issue", False, f"400 Bad Request: {response_text}")
+                    # This might be the issue the user is experiencing
+                    print(f"    DETAILED ERROR: {response_text}")
+                else:
+                    self.log_test("Frontend Request Format", False, f"Status {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("Frontend Request Format Test", False, f"Exception: {str(e)}")
+        
+        # TEST 8: Test empty file upload (common frontend issue)
+        print("\n🔍 TEST 8: Empty File Upload Testing")
+        
+        try:
+            # Test with empty file (common issue when frontend doesn't properly handle file selection)
+            form_data = aiohttp.FormData()
+            form_data.add_field('files', b'', filename='', content_type='application/octet-stream')
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/images", 
+                                       data=form_data, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 400:
+                    self.log_test("Empty File Validation", True, f"Correctly rejected empty file: {response_text}")
+                else:
+                    self.log_test("Empty File Validation", False, f"Unexpected response to empty file: Status {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("Empty File Upload Test", False, f"Exception: {str(e)}")
+        
+        # TEST 9: Test CORS headers (potential frontend integration issue)
+        print("\n🔍 TEST 9: CORS Headers Testing")
+        
+        try:
+            # Test preflight request (OPTIONS)
+            cors_headers = {
+                "Origin": "https://msupplies-shop.preview.emergentagent.com",
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "authorization,content-type"
+            }
+            
+            async with self.session.options(f"{API_BASE}/admin/upload/images", headers=cors_headers) as resp:
+                if resp.status == 200:
+                    cors_allow_origin = resp.headers.get('Access-Control-Allow-Origin')
+                    cors_allow_methods = resp.headers.get('Access-Control-Allow-Methods')
+                    cors_allow_headers = resp.headers.get('Access-Control-Allow-Headers')
+                    
+                    self.log_test("CORS Preflight", True, 
+                                f"Origin: {cors_allow_origin}, Methods: {cors_allow_methods}, Headers: {cors_allow_headers}")
+                else:
+                    self.log_test("CORS Preflight", False, f"OPTIONS request failed: Status {resp.status}")
+                    
+        except Exception as e:
+            self.log_test("CORS Headers Test", False, f"Exception: {str(e)}")
+        
+        # TEST 10: Test with malformed multipart data (potential frontend issue)
+        print("\n🔍 TEST 10: Malformed Request Testing")
+        
+        try:
+            # Test with incorrect field name (frontend might be using wrong field name)
+            test_image6 = Image.new('RGB', (100, 100), color='magenta')
+            image_buffer6 = io.BytesIO()
+            test_image6.save(image_buffer6, format='PNG')
+            image_buffer6.seek(0)
+            
+            # Use wrong field name that frontend might be sending
+            form_data = aiohttp.FormData()
+            form_data.add_field('images', image_buffer6, filename='wrong_field.png', content_type='image/png')  # Wrong field name
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/images", 
+                                       data=form_data, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 422:  # Validation error
+                    self.log_test("Wrong Field Name Detection", True, f"Correctly detected wrong field name: {response_text}")
+                elif resp.status == 400:
+                    self.log_test("Wrong Field Name Detection", True, f"Bad request for wrong field: {response_text}")
+                else:
+                    self.log_test("Wrong Field Name Test", False, f"Unexpected response: Status {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("Malformed Request Test", False, f"Exception: {str(e)}")
 
     async def test_packing_interface_inventory_loading_debug(self):
         """Debug the 'Failed to load inventory' issue in the packing interface"""
