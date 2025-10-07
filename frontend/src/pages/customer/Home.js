@@ -98,6 +98,13 @@ const Home = () => {
           </Link>
         </div>
       </section>
+      {/* Debug: Simple chat button to test */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <div className="w-14 h-14 rounded-full bg-teal-600 hover:bg-teal-700 shadow-lg flex items-center justify-center">
+          <span className="text-white text-2xl">💬</span>
+        </div>
+      </div>
+      
       <ChatWidget 
         agentType="sales" 
         currentPage="homepage" 
