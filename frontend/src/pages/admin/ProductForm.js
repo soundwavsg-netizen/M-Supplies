@@ -1030,7 +1030,7 @@ const ProductForm = () => {
                 <h3 className="font-medium text-slate-900">Current Variants - Click to Edit</h3>
                 {product.variants.map((variant, index) => (
                   <div key={variant.id || index} className="p-4 border rounded-lg bg-white">
-                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                       <div>
                         <Label className="text-xs text-gray-600">Width (cm)</Label>
                         <Input
