@@ -53,24 +53,20 @@ const ProductForm = () => {
     selected_pack_sizes: [] // Array of selected pack sizes
   });
 
-  // Get pricing tiers based on product name/category
-  const getPricingTiers = () => {
+  // Get default pricing tiers structure for new variants (simplified)
+  const getDefaultPriceTiers = (packSize) => {
     const isAccessory = product.category === 'accessories';
-    const isPremiumPolymailer = product.name.toLowerCase().includes('premium') && product.category === 'polymailers';
+    const isBubbleWrap = product.type === 'bubble wrap';
     
-    if (isAccessory) {
-      return [{ min_quantity: 1, price: '' }]; // Accessories sold individually
-    } else if (isPremiumPolymailer) {
-      return [
-        { min_quantity: 50, price: '' },
-        { min_quantity: 100, price: '' }
-      ]; // Premium polymailers: 50 and 100 pcs only
+    if (isAccessory || isBubbleWrap) {
+      return [{ min_quantity: 1, price: 0 }]; // Accessories and bubble wrap sold individually
     } else {
+      // Regular polymailers with basic quantity tiers
       return [
-        { min_quantity: 25, price: '' },
-        { min_quantity: 50, price: '' },
-        { min_quantity: 100, price: '' }
-      ]; // Regular polymailers: 25, 50, 100 pcs
+        { min_quantity: 25, price: 0 },
+        { min_quantity: 50, price: 0 },
+        { min_quantity: 100, price: 0 }
+      ];
     }
   };
 
