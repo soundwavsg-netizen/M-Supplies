@@ -970,7 +970,12 @@ const ProductForm = () => {
             {/* Existing Variants */}
             {product.variants.length > 0 && (
               <div className="space-y-2">
-                <h3 className="font-medium text-slate-900">Current Variants - Click to Edit</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium text-slate-900">Current Variants - Set Pricing & Stock</h3>
+                  <div className="text-xs text-gray-600 bg-yellow-50 border border-yellow-200 rounded px-2 py-1">
+                    💡 Update prices and stock levels for each variant below
+                  </div>
+                </div>
                 {product.variants.map((variant, index) => {
                   const width = variant.attributes?.width_cm || variant.width_cm || 0;
                   const height = variant.attributes?.height_cm || variant.height_cm || 0;
