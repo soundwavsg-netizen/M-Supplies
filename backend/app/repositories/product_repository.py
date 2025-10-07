@@ -210,8 +210,8 @@ class ProductRepository:
         # Get all unique types
         types = await self.variants.distinct('attributes.type')
         
-        # Get all categories
-        categories = await self.products.distinct('category')
+        # Get all categories (only from active products)
+        categories = await self.products.distinct('category', {'is_active': True})
         
         # Get price range
         price_pipeline = [
