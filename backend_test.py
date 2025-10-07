@@ -5569,20 +5569,272 @@ class BackendTester:
         else:
             self.log_test("Admin Inventory Cross-Check", False, "No admin token available")
 
+    async def test_champagne_pink_pricing_issue(self):
+        """Test Champagne Pink product pricing issue - variants not showing prices"""
+        print("\n🌸 Testing Champagne Pink Product Pricing Issue...")
+        print("User reported: When selecting a variant for champagne pink product, the price is not shown")
+        
+        # Step 1: Find Champagne Pink Product in the database
+        print("\n🔍 STEP 1: Finding Champagne Pink Product")
+        champagne_pink_product = None
+        
+        try:
+            async with self.session.post(f"{API_BASE}/products/filter", json={"page": 1, "limit": 50}) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    products = data.get('products', [])
+                    
+                    # Look for champagne pink product
+                    for product in products:
+                        product_name = product.get('name', '').lower()
+                        product_color = product.get('color', '').lower()
+                        
+                        if 'champagne pink' in product_name or 'champagne pink' in product_color:
+                            champagne_pink_product = product
+                            break
+                        
+                        # Also check variants for champagne pink color
+                        for variant in product.get('variants', []):
+                            variant_color = variant.get('attributes', {}).get('color', '').lower()
+                            if 'champagne pink' in variant_color:
+                                champagne_pink_product = product
+                                break
+                        
+                        if champagne_pink_product:
+                            break
+                    
+                    if champagne_pink_product:
+                        self.log_test("Find Champagne Pink Product", True, 
+                                    f"Found: {champagne_pink_product.get('name')} (ID: {champagne_pink_product.get('id')})")
+                    else:
+                        self.log_test("Find Champagne Pink Product", False, "No champagne pink product found")
+                        return
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Find Champagne Pink Product", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Find Champagne Pink Product", False, f"Exception: {str(e)}")
+            return
+        
+        product_id = champagne_pink_product['id']
+        
+        # Step 2: Check Product Structure - verify proper pricing structure in variants
+        print("\n🔍 STEP 2: Checking Product Structure and Variant Pricing")
+        
+        try:
+            async with self.session.get(f"{API_BASE}/products/{product_id}") as resp:
+                if resp.status == 200:
+                    product_details = await resp.json()
+                    variants = product_details.get('variants', [])
+                    
+                    self.log_test("Product Structure Check", True, 
+                                f"Product has {len(variants)} variants")
+                    
+                    if len(variants) == 0:
+                        self.log_test("Variant Availability", False, 
+                                    "CRITICAL: Product has no variants - this explains missing price display")
+                        return
+                    
+                    # Step 3: Check each variant's price_tiers structure
+                    print("\n💰 STEP 3: Analyzing Variant Price Tiers")
+                    
+                    champagne_pink_variants = []
+                    pricing_issues = []
+                    
+                    for i, variant in enumerate(variants):
+                        variant_attrs = variant.get('attributes', {})
+                        variant_color = variant_attrs.get('color', 'Unknown')
+                        variant_size = variant_attrs.get('size_code', 'Unknown')
+                        variant_pack = variant_attrs.get('pack_size', 'Unknown')
+                        price_tiers = variant.get('price_tiers', [])
+                        
+                        self.log_test(f"Variant {i+1} Structure", True, 
+                                    f"Color: {variant_color}, Size: {variant_size}, Pack: {variant_pack}")
+                        
+                        # Check if this is a champagne pink variant
+                        if 'champagne pink' in variant_color.lower():
+                            champagne_pink_variants.append(variant)
+                            
+                            # Check price_tiers structure
+                            if not price_tiers:
+                                pricing_issues.append(f"Variant {i+1}: Missing price_tiers array")
+                                self.log_test(f"Variant {i+1} Price Tiers", False, "Missing price_tiers array")
+                            else:
+                                # Check for 0 values in price tiers
+                                zero_prices = []
+                                valid_prices = []
+                                
+                                for tier in price_tiers:
+                                    price = tier.get('price', 0)
+                                    min_qty = tier.get('min_quantity', 0)
+                                    
+                                    if price == 0 or price == 0.0:
+                                        zero_prices.append(f"min_qty:{min_qty} = ${price}")
+                                    else:
+                                        valid_prices.append(f"min_qty:{min_qty} = ${price}")
+                                
+                                if zero_prices:
+                                    pricing_issues.append(f"Variant {i+1}: Zero price tiers found: {zero_prices}")
+                                    self.log_test(f"Variant {i+1} Zero Prices", False, 
+                                                f"Found zero prices: {zero_prices}")
+                                
+                                if valid_prices:
+                                    self.log_test(f"Variant {i+1} Valid Prices", True, 
+                                                f"Valid prices: {valid_prices}")
+                                else:
+                                    pricing_issues.append(f"Variant {i+1}: No valid prices found")
+                                    self.log_test(f"Variant {i+1} Valid Prices", False, "No valid prices found")
+                    
+                    # Summary of champagne pink variants
+                    if champagne_pink_variants:
+                        self.log_test("Champagne Pink Variants Found", True, 
+                                    f"Found {len(champagne_pink_variants)} champagne pink variants")
+                    else:
+                        self.log_test("Champagne Pink Variants Found", False, 
+                                    "No champagne pink variants found in this product")
+                    
+                    # Report pricing issues
+                    if pricing_issues:
+                        self.log_test("Pricing Issues Identified", False, 
+                                    f"Found {len(pricing_issues)} pricing issues: {pricing_issues}")
+                    else:
+                        self.log_test("Pricing Structure Validation", True, 
+                                    "All champagne pink variants have valid pricing structure")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Product Details Fetch", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Product Structure Check", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 4: Test Price Range Calculation
+        print("\n📊 STEP 4: Testing Price Range Calculation")
+        
+        try:
+            # Test product listing to see if champagne pink prices are included in range calculation
+            async with self.session.post(f"{API_BASE}/products/filter", 
+                                       json={"filters": {"colors": ["champagne pink"]}, "page": 1, "limit": 10}) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    filtered_products = data.get('products', [])
+                    
+                    if filtered_products:
+                        for product in filtered_products:
+                            price_range = product.get('price_range', {})
+                            min_price = price_range.get('min', 0)
+                            max_price = price_range.get('max', 0)
+                            
+                            self.log_test("Price Range Calculation", True, 
+                                        f"Product: {product.get('name')}, Price Range: ${min_price} - ${max_price}")
+                            
+                            if min_price == 0 or max_price == 0:
+                                self.log_test("Price Range Zero Values", False, 
+                                            f"ISSUE: Price range contains zero values (${min_price} - ${max_price})")
+                            else:
+                                self.log_test("Price Range Validity", True, 
+                                            f"Valid price range: ${min_price} - ${max_price}")
+                    else:
+                        self.log_test("Champagne Pink Filter Results", False, 
+                                    "No products returned when filtering by champagne pink color")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Price Range Calculation Test", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Price Range Calculation Test", False, f"Exception: {str(e)}")
+        
+        # Step 5: Test Customer Product Access
+        print("\n👤 STEP 5: Testing Customer Product Access")
+        
+        try:
+            async with self.session.get(f"{API_BASE}/products/{product_id}") as resp:
+                if resp.status == 200:
+                    customer_product = await resp.json()
+                    customer_variants = customer_product.get('variants', [])
+                    
+                    self.log_test("Customer Product Access", True, 
+                                f"Customer can access champagne pink product")
+                    
+                    # Check if customer sees proper pricing for champagne pink variants
+                    customer_champagne_variants = []
+                    for variant in customer_variants:
+                        variant_color = variant.get('attributes', {}).get('color', '').lower()
+                        if 'champagne pink' in variant_color:
+                            customer_champagne_variants.append(variant)
+                    
+                    if customer_champagne_variants:
+                        self.log_test("Customer Champagne Pink Variants", True, 
+                                    f"Customer sees {len(customer_champagne_variants)} champagne pink variants")
+                        
+                        # Check pricing visibility for customers
+                        for i, variant in enumerate(customer_champagne_variants):
+                            price_tiers = variant.get('price_tiers', [])
+                            if price_tiers and price_tiers[0].get('price', 0) > 0:
+                                self.log_test(f"Customer Variant {i+1} Pricing", True, 
+                                            f"Price: ${price_tiers[0].get('price', 0)}")
+                            else:
+                                self.log_test(f"Customer Variant {i+1} Pricing", False, 
+                                            "CRITICAL: Customer cannot see valid pricing for this variant")
+                    else:
+                        self.log_test("Customer Champagne Pink Variants", False, 
+                                    "Customer cannot see champagne pink variants")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Customer Product Access", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Customer Product Access", False, f"Exception: {str(e)}")
+        
+        # Step 6: Provide Detailed Product Analysis
+        print("\n📋 STEP 6: Detailed Product Analysis Summary")
+        
+        try:
+            async with self.session.get(f"{API_BASE}/products/{product_id}") as resp:
+                if resp.status == 200:
+                    full_product = await resp.json()
+                    
+                    print(f"\n📄 CHAMPAGNE PINK PRODUCT DETAILS:")
+                    print(f"Product ID: {full_product.get('id')}")
+                    print(f"Product Name: {full_product.get('name')}")
+                    print(f"Product Color: {full_product.get('color')}")
+                    print(f"Product Type: {full_product.get('type')}")
+                    print(f"Total Variants: {len(full_product.get('variants', []))}")
+                    
+                    print(f"\n🔍 VARIANT BREAKDOWN:")
+                    for i, variant in enumerate(full_product.get('variants', [])):
+                        attrs = variant.get('attributes', {})
+                        price_tiers = variant.get('price_tiers', [])
+                        
+                        print(f"Variant {i+1}:")
+                        print(f"  - SKU: {variant.get('sku', 'Unknown')}")
+                        print(f"  - Color: {attrs.get('color', 'Unknown')}")
+                        print(f"  - Size: {attrs.get('size_code', 'Unknown')}")
+                        print(f"  - Pack Size: {attrs.get('pack_size', 'Unknown')}")
+                        print(f"  - Price Tiers: {price_tiers}")
+                        print(f"  - Stock: {variant.get('on_hand', 0)} on hand, {variant.get('allocated', 0)} allocated")
+                    
+                    self.log_test("Detailed Product Analysis", True, 
+                                "Complete product structure logged for debugging")
+                else:
+                    self.log_test("Detailed Product Analysis", False, "Could not fetch full product details")
+        except Exception as e:
+            self.log_test("Detailed Product Analysis", False, f"Exception: {str(e)}")
+
 async def main():
-    """Run backend tests focused on Baby Blue Product Variant Creation"""
-    print("🚀 Starting M Supplies Backend API Tests - Baby Blue Product Variant Creation")
+    """Run backend tests focused on Champagne Pink Product Pricing Issue"""
+    print("🚀 Starting M Supplies Backend API Tests - Champagne Pink Product Pricing Issue")
     print(f"Testing against: {API_BASE}")
-    print("🎯 FOCUS: Creating variants for Baby Blue product to fix missing dropdown issue")
-    print("User Issue: Baby Blue product exists but has 0 variants, causing missing variant dropdown")
-    print("Solution: Create 2 variants (50pcs and 100pcs) with proper pricing and stock")
+    print("🎯 FOCUS: Investigating champagne pink product pricing issue")
+    print("User Issue: When selecting a variant for champagne pink product, the price is not shown")
+    print("Investigation: Check product structure, variant pricing, price tiers, and price calculation logic")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Create Baby Blue product variants (as specifically requested in review)
-        await tester.test_baby_blue_variant_creation()
+        # PRIORITY TEST: Investigate champagne pink pricing issue
+        await tester.test_champagne_pink_pricing_issue()
         
         # Print summary
         passed, failed = tester.print_summary()
