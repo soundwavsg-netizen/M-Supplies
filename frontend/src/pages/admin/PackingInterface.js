@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Search, Plus, Minus, Package, AlertTriangle, RotateCcw } from 'lucide-react';
-import axios from 'axios';
+import { adminInventoryAPI } from '@/lib/api';
 
 const PackingInterface = () => {
   const [inventory, setInventory] = useState([]);
