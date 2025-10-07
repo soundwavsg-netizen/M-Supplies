@@ -336,6 +336,7 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
+      <SmartChatWidget productContext={product} />
     </div>
   );
 };
