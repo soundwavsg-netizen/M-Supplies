@@ -7032,25 +7032,28 @@ class BackendTester:
                     "Identified schema mismatch between user data and backend expectations")
 
 async def main():
-    """Run backend tests focused on Promotion Data Loading Debug"""
-    print("🚀 Starting M Supplies Backend API Tests - Promotion Data Loading Debug")
+    """Run backend tests focused on Chat System API Testing"""
+    print("🚀 Starting M Supplies Backend API Tests - Chat System Integration")
     print(f"Testing against: {API_BASE}")
-    print("🎯 FOCUS: Debug 'failed to load promotions data' error after coupon creation")
-    print("User Issue: Coupon creation works, but subsequent data fetch fails")
-    print("Testing all APIs called in fetchAllData():")
-    print("1. GET /api/admin/coupons - Should return newly created coupon")
-    print("2. GET /api/admin/gift-items - May be failing if endpoint doesn't exist")
-    print("3. GET /api/admin/gift-tiers - May be failing if endpoint doesn't exist") 
-    print("4. GET /api/admin/promotions/stats - May be failing if endpoint doesn't exist")
+    print("🎯 FOCUS: Test new chat system API endpoints with Emergent AI integration")
+    print("User Request: Test chat session creation, message sending, history, and session management")
+    print("Testing scenarios:")
+    print("1. Homepage with sales agent")
+    print("2. Product page with sizing agent")
+    print("3. Support page with care agent")
+    print("4. Actual AI responses (not mocked)")
+    print("5. MongoDB storage verification")
+    print("6. Error handling for invalid sessions")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Test promotion data loading after coupon creation
-        await tester.test_promotion_data_loading_after_coupon_creation()
+        # PRIORITY TEST: Test chat system API endpoints
+        await tester.test_chat_system_api_endpoints()
         
-        # SECONDARY TEST: Test exact coupon creation payloads from previous review
+        # SECONDARY TESTS: Previous working tests for regression
+        await tester.test_promotion_data_loading_after_coupon_creation()
         await tester.test_coupon_creation_validation_error()
         
         # Print summary
