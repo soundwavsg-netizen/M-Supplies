@@ -37,18 +37,24 @@ const StockAdjustmentModal = ({ variant, onClose, onSuccess }) => {
         notes: notes.trim()
       };
 
-      // Handle both on_hand and allocated adjustments
+      // Handle on_hand, allocated, and safety_stock adjustments
       if (stockType === 'on_hand') {
         if (adjustmentType === 'set') {
           payload.on_hand_value = parseInt(value);
         } else {
           payload.on_hand_change = parseInt(value);
         }
-      } else { // allocated
+      } else if (stockType === 'allocated') {
         if (adjustmentType === 'set') {
           payload.allocated_value = parseInt(value);
         } else {
           payload.allocated_change = parseInt(value);
+        }
+      } else { // safety_stock
+        if (adjustmentType === 'set') {
+          payload.safety_stock_value = parseInt(value);
+        } else {
+          payload.safety_stock_change = parseInt(value);
         }
       }
 
