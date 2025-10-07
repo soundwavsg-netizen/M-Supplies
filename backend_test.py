@@ -818,6 +818,262 @@ class BackendTester:
         except Exception as e:
             self.log_test("Dynamic Fields Persistence Check", False, f"Exception: {str(e)}")
 
+    async def test_variant_pricing_updates_and_persistence(self):
+        """Test variant pricing updates and persistence for Heavy-Duty Polymailers"""
+        print("\n💰 Testing Variant Pricing Updates and Persistence...")
+        
+        if not self.admin_token:
+            self.log_test("Variant Pricing Test", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Step 1: Find Heavy-Duty Polymailers product
+        heavy_duty_product = None
+        try:
+            async with self.session.post(f"{API_BASE}/products/filter", json={"page": 1, "limit": 50}) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    products = data.get('products', [])
+                    
+                    # Look for Heavy-Duty Polymailers or similar product
+                    for product in products:
+                        if 'heavy' in product.get('name', '').lower() or 'polymailer' in product.get('name', '').lower():
+                            heavy_duty_product = product
+                            break
+                    
+                    if not heavy_duty_product and products:
+                        # Use first product if Heavy-Duty not found
+                        heavy_duty_product = products[0]
+                        self.log_test("Find Heavy-Duty Product", True, f"Using product: {heavy_duty_product.get('name')}")
+                    elif heavy_duty_product:
+                        self.log_test("Find Heavy-Duty Product", True, f"Found: {heavy_duty_product.get('name')}")
+                    else:
+                        self.log_test("Find Heavy-Duty Product", False, "No products found")
+                        return
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Find Heavy-Duty Product", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Find Heavy-Duty Product", False, f"Exception: {str(e)}")
+            return
+        
+        product_id = heavy_duty_product['id']
+        
+        # Step 2: Get full product details to examine current pricing
+        try:
+            async with self.session.get(f"{API_BASE}/products/{product_id}") as resp:
+                if resp.status == 200:
+                    original_product = await resp.json()
+                    original_variants = original_product.get('variants', [])
+                    self.log_test("Get Product Details", True, f"Product has {len(original_variants)} variants")
+                    
+                    # Log current pricing for each variant
+                    for i, variant in enumerate(original_variants):
+                        price_tiers = variant.get('price_tiers', [])
+                        pack_size = variant.get('attributes', {}).get('pack_size', 'Unknown')
+                        size_code = variant.get('attributes', {}).get('size_code', 'Unknown')
+                        
+                        if price_tiers:
+                            current_price = price_tiers[0].get('price', 0)
+                            self.log_test(f"Current Pricing - Variant {i+1}", True, 
+                                        f"Size: {size_code}, Pack: {pack_size}, Price: ${current_price}")
+                        else:
+                            self.log_test(f"Current Pricing - Variant {i+1}", False, "No price tiers found")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Get Product Details", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Get Product Details", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 3: Test price tier structure for each variant
+        if len(original_variants) >= 2:
+            variant_25x35_50 = None
+            variant_25x35_100 = None
+            
+            for variant in original_variants:
+                attrs = variant.get('attributes', {})
+                size_code = attrs.get('size_code', '')
+                pack_size = attrs.get('pack_size', 0)
+                
+                if size_code == '25x35' and pack_size == 50:
+                    variant_25x35_50 = variant
+                elif size_code == '25x35' and pack_size == 100:
+                    variant_25x35_100 = variant
+            
+            # Check if each variant has its own price_tiers array
+            if variant_25x35_50 and variant_25x35_100:
+                price_tiers_50 = variant_25x35_50.get('price_tiers', [])
+                price_tiers_100 = variant_25x35_100.get('price_tiers', [])
+                
+                # Verify price_tiers are not shared between variants
+                if price_tiers_50 is not price_tiers_100:
+                    self.log_test("Price Tiers Independence", True, "Each variant has independent price_tiers")
+                else:
+                    self.log_test("Price Tiers Independence", False, "Price tiers appear to be shared between variants")
+                
+                # Log current prices
+                if price_tiers_50:
+                    current_price_50 = price_tiers_50[0].get('price', 0)
+                    self.log_test("25x35cm 50-pack Current Price", True, f"${current_price_50}")
+                
+                if price_tiers_100:
+                    current_price_100 = price_tiers_100[0].get('price', 0)
+                    self.log_test("25x35cm 100-pack Current Price", True, f"${current_price_100}")
+            else:
+                self.log_test("Find Specific Variants", False, "Could not find 25x35cm variants with different pack sizes")
+        
+        # Step 4: Simulate admin price update (as mentioned in the issue: $4.5 → $15.00, $28.00)
+        if len(original_variants) >= 2:
+            updated_variants = []
+            
+            for i, variant in enumerate(original_variants):
+                updated_variant = variant.copy()
+                
+                # Update price tiers for first two variants to simulate the reported issue
+                if i == 0:
+                    updated_variant['price_tiers'] = [{"min_quantity": 1, "price": 15.00}]
+                elif i == 1:
+                    updated_variant['price_tiers'] = [{"min_quantity": 1, "price": 28.00}]
+                else:
+                    # Keep original pricing for other variants
+                    updated_variant['price_tiers'] = variant.get('price_tiers', [])
+                
+                updated_variants.append(updated_variant)
+            
+            update_payload = {
+                "variants": updated_variants
+            }
+            
+            # Step 5: Send admin product update
+            try:
+                async with self.session.put(f"{API_BASE}/admin/products/{product_id}", 
+                                          json=update_payload, headers=headers) as resp:
+                    if resp.status == 200:
+                        updated_product = await resp.json()
+                        self.log_test("Admin Price Update Request", True, "Price update request successful")
+                        
+                        # Verify the update response contains new prices
+                        updated_variants_response = updated_product.get('variants', [])
+                        if len(updated_variants_response) >= 2:
+                            first_variant_price = updated_variants_response[0].get('price_tiers', [{}])[0].get('price', 0)
+                            second_variant_price = updated_variants_response[1].get('price_tiers', [{}])[0].get('price', 0)
+                            
+                            if first_variant_price == 15.00:
+                                self.log_test("First Variant Price Update", True, f"Updated to ${first_variant_price}")
+                            else:
+                                self.log_test("First Variant Price Update", False, f"Expected $15.00, got ${first_variant_price}")
+                            
+                            if second_variant_price == 28.00:
+                                self.log_test("Second Variant Price Update", True, f"Updated to ${second_variant_price}")
+                            else:
+                                self.log_test("Second Variant Price Update", False, f"Expected $28.00, got ${second_variant_price}")
+                        
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Admin Price Update Request", False, f"Status {resp.status}: {error_text}")
+                        return
+            except Exception as e:
+                self.log_test("Admin Price Update Request", False, f"Exception: {str(e)}")
+                return
+        
+        # Step 6: Test price persistence by fetching product again (admin view)
+        try:
+            async with self.session.get(f"{API_BASE}/products/{product_id}", headers=headers) as resp:
+                if resp.status == 200:
+                    admin_refetch = await resp.json()
+                    admin_variants = admin_refetch.get('variants', [])
+                    
+                    if len(admin_variants) >= 2:
+                        first_price = admin_variants[0].get('price_tiers', [{}])[0].get('price', 0)
+                        second_price = admin_variants[1].get('price_tiers', [{}])[0].get('price', 0)
+                        
+                        if first_price == 15.00:
+                            self.log_test("Admin View Price Persistence - Variant 1", True, f"${first_price}")
+                        else:
+                            self.log_test("Admin View Price Persistence - Variant 1", False, f"Expected $15.00, got ${first_price}")
+                        
+                        if second_price == 28.00:
+                            self.log_test("Admin View Price Persistence - Variant 2", True, f"${second_price}")
+                        else:
+                            self.log_test("Admin View Price Persistence - Variant 2", False, f"Expected $28.00, got ${second_price}")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Admin View Price Persistence", False, f"Status {resp.status}: {error_text}")
+            
+        except Exception as e:
+            self.log_test("Admin View Price Persistence", False, f"Exception: {str(e)}")
+        
+        # Step 7: Test customer product access (the critical issue reported)
+        try:
+            async with self.session.get(f"{API_BASE}/products/{product_id}") as resp:
+                if resp.status == 200:
+                    customer_product = await resp.json()
+                    customer_variants = customer_product.get('variants', [])
+                    
+                    self.log_test("Customer Product Access", True, f"Customer can access product: {customer_product.get('name')}")
+                    
+                    if len(customer_variants) >= 2:
+                        first_customer_price = customer_variants[0].get('price_tiers', [{}])[0].get('price', 0)
+                        second_customer_price = customer_variants[1].get('price_tiers', [{}])[0].get('price', 0)
+                        
+                        # This is the critical test - are updated prices visible to customers?
+                        if first_customer_price == 15.00:
+                            self.log_test("Customer View Updated Price - Variant 1", True, f"${first_customer_price}")
+                        else:
+                            self.log_test("Customer View Updated Price - Variant 1", False, 
+                                        f"CRITICAL ISSUE: Expected $15.00, customer sees ${first_customer_price}")
+                        
+                        if second_customer_price == 28.00:
+                            self.log_test("Customer View Updated Price - Variant 2", True, f"${second_customer_price}")
+                        else:
+                            self.log_test("Customer View Updated Price - Variant 2", False, 
+                                        f"CRITICAL ISSUE: Expected $28.00, customer sees ${second_customer_price}")
+                        
+                        # Check if customer is seeing the old $0.80 price mentioned in the issue
+                        if first_customer_price == 0.80 or second_customer_price == 0.80:
+                            self.log_test("Old Price Still Visible", False, 
+                                        "CRITICAL: Customer still seeing old $0.80 price - price update not persisting")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Customer Product Access", False, f"Status {resp.status}: {error_text}")
+            
+        except Exception as e:
+            self.log_test("Customer Product Access", False, f"Exception: {str(e)}")
+        
+        # Step 8: Test pricing calculation logic
+        try:
+            # Test different pack sizes have different pricing
+            async with self.session.get(f"{API_BASE}/products/{product_id}") as resp:
+                if resp.status == 200:
+                    product = await resp.json()
+                    variants = product.get('variants', [])
+                    
+                    pack_size_prices = {}
+                    for variant in variants:
+                        pack_size = variant.get('attributes', {}).get('pack_size')
+                        price_tiers = variant.get('price_tiers', [])
+                        if price_tiers and pack_size:
+                            pack_size_prices[pack_size] = price_tiers[0].get('price', 0)
+                    
+                    if len(pack_size_prices) > 1:
+                        prices = list(pack_size_prices.values())
+                        if len(set(prices)) > 1:  # Different prices
+                            self.log_test("Different Pack Size Pricing", True, f"Pack sizes have different prices: {pack_size_prices}")
+                        else:
+                            self.log_test("Different Pack Size Pricing", False, "All pack sizes have same price")
+                    else:
+                        self.log_test("Pack Size Price Variety", False, "Not enough variants to test different pack size pricing")
+            
+        except Exception as e:
+            self.log_test("Pricing Calculation Logic", False, f"Exception: {str(e)}")
+
     async def test_pack_size_schema_structure(self):
         """Test product API and variant structure after pack_size schema changes"""
         print("\n📦 Testing Pack Size Schema Structure...")
