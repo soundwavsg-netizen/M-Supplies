@@ -322,9 +322,21 @@ metadata:
           agent: "testing"
           comment: "🎯 422 IMAGE UPLOAD ERROR SUCCESSFULLY DEBUGGED: Conducted comprehensive investigation of the specific 422 'Unprocessable Content' error when uploading 'm-supplies-logo-white.png image/png 28007' (28KB PNG). ROOT CAUSE IDENTIFIED: The 422 error occurs due to Pydantic validation failures in FastAPI when the request doesn't match the expected 'files: List[UploadFile] = File(...)' parameter. SPECIFIC CAUSES REPRODUCED: ✅ Missing 'files' field in FormData (most common cause) ✅ Empty FormData submission ✅ Wrong Content-Type header ✅ Sending JSON instead of multipart/form-data ✅ Malformed multipart boundary ✅ Raw data without proper multipart encoding. DETAILED ERROR MESSAGE EXTRACTED: {'type': 'missing', 'loc': ['body', 'files'], 'msg': 'Field required', 'input': None, 'url': 'https://errors.pydantic.dev/2.11/v/missing'}. BACKEND UPLOAD FUNCTIONALITY VERIFIED: ✅ Both single (/api/admin/upload/image) and multiple (/api/admin/upload/images) upload endpoints working correctly ✅ File type validation working (jpg, jpeg, png, webp, gif) ✅ File size limits enforced (10MB max) ✅ Authentication required and working ✅ Proper file storage with UUID naming ✅ CORS headers configured correctly. FRONTEND INTEGRATION ISSUE: The error suggests frontend is either not including 'files' field in FormData, sending empty FormData, or using incorrect Content-Type headers. Backend APIs are fully functional - issue is in frontend request formation."
 
+  - task: "Static File Serving and Image Accessibility"
+    implemented: true
+    working: false
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "🚨 CRITICAL ISSUE IDENTIFIED: Static file serving has MIME type problem. Backend correctly serves images with proper content-type (image/png, image/jpeg) when accessed directly (localhost:8001), but external URL returns text/html; charset=utf-8. ROOT CAUSE: Kubernetes ingress/reverse proxy is overriding content-type headers for static files. EVIDENCE: ✅ Image upload working (200 OK) ✅ Files stored correctly with proper permissions (644) ✅ Backend StaticFiles configuration correct ✅ Direct backend access: Content-Type: image/png ❌ External access: Content-Type: text/html; charset=utf-8 ✅ CORS headers working correctly ✅ URL construction correct (/uploads/products/filename). SOLUTION NEEDED: Fix Kubernetes ingress configuration to preserve MIME types for /uploads/* paths. This explains why images upload successfully but don't display in frontend - browsers receive HTML content-type instead of image content-type."
+
 test_plan:
   current_focus:
-    - "Image Upload Functionality Debug"
+    - "Static File Serving and Image Accessibility"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
