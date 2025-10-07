@@ -233,6 +233,7 @@ async def seed_database():
         'available_categories': [
             'polymailers', 'accessories', 'custom printing', 'packaging supplies'
         ],
+        'available_pack_sizes': [25, 50, 100, 500, 1000],
         'created_at': datetime.now(timezone.utc)
     }
     await db.settings.insert_one(settings)
