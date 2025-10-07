@@ -336,7 +336,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Static File Serving and Image Accessibility"
+    - "Coupon Creation Validation Error Debug"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
