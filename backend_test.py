@@ -6638,33 +6638,25 @@ class BackendTester:
                     "Identified schema mismatch between user data and backend expectations")
 
 async def main():
-    """Run backend tests focused on Coupon Creation Validation Debug"""
-    print("🚀 Starting M Supplies Backend API Tests - Coupon Creation Debug")
+    """Run backend tests focused on Promotion Data Loading Debug"""
+    print("🚀 Starting M Supplies Backend API Tests - Promotion Data Loading Debug")
     print(f"Testing against: {API_BASE}")
-    print("🎯 FOCUS: Debug coupon creation validation error")
-    print("User Issue: Getting 'field required, field required, field required' when creating coupon")
-    print("Testing exact payloads from review request:")
-    print("1. Full payload:", json.dumps({
-        "code": "VIP10",
-        "type": "percent", 
-        "value": 10,
-        "min_order_amount": 0,
-        "valid_from": "2025-01-07T12:00:00.000Z",
-        "valid_to": None,
-        "is_active": True
-    }, indent=2))
-    print("2. Minimal payload:", json.dumps({
-        "code": "TEST10",
-        "type": "percent",
-        "value": 10,
-        "valid_from": "2025-01-07T12:00:00.000Z"
-    }, indent=2))
+    print("🎯 FOCUS: Debug 'failed to load promotions data' error after coupon creation")
+    print("User Issue: Coupon creation works, but subsequent data fetch fails")
+    print("Testing all APIs called in fetchAllData():")
+    print("1. GET /api/admin/coupons - Should return newly created coupon")
+    print("2. GET /api/admin/gift-items - May be failing if endpoint doesn't exist")
+    print("3. GET /api/admin/gift-tiers - May be failing if endpoint doesn't exist") 
+    print("4. GET /api/admin/promotions/stats - May be failing if endpoint doesn't exist")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Test exact coupon creation payloads from review request
+        # PRIORITY TEST: Test promotion data loading after coupon creation
+        await tester.test_promotion_data_loading_after_coupon_creation()
+        
+        # SECONDARY TEST: Test exact coupon creation payloads from previous review
         await tester.test_coupon_creation_validation_error()
         
         # Print summary
