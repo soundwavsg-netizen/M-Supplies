@@ -206,7 +206,7 @@ const ChatWidget = ({
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-4 right-4 z-[9999]">
       <Card className={`w-96 shadow-xl transition-all duration-300 ${isMinimized ? 'h-16' : 'h-[500px]'}`}>
         {/* Header */}
         <div className="flex items-center justify-between p-4 bg-teal-600 text-white rounded-t-lg">
