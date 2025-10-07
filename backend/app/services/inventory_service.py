@@ -231,6 +231,25 @@ class InventoryService:
                 allocated_change = adjustment.allocated_change
                 new_allocated = allocated + allocated_change
         
+        # Handle safety stock adjustments
+        if adjustment.safety_stock_value is not None or adjustment.safety_stock_change is not None:
+            if adjustment.adjustment_type == 'set':
+                if adjustment.safety_stock_value is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="safety_stock_value is required for 'set' adjustment type"
+                    )
+                new_safety_stock = adjustment.safety_stock_value
+                safety_stock_change = new_safety_stock - safety_stock
+            else:  # change
+                if adjustment.safety_stock_change is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="safety_stock_change is required for 'change' adjustment type"
+                    )
+                safety_stock_change = adjustment.safety_stock_change
+                new_safety_stock = safety_stock + safety_stock_change
+        
         # Create ledger entry
         ledger_entry = {
             'variant_id': adjustment.variant_id,
