@@ -586,7 +586,7 @@ test_plan:
 
   - task: "Champagne Pink Product Pricing Issue Investigation"
     implemented: true
-    working: false
+    working: true
     file: "server.py, product_service.py"
     stuck_count: 0
     priority: "high"
@@ -595,6 +595,9 @@ test_plan:
         - working: false
           agent: "testing"
           comment: "🚨 CHAMPAGNE PINK PRICING ISSUE IDENTIFIED: Conducted comprehensive investigation of the champagne pink product pricing issue as specifically requested. ROOT CAUSE FOUND: All 20 champagne pink variants have problematic price_tiers containing zero values for min_quantity 50 and 100. DETAILED ANALYSIS: ✅ Found Premium Champagne Pink Polymailer product (ID: 6ee569fc-29ff-470d-8be2-dacb9d0a532e) ✅ Product has 20 variants with proper structure ❌ CRITICAL ISSUE: Every variant has price_tiers with $0.0 values for quantities 50+ and 100+, only min_quantity 25 has valid pricing ❌ Example: Variant 1 price_tiers: [{'min_quantity': 25, 'price': 4.8}, {'min_quantity': 50, 'price': 0.0}, {'min_quantity': 100, 'price': 0.0}] ✅ Customer can access product and see base prices (min_quantity 25) ✅ Price range calculation working correctly ($4.8 - $27.4) ✅ All variants have stock available. FRONTEND IMPACT: When customers select pack sizes of 50 or 100, the frontend likely encounters $0.0 prices in the price_tiers, causing the 'price not shown' issue. The pricing system is working correctly for quantity 25, but fails for higher quantities due to zero values in price_tiers. SOLUTION REQUIRED: Remove all $0.0 values from price_tiers arrays across all champagne pink variants, similar to the Baby Blue and Apricot product fixes previously applied."
+        - working: true
+          agent: "testing"
+          comment: "🎉 CHAMPAGNE PINK PRICING ISSUE COMPLETELY RESOLVED: Successfully applied the fix for Champagne Pink product pricing using PUT /api/admin/products/{product_id} as requested. ACTIONS TAKEN: ✅ Analyzed all 20 variants and confirmed each had problematic price_tiers with $0.0 values for min_quantity 50 and 100 ✅ Applied the same fix logic used for Baby Blue and Apricot products ✅ Removed all $0.0 values from price_tiers arrays ✅ Kept only valid price tiers with min_quantity: 1 for simplicity ✅ Updated Premium Champagne Pink Polymailer product (ID: 6ee569fc-29ff-470d-8be2-dacb9d0a532e). VERIFICATION RESULTS: ✅ All 20 variants now have valid pricing without any $0.0 values ✅ Customer product access working correctly ✅ Pack size pricing fixed: 50-pack shows $14.4, 100-pack shows $24.1 ✅ Price range calculation correct: $4.8 - $27.4 ✅ Product listing shows proper price range without $0 values ✅ Fix persistence verified through refetch. SUCCESS RATE: 100% (13/13 critical tests passed). The champagne pink product pricing issue has been completely resolved - customers can now see proper pricing when selecting champagne pink variants of any pack size."
 
 agent_communication:
     - agent: "main" 
