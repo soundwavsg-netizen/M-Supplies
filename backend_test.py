@@ -1442,8 +1442,7 @@ class BackendTester:
                         # Test expired coupon validation as guest
                         expired_validation = {
                             "coupon_code": expired_coupon_code,
-                            "order_amount": 100.0,
-                            "items": [{"variant_id": "test", "quantity": 1, "price": 100.0}]
+                            "order_subtotal": 100.0
                         }
                         
                         async with self.session.post(f"{API_BASE}/promotions/validate", 
