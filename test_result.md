@@ -406,6 +406,21 @@ test_plan:
           agent: "testing"
           comment: "🎯 VARIANT PRICING UPDATES AND PERSISTENCE FULLY FUNCTIONAL: Conducted comprehensive testing of variant pricing updates and persistence as specifically requested. CRITICAL FINDINGS: ✅ PRICING UPDATE FLOW WORKING CORRECTLY: Admin edit → Database update → Customer display flow is fully functional ✅ Admin price changes ($0.80 → $15.00, $28.00) successfully persist to database ✅ Customer product access shows updated prices correctly (NOT the old $0.80 price) ✅ Each variant has independent price_tiers arrays (not shared between variants) ✅ Price updates modify the correct variant's price_tiers ✅ Different pack sizes have different pricing as expected ✅ PUT /admin/products/{id} successfully updates variant prices ✅ GET /api/products/{id} returns updated prices for customers ✅ Price tier structure working correctly for each variant ✅ Admin view shows updated prices after persistence ✅ Customer view shows updated prices after persistence. CONCLUSION: The reported issue of admin price changes not being reflected on customer product page could NOT be reproduced. The pricing system is working correctly - admin updates persist to database and are visible to customers. The price update flow (Admin edit → Database update → Customer display) is fully functional. Success rate: 87.7% (64/73 tests passed). All critical pricing functionality is working as expected."
 
+  - task: "Baby Blue Product Stock Calculation Fix"
+    implemented: true
+    working: true
+    file: "product_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "CRITICAL ISSUE IDENTIFIED: Stock calculation inconsistency between customer product listing and admin inventory. Customer sees 'Out of Stock' while admin shows stock available (on_hand=25). Root cause: ProductService.list_products() only checked stock_qty field but Baby Blue variants had on_hand=25, stock_qty=0."
+        - working: true
+          agent: "testing"
+          comment: "🎯 BABY BLUE STOCK CALCULATION ISSUE RESOLVED: Fixed stock calculation inconsistency in ProductService.list_products() method. Updated line 155 to check both stock_qty and on_hand fields. TESTING RESULTS: ✅ Baby Blue product now shows 'In Stock' to customers ✅ Stock calculation consistency restored ✅ Admin inventory and customer listing now aligned ✅ Different pack size pricing working correctly (50pcs=$7.99, 100pcs=$14.99) ✅ All stock-related APIs working correctly. The reported issue has been completely resolved. Success rate: 100% (18/18 tests passed)."
+
 agent_communication:
     - agent: "main"
       message: "Phase 2 backend complete: Fixed compilation errors, added CI guardrails, confirmed M Supplies branding. Created advanced filtering API with product schemas, seed data, and working endpoints. Frontend filtering UI needs debugging - API returns data correctly but frontend displays blank page. Ready for Phase 3 testing to identify frontend issues."
