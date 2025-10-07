@@ -579,10 +579,15 @@ async def admin_list_inventory(
             available = max(0, on_hand - allocated - safety_stock)
             low_stock_threshold = variant.get('low_stock_threshold', 10)
             
+            # Get the first product image for the packing interface
+            product_images = product.get('images', [])
+            product_image = product_images[0] if product_images else None
+            
             inventory_list.append(InventoryStatus(
                 variant_id=variant['id'],
                 sku=variant['sku'],
                 product_name=product['name'],
+                product_image=product_image,
                 on_hand=on_hand,
                 allocated=allocated,
                 available=available,
