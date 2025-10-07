@@ -5097,18 +5097,19 @@ class BackendTester:
             self.log_test("Product Data Image Test", False, f"Exception: {str(e)}")
 
 async def main():
-    """Run backend tests focused on Static File Serving and Image Accessibility"""
-    print("🚀 Starting M Supplies Backend API Tests - Static File Serving and Image Accessibility")
+    """Run backend tests focused on Packing Interface Image Display Investigation"""
+    print("🚀 Starting M Supplies Backend API Tests - Packing Interface Image Investigation")
     print(f"Testing against: {API_BASE}")
-    print("🎯 FOCUS: Test if uploaded images are properly accessible via static file serving")
-    print("User Issue: Image uploaded successfully (200 response) but not displaying in frontend")
+    print("🎯 FOCUS: Investigate why packing interface isn't showing product images")
+    print("User Issue: Image upload works in ProductForm but packing interface doesn't display images")
+    print("Expected: Packing interface expects 'item.product_image' field but this might not be populated")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Static file serving and image accessibility (as specifically requested in review)
-        await tester.test_static_file_serving_and_image_accessibility()
+        # PRIORITY TEST: Packing interface image investigation (as specifically requested in review)
+        await tester.test_packing_interface_image_investigation()
         
         # Print summary
         passed, failed = tester.print_summary()
