@@ -173,13 +173,32 @@ const ProductForm = () => {
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
 
+    console.log('Starting image upload, files:', files.length);
+
     try {
       setImageUploading(true);
       
-      const formData = new FormData();
-      files.forEach(file => formData.append('files', file));
+      // Validate files
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) {
+          toast.error(`${file.name} is not a valid image file`);
+          return;
+        }
+        if (file.size > 10 * 1024 * 1024) { // 10MB
+          toast.error(`${file.name} is too large. Maximum size is 10MB`);
+          return;
+        }
+      }
       
+      const formData = new FormData();
+      files.forEach((file, index) => {
+        console.log(`Adding file ${index}:`, file.name, file.type, file.size);
+        formData.append('files', file);
+      });
+      
+      console.log('Sending upload request...');
       const response = await adminUploadAPI.images(formData);
+      console.log('Upload response:', response);
       
       const newImageUrls = response.data.urls;
       setProduct(prev => ({
@@ -191,7 +210,9 @@ const ProductForm = () => {
     } catch (err) {
       console.error('Image upload error:', err);
       console.error('Error response:', err.response?.data);
-      toast.error(`Failed to upload images: ${err.response?.data?.detail || err.message}`);
+      console.error('Error status:', err.response?.status);
+      const errorMsg = err.response?.data?.detail || err.response?.data?.message || err.message;
+      toast.error(`Failed to upload images: ${errorMsg}`);
     } finally {
       setImageUploading(false);
     }
