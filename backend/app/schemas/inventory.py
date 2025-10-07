@@ -117,9 +117,9 @@ class BusinessSettings(BaseModel):
         "lazada": 2
     }
     # Product configuration
-    available_colors: list = [
+    available_colors: List[str] = [
         "white", "pastel pink", "champagne pink", "milktea", "black", "clear"
     ]
-    available_types: list = [
+    available_types: List[str] = [
         "normal", "bubble wrap", "tool", "consumable"
     ]
