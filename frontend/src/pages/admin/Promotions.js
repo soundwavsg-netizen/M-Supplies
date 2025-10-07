@@ -105,7 +105,7 @@ const Promotions = () => {
           value: parseFloat(formData.value),
           min_order_amount: formData.min_order_amount ? parseFloat(formData.min_order_amount) : 0,
           valid_from: new Date(formData.valid_from).toISOString(),
-          valid_to: formData.valid_to ? new Date(formData.valid_to).toISOString() : null,
+          valid_to: new Date(formData.valid_to).toISOString(),
           is_active: formData.is_active
         };
 
