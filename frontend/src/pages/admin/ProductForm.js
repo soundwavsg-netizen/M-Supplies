@@ -1174,7 +1174,7 @@ const ProductForm = () => {
                             title={
                               product.type === 'bubble wrap' 
                                 ? `Individual pieces in stock`
-                                : `Total pieces: ${(variant.on_hand || 0) * (variant.pack_size || 50)}`
+                                : `Total pieces: ${(variant.on_hand || 0) * (variant.attributes?.pack_size || variant.pack_size || 50)}`
                             }
                           />
                           <Button
