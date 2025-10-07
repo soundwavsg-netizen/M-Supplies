@@ -1138,13 +1138,14 @@ class BackendTester:
         except Exception as e:
             self.log_test("Full Payload Coupon Creation", False, f"Exception: {str(e)}")
         
-        # Test 2: Minimal required fields only
-        print("\n📝 Test 2: Minimal required fields only")
+        # Test 2: Minimal required fields only (with required valid_to)
+        print("\n📝 Test 2: Minimal required fields only (with required valid_to)")
         minimal_payload = {
             "code": "TEST10",
             "type": "percent",
             "value": 10,
-            "valid_from": "2025-01-07T12:00:00.000Z"
+            "valid_from": "2025-01-07T12:00:00.000Z",
+            "valid_to": "2025-12-31T23:59:59.000Z"  # Added: this field is required
         }
         
         try:
