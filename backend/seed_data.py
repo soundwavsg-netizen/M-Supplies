@@ -230,6 +230,9 @@ async def seed_database():
         'available_types': [
             'normal', 'bubble wrap', 'tool', 'consumable'
         ],
+        'available_categories': [
+            'polymailers', 'accessories', 'custom printing', 'packaging supplies'
+        ],
         'created_at': datetime.now(timezone.utc)
     }
     await db.settings.insert_one(settings)
