@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { useEmergentAgent } from '@/hooks/useEmergentAgent';
 
 const ChatWidget = ({ 
   agentType = 'main', 
