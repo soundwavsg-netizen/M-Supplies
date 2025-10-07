@@ -324,7 +324,9 @@ const PackingInterface = () => {
                   <div className="text-center mb-3">
                     <p className="text-sm font-semibold text-gray-900 leading-tight">{productInfo.color}</p>
                     <p className="text-xs text-gray-600">{productInfo.size}</p>
-                    <p className="text-xs text-gray-500">{productInfo.packSize} pcs</p>
+                    {productInfo.packSize && productInfo.packSize !== '0' && (
+                      <p className="text-xs text-gray-500">{productInfo.packSize} pcs</p>
+                    )}
                   </div>
                   
                   {/* Stock Display */}
