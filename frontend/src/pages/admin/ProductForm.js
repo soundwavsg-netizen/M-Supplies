@@ -49,6 +49,7 @@ const ProductForm = () => {
     width_cm: '',
     height_cm: '',
     size_code: '',
+    pack_size: 50, // Default pack size
     price_tiers: [
       { min_quantity: 25, price: '' },
       { min_quantity: 50, price: '' },
