@@ -252,6 +252,12 @@ const ProductForm = () => {
       return;
     }
     
+    // Check if pack sizes are selected
+    if (!newVariant.selected_pack_sizes || newVariant.selected_pack_sizes.length === 0) {
+      toast.error(product.type === 'bubble wrap' ? 'Please select a quantity option' : 'Please select at least one pack size');
+      return;
+    }
+    
     // Check if at least the first price tier has a price
     if (!newVariant.price_tiers[0].price) {
       toast.error('Please set at least the base price (25 pcs)');
@@ -271,28 +277,40 @@ const ProductForm = () => {
       return;
     }
 
-    const variant = {
-      ...newVariant,
-      variant_id: `var_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      sku: `${product.category.toUpperCase()}_${product.type.toUpperCase()}_${product.color.toUpperCase()}_${newVariant.size_code}`,
-      width_cm: parseInt(newVariant.width_cm),
-      height_cm: parseInt(newVariant.height_cm),
+    // Create variants for each selected pack size
+    const newVariants = newVariant.selected_pack_sizes.map(packSize => ({
+      variant_id: `var_${Date.now()}_${packSize}_${Math.random().toString(36).substr(2, 9)}`,
+      sku: `${product.category.toUpperCase()}_${product.type.toUpperCase()}_${product.color.toUpperCase()}_${newVariant.size_code}_${packSize}`,
+      attributes: {
+        width_cm: parseInt(newVariant.width_cm),
+        height_cm: parseInt(newVariant.height_cm),
+        size_code: newVariant.size_code,
+        type: product.type,
+        color: product.color,
+        pack_size: packSize
+      },
       price_tiers: validPriceTiers,
       on_hand: parseInt(newVariant.on_hand) || 0,
       safety_stock: parseInt(newVariant.safety_stock) || 0
-    };
+    }));
 
     setProduct(prev => ({
       ...prev,
-      variants: [...prev.variants, variant]
+      variants: [...prev.variants, ...newVariants]
     }));
 
-    // Reset form (no color/type since they're at product level)
+    const packSizeText = product.type === 'bubble wrap' 
+      ? `${newVariant.selected_pack_sizes[0]} pieces`
+      : `${newVariant.selected_pack_sizes.length} pack sizes`;
+    toast.success(`Added ${newVariants.length} variant${newVariants.length > 1 ? 's' : ''} (${packSizeText})`);
+
+    // Reset form
     const newPriceTiers = getPricingTiers();
     setNewVariant({
       width_cm: '',
       height_cm: '',
       size_code: '',
+      selected_pack_sizes: [],
       price_tiers: newPriceTiers,
       on_hand: '',
       safety_stock: 0
