@@ -39,6 +39,9 @@ from app.services.payment_service import PaymentService
 from app.services.inventory_service import InventoryService
 from app.services.upload_service import UploadService
 
+# Import API routers
+from app.api import promotion
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
