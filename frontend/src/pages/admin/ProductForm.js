@@ -213,25 +213,6 @@ const ProductForm = () => {
       toast.error(product.type === 'bubble wrap' ? 'Please select a quantity option' : 'Please select at least one pack size');
       return;
     }
-    
-    // Check if at least the first price tier has a price
-    if (!newVariant.price_tiers[0].price) {
-      toast.error('Please set at least the base price (25 pcs)');
-      return;
-    }
-
-    // Filter out empty price tiers and convert to numbers
-    const validPriceTiers = newVariant.price_tiers
-      .filter(tier => tier.price && tier.price !== '')
-      .map(tier => ({
-        min_quantity: parseInt(tier.min_quantity),
-        price: parseFloat(tier.price)
-      }));
-
-    if (validPriceTiers.length === 0) {
-      toast.error('Please set at least one price tier');
-      return;
-    }
 
     // Create variants for each selected pack size
     const newVariants = newVariant.selected_pack_sizes.map(packSize => ({
@@ -245,9 +226,9 @@ const ProductForm = () => {
         color: product.color,
         pack_size: packSize
       },
-      price_tiers: validPriceTiers,
-      on_hand: parseInt(newVariant.on_hand) || 0,
-      safety_stock: parseInt(newVariant.safety_stock) || 0
+      price_tiers: getDefaultPriceTiers(packSize), // Default price structure with 0 values
+      on_hand: 0, // Default stock
+      safety_stock: 0 // Default safety stock
     }));
 
     setProduct(prev => ({
@@ -258,18 +239,14 @@ const ProductForm = () => {
     const packSizeText = product.type === 'bubble wrap' 
       ? `${newVariant.selected_pack_sizes[0]} pieces`
       : `${newVariant.selected_pack_sizes.length} pack sizes`;
-    toast.success(`Added ${newVariants.length} variant${newVariants.length > 1 ? 's' : ''} (${packSizeText})`);
+    toast.success(`Added ${newVariants.length} variant${newVariants.length > 1 ? 's' : ''} (${packSizeText}). Set pricing and stock below.`);
 
     // Reset form
-    const newPriceTiers = getPricingTiers();
     setNewVariant({
       width_cm: '',
       height_cm: '',
       size_code: '',
-      selected_pack_sizes: [],
-      price_tiers: newPriceTiers,
-      on_hand: '',
-      safety_stock: 0
+      selected_pack_sizes: []
     });
   };
 
