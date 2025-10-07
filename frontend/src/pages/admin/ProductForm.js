@@ -758,8 +758,9 @@ const ProductForm = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableTypes.map(type => {
-                      const typeStr = typeof type === 'string' ? type : String(type);
+                    {Array.isArray(availableTypes) && availableTypes.map(type => {
+                      const typeStr = typeof type === 'string' ? type : String(type || '');
+                      if (!typeStr) return null;
                       return (
                         <SelectItem key={typeStr} value={typeStr} className="capitalize">
                           {typeStr}
