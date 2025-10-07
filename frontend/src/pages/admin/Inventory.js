@@ -104,6 +104,12 @@ const Inventory = () => {
               <p className="text-sm text-gray-600">Add new products or search existing inventory</p>
             </div>
             <div className="flex gap-3">
+              <Link to="/admin/packing">
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  <Package className="w-4 h-4 mr-2" />
+                  📦 Packing Interface
+                </Button>
+              </Link>
               <Link to="/admin/products/new">
                 <Button className="bg-teal-700 hover:bg-teal-800">
                   <Plus className="w-4 h-4 mr-2" />
