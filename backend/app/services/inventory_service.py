@@ -183,12 +183,15 @@ class InventoryService:
         
         on_hand = variant.get('on_hand', 0)
         allocated = variant.get('allocated', 0)
+        safety_stock = variant.get('safety_stock', 0)
         
         # Initialize changes
         on_hand_change = 0
         allocated_change = 0
+        safety_stock_change = 0
         new_on_hand = on_hand
         new_allocated = allocated
+        new_safety_stock = safety_stock
         
         # Handle on_hand adjustments
         if adjustment.on_hand_value is not None or adjustment.on_hand_change is not None:
