@@ -4638,20 +4638,246 @@ class BackendTester:
             self.log_test("Baby Blue Variant Formatting Debug", False, f"Exception: {str(e)}")
             return
 
+    async def test_static_file_serving_and_image_accessibility(self):
+        """Test static file serving and image accessibility as requested in review"""
+        print("\n📸 Testing Static File Serving and Image Accessibility...")
+        print("🎯 FOCUS: Test if uploaded images are properly accessible via static file serving")
+        print("User Issue: Image uploaded successfully (200 response) but not displaying in frontend")
+        print("Testing: /uploads/products/ URLs accessibility, CORS headers, URL construction, file permissions")
+        
+        if not self.admin_token:
+            self.log_test("Static File Test - Admin Token", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Step 1: Test uploading a new image and get the URL
+        print("\n🔍 STEP 1: Upload new image and verify URL construction")
+        
+        # Create a test image
+        test_image = Image.new('RGB', (100, 100), color='red')
+        image_buffer = io.BytesIO()
+        test_image.save(image_buffer, format='PNG')
+        image_size = len(image_buffer.getvalue())
+        image_buffer.seek(0)
+        
+        uploaded_image_url = None
+        try:
+            form_data = aiohttp.FormData()
+            form_data.add_field('file', image_buffer, filename='test-static-serving.png', content_type='image/png')
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/image", 
+                                       data=form_data, headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    uploaded_image_url = data.get('url')
+                    self.log_test("Image Upload for Static Test", True, f"Uploaded: {uploaded_image_url}")
+                    
+                    # Verify URL format
+                    if uploaded_image_url and uploaded_image_url.startswith('/uploads/products/'):
+                        self.log_test("URL Construction Format", True, f"Correct format: {uploaded_image_url}")
+                    else:
+                        self.log_test("URL Construction Format", False, f"Unexpected format: {uploaded_image_url}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Image Upload for Static Test", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Image Upload for Static Test", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 2: Test static file accessibility via HTTP GET
+        print("\n🔍 STEP 2: Test static file accessibility via HTTP GET")
+        
+        if uploaded_image_url:
+            # Construct full URL for static file access
+            static_file_url = f"{BACKEND_URL}{uploaded_image_url}"
+            
+            try:
+                async with self.session.get(static_file_url) as resp:
+                    if resp.status == 200:
+                        content_type = resp.headers.get('content-type', '')
+                        content_length = resp.headers.get('content-length', '0')
+                        self.log_test("Static File HTTP GET Access", True, 
+                                    f"Status 200, Content-Type: {content_type}, Size: {content_length} bytes")
+                        
+                        # Verify it's actually an image
+                        if 'image' in content_type.lower():
+                            self.log_test("Static File Content Type", True, f"Correct image content-type: {content_type}")
+                        else:
+                            self.log_test("Static File Content Type", False, f"Unexpected content-type: {content_type}")
+                            
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Static File HTTP GET Access", False, 
+                                    f"Status {resp.status}: {error_text}")
+                        self.log_test("CRITICAL ISSUE", False, 
+                                    f"Static file not accessible at {static_file_url} - this explains why images don't display in frontend")
+            except Exception as e:
+                self.log_test("Static File HTTP GET Access", False, f"Exception: {str(e)}")
+        
+        # Step 3: Test CORS headers for static files
+        print("\n🔍 STEP 3: Test CORS headers for static files")
+        
+        if uploaded_image_url:
+            static_file_url = f"{BACKEND_URL}{uploaded_image_url}"
+            
+            try:
+                # Test CORS preflight request
+                cors_headers = {
+                    'Origin': 'https://msupplies-shop.preview.emergentagent.com',
+                    'Access-Control-Request-Method': 'GET',
+                    'Access-Control-Request-Headers': 'content-type'
+                }
+                
+                async with self.session.options(static_file_url, headers=cors_headers) as resp:
+                    cors_allow_origin = resp.headers.get('access-control-allow-origin', '')
+                    cors_allow_methods = resp.headers.get('access-control-allow-methods', '')
+                    
+                    if cors_allow_origin:
+                        self.log_test("Static File CORS Headers", True, 
+                                    f"CORS Origin: {cors_allow_origin}, Methods: {cors_allow_methods}")
+                    else:
+                        self.log_test("Static File CORS Headers", False, 
+                                    "No CORS headers found - this may prevent frontend access")
+                        
+                # Test actual GET request with Origin header
+                get_headers = {'Origin': 'https://msupplies-shop.preview.emergentagent.com'}
+                async with self.session.get(static_file_url, headers=get_headers) as resp:
+                    cors_allow_origin = resp.headers.get('access-control-allow-origin', '')
+                    if cors_allow_origin:
+                        self.log_test("Static File CORS on GET", True, f"CORS Origin on GET: {cors_allow_origin}")
+                    else:
+                        self.log_test("Static File CORS on GET", False, "No CORS headers on GET request")
+                        
+            except Exception as e:
+                self.log_test("Static File CORS Test", False, f"Exception: {str(e)}")
+        
+        # Step 4: Test existing uploaded images
+        print("\n🔍 STEP 4: Test accessibility of existing uploaded images")
+        
+        # Test a few existing images from the uploads directory
+        existing_images = [
+            "07f57a7e-abbf-4f09-b598-1962bc7ea95b.png",  # 28KB PNG (similar to user's file)
+            "b8a8e2cb-e485-44c5-8091-19fd56c17143.jpg",  # Large JPG
+            "00bb2a9c-2e76-4cde-a764-bca56960cf1a.jpg"   # Small JPG
+        ]
+        
+        for image_filename in existing_images:
+            existing_url = f"{BACKEND_URL}/uploads/products/{image_filename}"
+            
+            try:
+                async with self.session.get(existing_url) as resp:
+                    if resp.status == 200:
+                        content_length = resp.headers.get('content-length', '0')
+                        self.log_test(f"Existing Image Access - {image_filename}", True, 
+                                    f"Accessible, Size: {content_length} bytes")
+                    else:
+                        self.log_test(f"Existing Image Access - {image_filename}", False, 
+                                    f"Status {resp.status} - Image not accessible")
+            except Exception as e:
+                self.log_test(f"Existing Image Access - {image_filename}", False, f"Exception: {str(e)}")
+        
+        # Step 5: Test file permissions on server
+        print("\n🔍 STEP 5: Test file permissions on server")
+        
+        try:
+            # Check if upload directory exists and has proper permissions
+            import os
+            upload_dir = "/app/backend/uploads/products"
+            
+            if os.path.exists(upload_dir):
+                dir_permissions = oct(os.stat(upload_dir).st_mode)[-3:]
+                self.log_test("Upload Directory Permissions", True, f"Directory exists with permissions: {dir_permissions}")
+                
+                # Check a few file permissions
+                for image_filename in existing_images[:2]:  # Check first 2
+                    file_path = f"{upload_dir}/{image_filename}"
+                    if os.path.exists(file_path):
+                        file_permissions = oct(os.stat(file_path).st_mode)[-3:]
+                        readable = os.access(file_path, os.R_OK)
+                        self.log_test(f"File Permissions - {image_filename}", readable, 
+                                    f"Permissions: {file_permissions}, Readable: {readable}")
+                    else:
+                        self.log_test(f"File Permissions - {image_filename}", False, "File not found")
+            else:
+                self.log_test("Upload Directory Permissions", False, "Upload directory does not exist")
+                
+        except Exception as e:
+            self.log_test("File Permissions Check", False, f"Exception: {str(e)}")
+        
+        # Step 6: Test full URL construction for frontend
+        print("\n🔍 STEP 6: Test full URL construction for frontend")
+        
+        if uploaded_image_url:
+            # Test different URL construction methods
+            url_variations = [
+                f"{BACKEND_URL}{uploaded_image_url}",  # Direct backend URL
+                f"https://msupplies-shop.preview.emergentagent.com{uploaded_image_url}",  # Frontend URL
+                uploaded_image_url  # Relative URL
+            ]
+            
+            for i, test_url in enumerate(url_variations):
+                try:
+                    async with self.session.get(test_url) as resp:
+                        if resp.status == 200:
+                            self.log_test(f"URL Variation {i+1} Access", True, f"Accessible: {test_url}")
+                        else:
+                            self.log_test(f"URL Variation {i+1} Access", False, f"Not accessible: {test_url}")
+                except Exception as e:
+                    self.log_test(f"URL Variation {i+1} Access", False, f"Exception for {test_url}: {str(e)}")
+        
+        # Step 7: Test image serving from product data
+        print("\n🔍 STEP 7: Test image URLs returned in product data")
+        
+        try:
+            # Get a product and check if it has image URLs
+            async with self.session.post(f"{API_BASE}/products/filter", json={"page": 1, "limit": 5}) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    products = data.get('products', [])
+                    
+                    images_found = 0
+                    for product in products:
+                        product_images = product.get('images', [])
+                        if product_images:
+                            images_found += len(product_images)
+                            
+                            # Test accessibility of product images
+                            for img_url in product_images[:2]:  # Test first 2 images
+                                if img_url.startswith('/uploads/'):
+                                    full_img_url = f"{BACKEND_URL}{img_url}"
+                                    
+                                    try:
+                                        async with self.session.get(full_img_url) as img_resp:
+                                            if img_resp.status == 200:
+                                                self.log_test(f"Product Image Access", True, f"Product image accessible: {img_url}")
+                                            else:
+                                                self.log_test(f"Product Image Access", False, f"Product image not accessible: {img_url}")
+                                    except Exception as e:
+                                        self.log_test(f"Product Image Access", False, f"Exception accessing {img_url}: {str(e)}")
+                    
+                    self.log_test("Product Images Found", images_found > 0, f"Found {images_found} images in product data")
+                    
+                else:
+                    self.log_test("Product Data Image Test", False, f"Could not get products: {resp.status}")
+                    
+        except Exception as e:
+            self.log_test("Product Data Image Test", False, f"Exception: {str(e)}")
+
 async def main():
-    """Run backend tests focused on Image Upload functionality debug"""
-    print("🚀 Starting M Supplies Backend API Tests - Image Upload Functionality Debug")
+    """Run backend tests focused on Static File Serving and Image Accessibility"""
+    print("🚀 Starting M Supplies Backend API Tests - Static File Serving and Image Accessibility")
     print(f"Testing against: {API_BASE}")
+    print("🎯 FOCUS: Test if uploaded images are properly accessible via static file serving")
+    print("User Issue: Image uploaded successfully (200 response) but not displaying in frontend")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Debug 422 validation error for image uploads (as specifically requested in review)
-        await tester.test_image_upload_422_debug()
-        
-        # Additional image upload tests
-        await tester.test_image_upload_functionality()
+        # PRIORITY TEST: Static file serving and image accessibility (as specifically requested in review)
+        await tester.test_static_file_serving_and_image_accessibility()
         
         # Print summary
         passed, failed = tester.print_summary()
