@@ -105,14 +105,14 @@ const ProductForm = () => {
       const settings = response.data;
       
       // Set available colors, types, and categories from settings
-      if (settings.available_colors) {
-        setAvailableColors(settings.available_colors);
+      if (settings.available_colors && Array.isArray(settings.available_colors)) {
+        setAvailableColors(settings.available_colors.filter(c => typeof c === 'string'));
       }
-      if (settings.available_types) {
-        setAvailableTypes(settings.available_types);
+      if (settings.available_types && Array.isArray(settings.available_types)) {
+        setAvailableTypes(settings.available_types.filter(t => typeof t === 'string'));
       }
-      if (settings.available_categories) {
-        setAvailableCategories(settings.available_categories);
+      if (settings.available_categories && Array.isArray(settings.available_categories)) {
+        setAvailableCategories(settings.available_categories.filter(cat => typeof cat === 'string'));
       }
     } catch (err) {
       console.error('Failed to load settings:', err);
