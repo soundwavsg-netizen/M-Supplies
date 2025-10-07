@@ -754,26 +754,14 @@ const ProductForm = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableTypes.map(type => (
-                      <div key={type} className="flex items-center justify-between group px-2 py-1.5 hover:bg-gray-50">
-                        <SelectItem value={type} className="flex-1 capitalize">
-                          {type}
+                    {availableTypes.map(type => {
+                      const typeStr = typeof type === 'string' ? type : String(type);
+                      return (
+                        <SelectItem key={typeStr} value={typeStr} className="capitalize">
+                          {typeStr}
                         </SelectItem>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            deleteType(type);
-                          }}
-                          className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 text-red-500 hover:text-red-700 ml-2"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </SelectContent>
                 </Select>
                 {product.type === 'bubble wrap' && (
