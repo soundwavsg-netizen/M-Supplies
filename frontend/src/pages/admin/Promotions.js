@@ -100,7 +100,27 @@ const Promotions = () => {
         onClose();
         fetchAllData();
       } catch (error) {
-        toast.error(error.response?.data?.detail || 'Failed to save coupon');
+        console.error('Coupon save error:', error);
+        
+        // Handle different error response formats
+        let errorMessage = 'Failed to save coupon';
+        
+        if (error.response?.data) {
+          const errorData = error.response.data;
+          
+          if (typeof errorData.detail === 'string') {
+            errorMessage = errorData.detail;
+          } else if (Array.isArray(errorData.detail)) {
+            // Handle validation errors array
+            errorMessage = errorData.detail.map(err => err.msg || err).join(', ');
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        toast.error(errorMessage);
       }
     };
 
