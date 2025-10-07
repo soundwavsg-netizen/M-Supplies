@@ -1240,6 +1240,225 @@ class BackendTester:
         except Exception as e:
             self.log_test("Filtered Products API", False, f"Exception: {str(e)}")
 
+    async def test_product_deletion_functionality(self):
+        """Test product deletion functionality and investigate why deletion isn't working"""
+        print("\n🗑️ Testing Product Deletion Functionality...")
+        
+        if not self.admin_token:
+            self.log_test("Product Deletion Test", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Step 1: Get list of current products before deletion
+        print("\n📋 Step 1: Getting product list before deletion...")
+        premium_product_id = None
+        initial_product_count = 0
+        initial_variant_count = 0
+        
+        try:
+            async with self.session.get(f"{API_BASE}/products") as resp:
+                if resp.status == 200:
+                    products = await resp.json()
+                    initial_product_count = len(products)
+                    
+                    # Find Premium Polymailers product
+                    for product in products:
+                        if "Premium Polymailers" in product.get('name', ''):
+                            premium_product_id = product['id']
+                            break
+                    
+                    if premium_product_id:
+                        self.log_test("Find Premium Polymailers Product", True, f"Found Premium Polymailers ID: {premium_product_id}")
+                    else:
+                        self.log_test("Find Premium Polymailers Product", False, "Premium Polymailers not found in product list")
+                        return
+                    
+                    self.log_test("Initial Product Count", True, f"Found {initial_product_count} products")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Get Products Before Deletion", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Get Products Before Deletion", False, f"Exception: {str(e)}")
+            return
+        
+        # Get detailed product info including variants
+        try:
+            async with self.session.get(f"{API_BASE}/products/{premium_product_id}") as resp:
+                if resp.status == 200:
+                    product_details = await resp.json()
+                    variants = product_details.get('variants', [])
+                    initial_variant_count = len(variants)
+                    self.log_test("Get Premium Product Details", True, f"Premium Polymailers has {initial_variant_count} variants")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Get Premium Product Details", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Get Premium Product Details", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 2: Test inventory API before deletion
+        print("\n📦 Step 2: Testing inventory API before deletion...")
+        initial_inventory_count = 0
+        premium_variants_in_inventory = 0
+        
+        try:
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                if resp.status == 200:
+                    inventory = await resp.json()
+                    initial_inventory_count = len(inventory)
+                    
+                    # Count Premium Polymailers variants in inventory
+                    for item in inventory:
+                        if "Premium Polymailers" in item.get('product_name', ''):
+                            premium_variants_in_inventory += 1
+                    
+                    self.log_test("Initial Inventory Count", True, f"Found {initial_inventory_count} inventory items")
+                    self.log_test("Premium Variants in Inventory", True, f"Found {premium_variants_in_inventory} Premium Polymailers variants")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Get Inventory Before Deletion", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Get Inventory Before Deletion", False, f"Exception: {str(e)}")
+        
+        # Step 3: Test product deletion API
+        print("\n🗑️ Step 3: Testing product deletion API...")
+        
+        try:
+            async with self.session.delete(f"{API_BASE}/admin/products/{premium_product_id}", headers=headers) as resp:
+                if resp.status == 200:
+                    response_data = await resp.json()
+                    self.log_test("Product Deletion API Call", True, f"Deletion API returned: {response_data}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Product Deletion API Call", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Product Deletion API Call", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 4: Verify product is marked as is_active: False
+        print("\n🔍 Step 4: Verifying soft delete implementation...")
+        
+        try:
+            # Try to get the product directly (should still exist in DB but marked inactive)
+            async with self.session.get(f"{API_BASE}/products/{premium_product_id}") as resp:
+                if resp.status == 404:
+                    self.log_test("Product Soft Delete - Customer View", True, "Product not accessible to customers after deletion")
+                elif resp.status == 200:
+                    product_data = await resp.json()
+                    is_active = product_data.get('is_active', True)
+                    if is_active is False:
+                        self.log_test("Product Soft Delete - is_active Flag", True, "Product marked as is_active: False")
+                    else:
+                        self.log_test("Product Soft Delete - is_active Flag", False, f"Product is_active: {is_active} (should be False)")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Product Soft Delete Verification", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Product Soft Delete Verification", False, f"Exception: {str(e)}")
+        
+        # Step 5: Check if variants are deleted
+        print("\n🧩 Step 5: Checking if variants are deleted...")
+        
+        try:
+            # Check if variants still exist by trying to access the product details with admin token
+            async with self.session.get(f"{API_BASE}/products/{premium_product_id}", headers=headers) as resp:
+                if resp.status == 200:
+                    product_data = await resp.json()
+                    remaining_variants = product_data.get('variants', [])
+                    if len(remaining_variants) == 0:
+                        self.log_test("Variant Deletion", True, "All variants deleted successfully")
+                    else:
+                        self.log_test("Variant Deletion", False, f"Still has {len(remaining_variants)} variants (should be 0)")
+                elif resp.status == 404:
+                    self.log_test("Variant Deletion", True, "Product not found - variants likely deleted")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Variant Deletion Check", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Variant Deletion Check", False, f"Exception: {str(e)}")
+        
+        # Step 6: Test product list after deletion (with is_active=True filter)
+        print("\n📋 Step 6: Testing product list after deletion...")
+        
+        try:
+            async with self.session.get(f"{API_BASE}/products") as resp:
+                if resp.status == 200:
+                    products_after = await resp.json()
+                    final_product_count = len(products_after)
+                    
+                    # Check if Premium Polymailers is filtered out
+                    premium_found_after = any("Premium Polymailers" in p.get('name', '') for p in products_after)
+                    
+                    if not premium_found_after:
+                        self.log_test("Product List Filtering", True, "Premium Polymailers filtered out from product list")
+                    else:
+                        self.log_test("Product List Filtering", False, "Premium Polymailers still appears in product list")
+                    
+                    if final_product_count == initial_product_count - 1:
+                        self.log_test("Product Count After Deletion", True, f"Product count reduced from {initial_product_count} to {final_product_count}")
+                    else:
+                        self.log_test("Product Count After Deletion", False, f"Expected {initial_product_count - 1}, got {final_product_count}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Get Products After Deletion", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Get Products After Deletion", False, f"Exception: {str(e)}")
+        
+        # Step 7: Test inventory API after deletion
+        print("\n📦 Step 7: Testing inventory API after deletion...")
+        
+        try:
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                if resp.status == 200:
+                    inventory_after = await resp.json()
+                    final_inventory_count = len(inventory_after)
+                    
+                    # Count Premium Polymailers variants in inventory after deletion
+                    premium_variants_after = sum(1 for item in inventory_after if "Premium Polymailers" in item.get('product_name', ''))
+                    
+                    if premium_variants_after == 0:
+                        self.log_test("Inventory Filtering After Deletion", True, "Premium Polymailers variants removed from inventory")
+                    else:
+                        self.log_test("Inventory Filtering After Deletion", False, f"Still found {premium_variants_after} Premium variants in inventory")
+                    
+                    expected_inventory_count = initial_inventory_count - premium_variants_in_inventory
+                    if final_inventory_count == expected_inventory_count:
+                        self.log_test("Inventory Count After Deletion", True, f"Inventory count reduced from {initial_inventory_count} to {final_inventory_count}")
+                    else:
+                        self.log_test("Inventory Count After Deletion", False, f"Expected {expected_inventory_count}, got {final_inventory_count}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Get Inventory After Deletion", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Get Inventory After Deletion", False, f"Exception: {str(e)}")
+        
+        # Step 8: Test filtered products API
+        print("\n🔍 Step 8: Testing filtered products API after deletion...")
+        
+        try:
+            filter_request = {"page": 1, "limit": 100}
+            async with self.session.post(f"{API_BASE}/products/filter", json=filter_request) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    filtered_products = data.get('products', [])
+                    
+                    # Check if Premium Polymailers is filtered out
+                    premium_in_filtered = any("Premium Polymailers" in p.get('name', '') for p in filtered_products)
+                    
+                    if not premium_in_filtered:
+                        self.log_test("Filtered Products API", True, "Premium Polymailers not in filtered results")
+                    else:
+                        self.log_test("Filtered Products API", False, "Premium Polymailers still appears in filtered results")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Filtered Products API", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Filtered Products API", False, f"Exception: {str(e)}")
+
     async def test_cart_api_endpoints(self):
         """Test cart API endpoints comprehensively"""
         print("\n🛒 Testing Cart API Endpoints...")
