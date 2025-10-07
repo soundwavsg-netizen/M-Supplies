@@ -6093,18 +6093,18 @@ class BackendTester:
 
 async def main():
     """Run backend tests focused on Champagne Pink Product Pricing Issue"""
-    print("🚀 Starting M Supplies Backend API Tests - Champagne Pink Product Pricing Issue")
+    print("🚀 Starting M Supplies Backend API Tests - Champagne Pink Product Pricing Fix")
     print(f"Testing against: {API_BASE}")
-    print("🎯 FOCUS: Investigating champagne pink product pricing issue")
+    print("🎯 FOCUS: Fixing champagne pink product pricing issue")
     print("User Issue: When selecting a variant for champagne pink product, the price is not shown")
-    print("Investigation: Check product structure, variant pricing, price tiers, and price calculation logic")
+    print("Solution: Remove all $0.0 values from price_tiers and apply the same fix as Baby Blue and Apricot")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Investigate champagne pink pricing issue
-        await tester.test_champagne_pink_pricing_issue()
+        # PRIORITY TEST: Fix champagne pink pricing issue
+        await tester.test_champagne_pink_pricing_fix()
         
         # Print summary
         passed, failed = tester.print_summary()
