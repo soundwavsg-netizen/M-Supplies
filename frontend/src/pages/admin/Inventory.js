@@ -110,6 +110,12 @@ const Inventory = () => {
                   📦 Packing Interface
                 </Button>
               </Link>
+              <Link to="/admin/promotions">
+                <Button className="bg-purple-600 hover:bg-purple-700">
+                  <Package className="w-4 h-4 mr-2" />
+                  🎟️ Promotions
+                </Button>
+              </Link>
               <Link to="/admin/products/new">
                 <Button className="bg-teal-700 hover:bg-teal-800">
                   <Plus className="w-4 h-4 mr-2" />
