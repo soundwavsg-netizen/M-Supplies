@@ -55,6 +55,10 @@ class ProductService:
         }
         new_attributes['color'] = color_mapping.get(color, 'white')
         
+        # Add pack_size - required field in new schema
+        # Default to 50 if not present in old data
+        new_attributes['pack_size'] = attributes.get('pack_size', 50)
+        
         # Keep optional fields
         if 'thickness' in attributes:
             new_attributes['thickness'] = attributes['thickness']
