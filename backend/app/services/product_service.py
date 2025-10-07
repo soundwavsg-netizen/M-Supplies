@@ -140,12 +140,15 @@ class ProductService:
         for product in products:
             variants = await self.product_repo.get_variants_by_product(product['id'])
             
-            # Calculate price range
+            # Calculate price range (exclude 0 values)
             if variants:
                 all_prices = []
                 for variant in variants:
                     for tier in variant.get('price_tiers', []):
-                        all_prices.append(tier['price'])
+                        price = tier.get('price', 0)
+                        # Only include non-zero prices in range calculation
+                        if price > 0:
+                            all_prices.append(price)
                 
                 price_range = {
                     'min': min(all_prices) if all_prices else 0,
