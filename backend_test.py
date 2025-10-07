@@ -648,7 +648,8 @@ class BackendTester:
                     "height_cm": 25,
                     "size_code": "20x25",
                     "type": "normal",
-                    "color": "white"
+                    "color": "white",
+                    "pack_size": 100
                 },
                 "price_tiers": [{"min_quantity": 1, "price": 0.80}],
                 "stock_qty": 50,
@@ -664,7 +665,8 @@ class BackendTester:
                     "height_cm": 30,
                     "size_code": "25x30",
                     "type": "normal",
-                    "color": "milktea"
+                    "color": "milktea",
+                    "pack_size": 50
                 },
                 "price_tiers": [{"min_quantity": 1, "price": 0.90}],
                 "stock_qty": 75,
