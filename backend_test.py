@@ -3721,17 +3721,233 @@ class BackendTester:
         except Exception as e:
             self.log_test("Customer Product Access After Fix", False, f"Exception: {str(e)}")
 
+    async def test_baby_blue_variant_formatting_debug(self):
+        """Debug Baby Blue variant formatting issues in packing interface"""
+        print("\n🔍 DEBUGGING BABY BLUE VARIANT FORMATTING ISSUES...")
+        print("Investigating:")
+        print("1. Missing '100pcs' text in Baby Blue 100pcs variant display")
+        print("2. Font inconsistency in Baby Blue formatting vs other variants")
+        print("3. SKU structure analysis for all Baby Blue variants")
+        print("4. Pack size data in SKU breakdown (4th index after splitting by '_')")
+        print("5. Color data in SKU breakdown (2nd index after splitting by '_')")
+        print("6. Comparison with White and Apricot variants")
+        
+        if not self.admin_token:
+            self.log_test("Baby Blue Variant Debug", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Step 1: Get detailed inventory data using GET /api/admin/inventory
+        print("\n📊 STEP 1: Getting detailed inventory data...")
+        try:
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                if resp.status == 200:
+                    inventory_data = await resp.json()
+                    self.log_test("Admin Inventory API Access", True, f"Retrieved {len(inventory_data)} inventory items")
+                    
+                    # Step 2: Analyze SKU structures for Baby Blue variants
+                    print("\n🔍 STEP 2: Analyzing Baby Blue variant SKU structures...")
+                    baby_blue_variants = []
+                    white_variants = []
+                    apricot_variants = []
+                    
+                    for item in inventory_data:
+                        sku = item.get('sku', '')
+                        product_name = item.get('product_name', '')
+                        
+                        # Identify Baby Blue variants
+                        if 'baby blue' in product_name.lower() or 'baby_blue' in sku.lower():
+                            baby_blue_variants.append(item)
+                        # Identify White variants for comparison
+                        elif 'white' in product_name.lower() or 'white' in sku.lower():
+                            white_variants.append(item)
+                        # Identify Apricot variants for comparison
+                        elif 'apricot' in product_name.lower() or 'apricot' in sku.lower():
+                            apricot_variants.append(item)
+                    
+                    self.log_test("Baby Blue Variants Found", len(baby_blue_variants) > 0, 
+                                f"Found {len(baby_blue_variants)} Baby Blue variants")
+                    self.log_test("White Variants Found", len(white_variants) > 0, 
+                                f"Found {len(white_variants)} White variants for comparison")
+                    self.log_test("Apricot Variants Found", len(apricot_variants) > 0, 
+                                f"Found {len(apricot_variants)} Apricot variants for comparison")
+                    
+                    # Step 3: Detailed SKU analysis for Baby Blue variants
+                    print("\n🎯 STEP 3: Detailed Baby Blue SKU Analysis...")
+                    for i, variant in enumerate(baby_blue_variants):
+                        sku = variant.get('sku', '')
+                        product_name = variant.get('product_name', '')
+                        
+                        self.log_test(f"Baby Blue Variant {i+1} - Basic Info", True, 
+                                    f"Product: {product_name}, SKU: {sku}")
+                        
+                        # Analyze SKU structure by splitting on '_'
+                        sku_parts = sku.split('_')
+                        self.log_test(f"Baby Blue Variant {i+1} - SKU Parts", True, 
+                                    f"SKU split by '_': {sku_parts} (Total parts: {len(sku_parts)})")
+                        
+                        # Extract specific parts as mentioned in the review
+                        if len(sku_parts) >= 3:
+                            color_part = sku_parts[2] if len(sku_parts) > 2 else "N/A"
+                            self.log_test(f"Baby Blue Variant {i+1} - Color Data", True, 
+                                        f"Color from SKU (index 2): '{color_part}'")
+                        
+                        if len(sku_parts) >= 5:
+                            pack_size_part = sku_parts[4] if len(sku_parts) > 4 else "N/A"
+                            self.log_test(f"Baby Blue Variant {i+1} - Pack Size Data", True, 
+                                        f"Pack size from SKU (index 4): '{pack_size_part}'")
+                        else:
+                            self.log_test(f"Baby Blue Variant {i+1} - Pack Size Data", False, 
+                                        f"SKU has only {len(sku_parts)} parts, cannot extract pack size from index 4")
+                        
+                        # Check for "100pcs" or "100" in SKU
+                        has_100_in_sku = '100' in sku
+                        self.log_test(f"Baby Blue Variant {i+1} - Contains '100'", has_100_in_sku, 
+                                    f"SKU contains '100': {has_100_in_sku}")
+                        
+                        # Additional inventory details
+                        self.log_test(f"Baby Blue Variant {i+1} - Inventory Details", True, 
+                                    f"On Hand: {variant.get('on_hand', 0)}, "
+                                    f"Available: {variant.get('available', 0)}, "
+                                    f"Safety Stock: {variant.get('safety_stock', 0)}")
+                    
+                    # Step 4: Compare with White variants
+                    print("\n⚪ STEP 4: White Variants Comparison...")
+                    for i, variant in enumerate(white_variants[:3]):  # Limit to first 3 for comparison
+                        sku = variant.get('sku', '')
+                        product_name = variant.get('product_name', '')
+                        
+                        self.log_test(f"White Variant {i+1} - Basic Info", True, 
+                                    f"Product: {product_name}, SKU: {sku}")
+                        
+                        sku_parts = sku.split('_')
+                        self.log_test(f"White Variant {i+1} - SKU Structure", True, 
+                                    f"SKU parts: {sku_parts} (Total: {len(sku_parts)})")
+                        
+                        if len(sku_parts) >= 3:
+                            color_part = sku_parts[2] if len(sku_parts) > 2 else "N/A"
+                            self.log_test(f"White Variant {i+1} - Color Data", True, 
+                                        f"Color from SKU (index 2): '{color_part}'")
+                        
+                        if len(sku_parts) >= 5:
+                            pack_size_part = sku_parts[4] if len(sku_parts) > 4 else "N/A"
+                            self.log_test(f"White Variant {i+1} - Pack Size Data", True, 
+                                        f"Pack size from SKU (index 4): '{pack_size_part}'")
+                    
+                    # Step 5: Compare with Apricot variants
+                    print("\n🍑 STEP 5: Apricot Variants Comparison...")
+                    for i, variant in enumerate(apricot_variants[:3]):  # Limit to first 3 for comparison
+                        sku = variant.get('sku', '')
+                        product_name = variant.get('product_name', '')
+                        
+                        self.log_test(f"Apricot Variant {i+1} - Basic Info", True, 
+                                    f"Product: {product_name}, SKU: {sku}")
+                        
+                        sku_parts = sku.split('_')
+                        self.log_test(f"Apricot Variant {i+1} - SKU Structure", True, 
+                                    f"SKU parts: {sku_parts} (Total: {len(sku_parts)})")
+                        
+                        if len(sku_parts) >= 3:
+                            color_part = sku_parts[2] if len(sku_parts) > 2 else "N/A"
+                            self.log_test(f"Apricot Variant {i+1} - Color Data", True, 
+                                        f"Color from SKU (index 2): '{color_part}'")
+                        
+                        if len(sku_parts) >= 5:
+                            pack_size_part = sku_parts[4] if len(sku_parts) > 4 else "N/A"
+                            self.log_test(f"Apricot Variant {i+1} - Pack Size Data", True, 
+                                        f"Pack size from SKU (index 4): '{pack_size_part}'")
+                    
+                    # Step 6: Identify potential formatting issues
+                    print("\n🚨 STEP 6: Identifying Potential Formatting Issues...")
+                    
+                    # Check if Baby Blue variants have consistent SKU structure
+                    if baby_blue_variants:
+                        sku_lengths = [len(variant.get('sku', '').split('_')) for variant in baby_blue_variants]
+                        if len(set(sku_lengths)) > 1:
+                            self.log_test("Baby Blue SKU Structure Consistency", False, 
+                                        f"Inconsistent SKU part counts: {sku_lengths}")
+                        else:
+                            self.log_test("Baby Blue SKU Structure Consistency", True, 
+                                        f"All Baby Blue SKUs have {sku_lengths[0]} parts")
+                        
+                        # Check for missing "100" indicators
+                        variants_with_100 = [v for v in baby_blue_variants if '100' in v.get('sku', '')]
+                        variants_without_100 = [v for v in baby_blue_variants if '100' not in v.get('sku', '')]
+                        
+                        if variants_without_100:
+                            self.log_test("Missing '100' in SKU", False, 
+                                        f"{len(variants_without_100)} Baby Blue variants don't have '100' in SKU")
+                            for variant in variants_without_100:
+                                self.log_test("Variant Missing '100'", False, 
+                                            f"SKU: {variant.get('sku', '')}, Product: {variant.get('product_name', '')}")
+                        else:
+                            self.log_test("All Baby Blue Variants Have '100'", True, 
+                                        "All Baby Blue variants contain '100' in their SKU")
+                        
+                        # Check color formatting consistency
+                        baby_blue_colors = []
+                        for variant in baby_blue_variants:
+                            sku_parts = variant.get('sku', '').split('_')
+                            if len(sku_parts) >= 3:
+                                baby_blue_colors.append(sku_parts[2])
+                        
+                        unique_color_formats = set(baby_blue_colors)
+                        if len(unique_color_formats) > 1:
+                            self.log_test("Baby Blue Color Format Consistency", False, 
+                                        f"Inconsistent color formats: {list(unique_color_formats)}")
+                        else:
+                            self.log_test("Baby Blue Color Format Consistency", True, 
+                                        f"Consistent color format: {list(unique_color_formats)}")
+                    
+                    # Step 7: Generate formatProductInfo debugging data
+                    print("\n🔧 STEP 7: formatProductInfo Function Debug Data...")
+                    
+                    if baby_blue_variants:
+                        self.log_test("formatProductInfo Debug Data", True, 
+                                    "Generated debug data for formatProductInfo function:")
+                        
+                        for i, variant in enumerate(baby_blue_variants):
+                            sku = variant.get('sku', '')
+                            sku_parts = sku.split('_')
+                            
+                            debug_info = {
+                                'variant_index': i + 1,
+                                'full_sku': sku,
+                                'sku_parts': sku_parts,
+                                'sku_parts_count': len(sku_parts),
+                                'color_index_2': sku_parts[2] if len(sku_parts) > 2 else None,
+                                'pack_size_index_4': sku_parts[4] if len(sku_parts) > 4 else None,
+                                'contains_100': '100' in sku,
+                                'product_name': variant.get('product_name', ''),
+                                'expected_display': f"Baby Blue {sku_parts[4] if len(sku_parts) > 4 else '?'}pcs" if len(sku_parts) > 4 else "Baby Blue ?pcs"
+                            }
+                            
+                            print(f"    Baby Blue Variant {i+1} Debug Info:")
+                            for key, value in debug_info.items():
+                                print(f"      {key}: {value}")
+                            print()
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Admin Inventory API Access", False, f"Status {resp.status}: {error_text}")
+                    return
+                    
+        except Exception as e:
+            self.log_test("Baby Blue Variant Formatting Debug", False, f"Exception: {str(e)}")
+            return
+
 async def main():
-    """Run backend tests focused on packing interface inventory loading issue"""
-    print("🚀 Starting M Supplies Backend API Tests - Packing Interface Inventory Loading Debug")
+    """Run backend tests focused on Baby Blue variant formatting debug"""
+    print("🚀 Starting M Supplies Backend API Tests - Baby Blue Variant Formatting Debug")
     print(f"Testing against: {API_BASE}")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Packing interface inventory loading issue (as specifically requested in review)
-        await tester.test_packing_interface_inventory_loading_debug()
+        # PRIORITY TEST: Baby Blue variant formatting debug (as specifically requested in review)
+        await tester.test_baby_blue_variant_formatting_debug()
         
         # Print summary
         passed, failed = tester.print_summary()
