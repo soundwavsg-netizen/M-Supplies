@@ -1492,31 +1492,15 @@ class BackendTester:
 
 async def main():
     """Run all backend tests"""
-    print("🚀 Starting M Supplies Backend API Tests")
+    print("🚀 Starting M Supplies Backend API Tests - Baby Blue Product Debug")
     print(f"Testing against: {API_BASE}")
     
     async with BackendTester() as tester:
-        # Run all tests
+        # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Variant pricing updates and persistence (as requested)
-        await tester.test_variant_pricing_updates_and_persistence()
-        
-        # Priority test for pack_size schema changes
-        await tester.test_pack_size_schema_structure()
-        
-        await tester.test_filter_options_endpoint()
-        await tester.test_product_filtering()
-        await tester.test_business_rules()
-        await tester.test_seed_data_verification()
-        await tester.test_sorting_options()
-        await tester.test_admin_inventory_management()
-        await tester.test_deep_link_support()
-        
-        # Run new product update tests
-        await tester.test_product_update_with_variants()
-        await tester.test_complete_variant_replacement()
-        await tester.test_dynamic_field_updates()
+        # PRIORITY TEST: Baby Blue product debugging (as specifically requested)
+        await tester.test_baby_blue_product_debug()
         
         # Print summary
         passed, failed = tester.print_summary()
