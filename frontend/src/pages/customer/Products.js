@@ -452,6 +452,7 @@ const Products = () => {
           </div>
         </div>
       </div>
+      <SmartChatWidget />
     </div>
   );
 };
