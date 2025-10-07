@@ -1011,6 +1011,10 @@ async def main():
     async with BackendTester() as tester:
         # Run all tests
         await tester.authenticate()
+        
+        # Priority test for pack_size schema changes
+        await tester.test_pack_size_schema_structure()
+        
         await tester.test_filter_options_endpoint()
         await tester.test_product_filtering()
         await tester.test_business_rules()
