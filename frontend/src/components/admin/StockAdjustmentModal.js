@@ -94,6 +94,12 @@ const StockAdjustmentModal = ({ variant, onClose, onSuccess }) => {
               <p className="text-sm font-medium text-teal-700">{variant.available}</p>
             </div>
           </div>
+          <div className="grid grid-cols-1 gap-2 mt-2 pt-2 border-t">
+            <div>
+              <p className="text-xs text-gray-500">Safety Stock</p>
+              <p className="text-sm font-medium text-purple-700">{variant.safety_stock || 0}</p>
+            </div>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
