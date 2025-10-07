@@ -77,6 +77,9 @@ class StockAdjustment(BaseModel):
     # Allocated adjustments  
     allocated_value: Optional[int] = None
     allocated_change: Optional[int] = None
+    # Safety Stock adjustments
+    safety_stock_value: Optional[int] = None
+    safety_stock_change: Optional[int] = None
     reason: InventoryMovementReason
     notes: str
 
