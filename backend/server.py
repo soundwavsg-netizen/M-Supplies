@@ -758,6 +758,38 @@ async def upload_images(
     return {"urls": image_urls}
 
 
+@api_router.get("/images/{filename}", tags=["Images"])
+async def serve_image(filename: str):
+    """Serve images with proper MIME types (bypasses ingress issues)"""
+    from fastapi.responses import FileResponse
+    import mimetypes
+    from pathlib import Path
+    
+    # Security: only allow safe filenames
+    if '..' in filename or '/' in filename or '\\' in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    
+    upload_dir = Path(os.getenv('UPLOAD_DIR', '/app/backend/uploads'))
+    file_path = upload_dir / "products" / filename
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    # Determine MIME type
+    mime_type, _ = mimetypes.guess_type(str(file_path))
+    if not mime_type or not mime_type.startswith('image/'):
+        mime_type = 'image/jpeg'  # Default fallback
+    
+    return FileResponse(
+        path=str(file_path),
+        media_type=mime_type,
+        headers={
+            "Cache-Control": "public, max-age=3600",
+            "Access-Control-Allow-Origin": "*"
+        }
+    )
+
+
 # Include router
 app.include_router(api_router)
 
