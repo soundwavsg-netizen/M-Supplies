@@ -599,6 +599,18 @@ test_plan:
           agent: "testing"
           comment: "🎉 CHAMPAGNE PINK PRICING ISSUE COMPLETELY RESOLVED: Successfully applied the fix for Champagne Pink product pricing using PUT /api/admin/products/{product_id} as requested. ACTIONS TAKEN: ✅ Analyzed all 20 variants and confirmed each had problematic price_tiers with $0.0 values for min_quantity 50 and 100 ✅ Applied the same fix logic used for Baby Blue and Apricot products ✅ Removed all $0.0 values from price_tiers arrays ✅ Kept only valid price tiers with min_quantity: 1 for simplicity ✅ Updated Premium Champagne Pink Polymailer product (ID: 6ee569fc-29ff-470d-8be2-dacb9d0a532e). VERIFICATION RESULTS: ✅ All 20 variants now have valid pricing without any $0.0 values ✅ Customer product access working correctly ✅ Pack size pricing fixed: 50-pack shows $14.4, 100-pack shows $24.1 ✅ Price range calculation correct: $4.8 - $27.4 ✅ Product listing shows proper price range without $0 values ✅ Fix persistence verified through refetch. SUCCESS RATE: 100% (13/13 critical tests passed). The champagne pink product pricing issue has been completely resolved - customers can now see proper pricing when selecting champagne pink variants of any pack size."
 
+  - task: "Coupon Creation Validation Error Debug"
+    implemented: true
+    working: false
+    file: "server.py, app/schemas/coupon.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "🎯 COUPON CREATION VALIDATION ERROR SUCCESSFULLY DEBUGGED: Conducted comprehensive investigation of the specific validation error when creating coupons. ROOT CAUSE IDENTIFIED: Schema mismatch between frontend form data and backend coupon.py schema. USER'S DATA USES WRONG FIELD NAMES: ❌ 'description' field not supported in coupon.py schema ❌ 'discount_type: percentage' should be 'type: percent' ❌ 'discount_value' should be 'value' ❌ 'usage_type' field not supported in coupon.py schema ❌ 'minimum_order_amount' should be 'min_order_amount' ❌ Missing required fields: 'valid_from' and 'valid_to' (datetime). DETAILED ERROR ANALYSIS: The 422 error shows exactly 4 missing required fields: ['body -> type', 'body -> value', 'body -> valid_from', 'body -> valid_to']. SOLUTION VERIFIED: ✅ Corrected schema works perfectly - created coupon successfully with proper field mapping ✅ Both 'percent' and 'fixed' discount types working ✅ All validation rules working correctly. FIELD MAPPING REQUIRED: Frontend needs to map user data to correct schema: description→REMOVE, discount_type→type, discount_value→value, usage_type→REMOVE, minimum_order_amount→min_order_amount, ADD valid_from/valid_to dates."
+
 agent_communication:
     - agent: "main" 
       message: "User reported issue with variant creation process: pricing tiers and initial stock during variant creation causing price display problems. Need to simplify variant creation by removing pricing and stock fields, then allow admin to set these after variant creation. Product listing should pull correct price from variant info."
