@@ -128,4 +128,15 @@ export const adminSettingsAPI = {
   update: (data) => api.put('/admin/settings', data),
 };
 
+// Admin - Inventory
+export const adminInventoryAPI = {
+  list: () => api.get('/admin/inventory'),
+  get: (variantId) => api.get(`/admin/inventory/${variantId}`),
+  getLedger: (variantId, params) => api.get(`/admin/inventory/${variantId}/ledger`, { params }),
+  adjust: (data) => api.post('/admin/inventory/adjust', data),
+  importExternalOrder: (data) => api.post('/admin/external-orders/import', data),
+  createChannelMapping: (data) => api.post('/admin/channel-mappings', data),
+  getChannelMappings: (channel) => api.get(`/admin/channel-mappings/${channel}`),
+};
+
 export default api;
