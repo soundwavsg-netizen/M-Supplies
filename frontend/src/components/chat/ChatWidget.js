@@ -39,90 +39,71 @@ const ChatWidget = ({
 
   // Initialize chat with context-specific welcome message
   useEffect(() => {
-    if (isOpen && messages.length === 0) {
+    if (isOpen && messages.length === 0 && !sessionId) {
       initializeChat();
     }
   }, [isOpen, currentPage, agentType]);
 
-  const getAgentConfig = () => {
-    const configs = {
-      homepage: {
-        main: {
-          name: "M Supplies Assistant",
-          avatar: "🏪",
-          welcomeMessage: "Welcome to M Supplies! I'm here to help you find the perfect polymailers and packaging solutions. What can I assist you with today?",
-          suggestions: ["Show me polymailers", "What sizes do you have?", "Bulk order pricing", "Material recommendations"]
-        },
-        sales: {
-          name: "Sales Expert",
-          avatar: "💼", 
-          welcomeMessage: "Hi! I'm your sales specialist. Let me help you find the best packaging solutions and exclusive deals for your business needs!",
-          suggestions: ["Bulk discounts", "VIP pricing", "Product bundles", "Custom solutions"]
-        }
-      },
-      product: {
-        main: {
-          name: "Product Expert",
-          avatar: "📦",
-          welcomeMessage: `I'm here to help with ${productContext?.name || 'this product'}. Ask me about sizing, materials, or recommendations!`,
-          suggestions: ["Right size for me?", "Material benefits", "Quantity recommendations", "Similar products"]
-        },
-        sizing: {
-          name: "Sizing Specialist",
-          avatar: "📏",
-          welcomeMessage: "Perfect! I specialize in helping customers find the exact right size. What are you planning to pack?",
-          suggestions: ["Size calculator", "Dimension guide", "Pack quantity advice", "Shipping considerations"]
-        }
-      },
-      support: {
-        main: {
-          name: "Support Team",
-          avatar: "🛠️",
-          welcomeMessage: "Hello! I'm here to help with any questions or issues. How can I assist you today?",
-          suggestions: ["Track my order", "Return policy", "Shipping info", "Technical help"]
-        },
-        care: {
-          name: "Customer Care",
-          avatar: "💝",
-          welcomeMessage: "Hi there! I'm your dedicated customer care specialist. Let me help make your experience with M Supplies exceptional!",
-          suggestions: ["Order support", "Account help", "Feedback", "Special requests"]
-        }
-      }
-    };
+  const initializeChat = async () => {
+    try {
+      setIsTyping(true);
+      
+      const context = {
+        agentType: agentType,
+        page: currentPage,
+        product: productContext,
+        cart: cartContext
+      };
 
-    const pageConfig = configs[currentPage] || configs.homepage;
-    return pageConfig[agentType] || pageConfig.main;
-  };
-
-  const initializeChat = () => {
-    const config = getAgentConfig();
-    const welcomeMessage = {
-      id: Date.now(),
-      type: 'agent',
-      content: config.welcomeMessage,
-      timestamp: new Date(),
-      agentName: config.name,
-      avatar: config.avatar
-    };
-
-    setMessages([welcomeMessage]);
-
-    // Add suggested actions after a short delay
-    setTimeout(() => {
-      if (config.suggestions?.length > 0) {
-        const suggestionsMessage = {
-          id: Date.now() + 1,
-          type: 'suggestions',
-          suggestions: config.suggestions,
-          timestamp: new Date()
+      const sessionData = await createSession(context);
+      
+      if (sessionData && sessionData.welcomeMessage) {
+        setSessionId(sessionData.sessionId);
+        
+        const welcomeMessage = {
+          id: sessionData.welcomeMessage.message_id || Date.now(),
+          type: 'agent',
+          content: sessionData.welcomeMessage.content,
+          timestamp: new Date(sessionData.welcomeMessage.timestamp) || new Date(),
+          agentName: sessionData.welcomeMessage.agent_name,
+          avatar: sessionData.welcomeMessage.agent_avatar
         };
-        setMessages(prev => [...prev, suggestionsMessage]);
+
+        setMessages([welcomeMessage]);
+
+        // Add suggestions if available
+        if (sessionData.welcomeMessage.suggestions?.length > 0) {
+          setTimeout(() => {
+            const suggestionsMessage = {
+              id: Date.now() + 1,
+              type: 'suggestions',
+              suggestions: sessionData.welcomeMessage.suggestions,
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, suggestionsMessage]);
+          }, 1000);
+        }
       }
-    }, 1000);
+    } catch (error) {
+      console.error('Failed to initialize chat:', error);
+      // Fallback to basic welcome message
+      const fallbackMessage = {
+        id: Date.now(),
+        type: 'agent',
+        content: "Hello! I'm here to help with M Supplies. How can I assist you today?",
+        timestamp: new Date(),
+        agentName: "M Supplies Assistant",
+        avatar: "🏪"
+      };
+      setMessages([fallbackMessage]);
+      toast.error('Chat initialization failed, but I\'m still here to help!');
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const sendMessage = async (messageContent = inputMessage) => {
-    if (!messageContent.trim()) return;
+    if (!messageContent.trim() || !sessionId) return;
 
     const userMessage = {
       id: Date.now(),
@@ -136,32 +117,41 @@ const ChatWidget = ({
     setIsTyping(true);
 
     try {
-      // Context for the agent
       const context = {
+        sessionId: sessionId,
         page: currentPage,
         agentType: agentType,
-        sessionId: sessionId,
         product: productContext,
-        cart: cartContext,
-        timestamp: new Date().toISOString()
+        cart: cartContext
       };
 
-      // Simulate AI response - Replace this with actual Emergent agent API call
-      const response = await simulateAgentResponse(messageContent, context);
+      const response = await sendToAgent(messageContent, context);
 
       const agentMessage = {
-        id: Date.now() + 1,
+        id: response.messageId || Date.now() + 1,
         type: 'agent',
         content: response.content,
-        timestamp: new Date(),
-        agentName: getAgentConfig().name,
-        avatar: getAgentConfig().avatar,
+        timestamp: new Date(response.timestamp) || new Date(),
+        agentName: response.agentName,
+        avatar: response.agentAvatar,
         actions: response.actions || []
       };
 
       setMessages(prev => [...prev, agentMessage]);
     } catch (error) {
       console.error('Agent error:', error);
+      
+      // Fallback response
+      const fallbackMessage = {
+        id: Date.now() + 1,
+        type: 'agent',
+        content: "I apologize, but I'm having trouble processing your request right now. Could you please try again?",
+        timestamp: new Date(),
+        agentName: "M Supplies Assistant",
+        avatar: "🏪"
+      };
+      
+      setMessages(prev => [...prev, fallbackMessage]);
       toast.error('Sorry, I encountered an error. Please try again.');
     } finally {
       setIsTyping(false);
