@@ -205,7 +205,7 @@ const ProductDetail = () => {
                 size="lg"
                 className="w-full bg-teal-700 hover:bg-teal-800"
                 onClick={handleAddToCart}
-                disabled={!selectedVariant || selectedVariant.stock_qty === 0 || adding}
+                disabled={!selectedVariant || (selectedVariant.on_hand || selectedVariant.stock_qty || 0) === 0 || adding}
                 data-testid="add-to-cart-button"
               >
                 {adding ? (
