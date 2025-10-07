@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { ArrowLeft, Plus, X, Upload, Image, Trash2 } from 'lucide-react';
-import { adminProductsAPI, productsAPI, adminUploadAPI } from '@/lib/api';
+import { adminProductsAPI, productsAPI, adminUploadAPI, adminSettingsAPI } from '@/lib/api';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
