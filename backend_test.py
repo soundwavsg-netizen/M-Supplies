@@ -498,7 +498,8 @@ class BackendTester:
                 "height_cm": 40,
                 "size_code": "30x40",
                 "type": "normal",
-                "color": "white"
+                "color": "white",
+                "pack_size": 25
             },
             "price_tiers": [{"min_quantity": 1, "price": 1.50}],
             "stock_qty": 100,
