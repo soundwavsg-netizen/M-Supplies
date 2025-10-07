@@ -168,7 +168,8 @@ const ProductDetail = () => {
                         {product.variants.map((variant) => {
                           const width = variant.attributes?.width_cm || variant.width_cm;
                           const height = variant.attributes?.height_cm || variant.height_cm;
-                          const size = variant.attributes?.size_code || `${width}×${height} cm`;
+                          // Always show dimensions with cm units
+                          const size = `${width}×${height} cm`;
                           const packSize = variant.attributes?.pack_size || variant.pack_size || 50;
                           const availableStock = variant.available || (variant.on_hand || variant.stock_qty || 0) - (variant.allocated || 0) - (variant.safety_stock || 0);
                           const isOutOfStock = availableStock <= 0;
