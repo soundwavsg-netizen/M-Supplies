@@ -1151,14 +1151,23 @@ const ProductForm = () => {
                         </Select>
                       </div>
                       <div>
-                        <Label className="text-xs text-gray-600">Price ($)</Label>
+                        <Label className="text-xs text-gray-600">
+                          {product.type === 'bubble wrap' ? 'Price per piece ($)' : 'Price per pack ($)'}
+                        </Label>
                         <Input
                           type="number"
                           step="0.01"
                           value={variant.price_tiers?.[0]?.price || variant.price || ''}
                           onChange={(e) => updateVariant(index, 'price', parseFloat(e.target.value))}
                           className="text-sm"
+                          placeholder="0.00"
                         />
+                        <p className="text-xs text-gray-500 mt-1">
+                          {product.type === 'bubble wrap' 
+                            ? 'Price for individual pieces'
+                            : `Price for ${variant.attributes?.pack_size || variant.pack_size || 50}-piece pack`
+                          }
+                        </p>
                       </div>
                       <div>
                         <Label className="text-xs text-gray-600">
