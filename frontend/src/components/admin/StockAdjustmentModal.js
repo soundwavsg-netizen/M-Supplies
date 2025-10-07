@@ -98,6 +98,24 @@ const StockAdjustmentModal = ({ variant, onClose, onSuccess }) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
+            <Label>Stock Type</Label>
+            <Select value={stockType} onValueChange={setStockType}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="on_hand">📦 On Hand (Physical Stock)</SelectItem>
+                <SelectItem value="allocated">🔒 Allocated (Reserved for Orders)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-gray-500 mt-1">
+              {stockType === 'on_hand' 
+                ? 'Physical stock in your warehouse' 
+                : 'Stock reserved for pending orders (not yet shipped)'}
+            </p>
+          </div>
+
+          <div>
             <Label>Adjustment Type</Label>
             <Select value={adjustmentType} onValueChange={setAdjustmentType}>
               <SelectTrigger>
