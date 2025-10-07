@@ -152,6 +152,13 @@ const ProductDetail = () => {
                       onValueChange={(val) => {
                         const variant = product.variants.find(v => v.id === val);
                         setSelectedVariant(variant);
+                        // Adjust quantity if current quantity exceeds new variant's available stock
+                        if (variant) {
+                          const maxStock = Math.max(1, variant.available || (variant.on_hand || variant.stock_qty || 0) - (variant.allocated || 0) - (variant.safety_stock || 0));
+                          if (quantity > maxStock) {
+                            setQuantity(Math.min(quantity, maxStock));
+                          }
+                        }
                       }}
                     >
                       <SelectTrigger data-testid="variant-select">
