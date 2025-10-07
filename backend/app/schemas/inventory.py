@@ -116,3 +116,10 @@ class BusinessSettings(BaseModel):
         "shopee": 2,
         "lazada": 2
     }
+    # Product configuration
+    available_colors: list = [
+        "white", "pastel pink", "champagne pink", "milktea", "black", "clear"
+    ]
+    available_types: list = [
+        "normal", "bubble wrap", "tool", "consumable"
+    ]
