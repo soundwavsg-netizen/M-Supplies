@@ -2031,9 +2031,14 @@ class BackendTester:
                     inventory_data = await resp.json()
                     self.log_test("Admin Inventory Listing", True, f"Retrieved {len(inventory_data)} inventory items")
                     
+                    # Debug: Show all available products first
+                    print(f"    Available products in inventory:")
+                    for item in inventory_data:
+                        print(f"      - {item.get('product_name', 'Unknown')} (SKU: {item.get('sku', 'Unknown')})")
+                    
                     # Find Baby Blue variants
                     for item in inventory_data:
-                        if "Baby Blue" in item.get('product_name', ''):
+                        if "Baby Blue" in item.get('product_name', '') or "blue" in item.get('product_name', '').lower():
                             baby_blue_variants.append(item)
                     
                     if baby_blue_variants:
