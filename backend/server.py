@@ -40,7 +40,7 @@ from app.services.inventory_service import InventoryService
 from app.services.upload_service import UploadService
 
 # Import API routers
-from app.api import promotion
+from app.api import promotion, chat
 
 # Configure logging
 logging.basicConfig(
