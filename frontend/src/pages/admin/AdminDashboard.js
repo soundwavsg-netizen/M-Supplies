@@ -71,14 +71,14 @@ const AdminDashboard = () => {
                 📦 Packing Interface
               </Button>
             </Link>
+            <Link to="/admin/promotions">
+              <Button className="w-full" variant="outline" className="bg-purple-600 hover:bg-purple-700 text-white">
+                🎟️ Promotions & Gifts
+              </Button>
+            </Link>
             <Link to="/admin/orders">
               <Button className="w-full" variant="outline">
                 View Orders
-              </Button>
-            </Link>
-            <Link to="/admin/coupons/new">
-              <Button className="w-full" variant="outline">
-                Create Coupon
               </Button>
             </Link>
             <Link to="/admin/users">
