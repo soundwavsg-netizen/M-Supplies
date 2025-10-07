@@ -1189,12 +1189,10 @@ const ProductForm = () => {
                           </Button>
                         </div>
                       </div>
+                      </div>
                     </div>
-                    <div className="mt-2 text-xs text-gray-500">
-                      <strong>SKU:</strong> {variant.sku} | <strong>Product Color:</strong> {product.color} | <strong>Type:</strong> {product.type}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
