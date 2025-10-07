@@ -21,15 +21,17 @@ class VariantBase(BaseModel):
     sku: str
     attributes: VariantAttributes
     price_tiers: List[PriceTier]
-    pack_size: int = 50  # Number of pieces per pack (50, 100, etc.)
+    pack_size: int = 50  # Number of pieces per pack (50, 100, etc.) - For bubble wrap, this represents individual pieces
     stock_qty: int = 0  # Legacy field, use on_hand instead
     cost_price: Optional[float] = None
     
-    # Centralized inventory fields - these represent number of packs, not individual pieces
-    on_hand: int = 0  # Number of packs in stock
-    allocated: int = 0  # Number of packs allocated
-    safety_stock: int = 0  # Safety stock in packs
-    low_stock_threshold: int = 10  # Low stock threshold in packs
+    # Centralized inventory fields - units depend on product type
+    # For regular products: represents number of packs
+    # For bubble wrap: represents individual pieces
+    on_hand: int = 0  # Number of units in stock (packs or pieces)
+    allocated: int = 0  # Number of units allocated
+    safety_stock: int = 0  # Safety stock in units
+    low_stock_threshold: int = 10  # Low stock threshold in units
     channel_buffers: Dict[str, int] = {}
 
 class VariantCreate(VariantBase):
