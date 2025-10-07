@@ -1239,6 +1239,234 @@ class BackendTester:
                     
         except Exception as e:
             self.log_test("Filtered Products API", False, f"Exception: {str(e)}")
+
+    async def test_baby_blue_product_debug(self):
+        """Debug Baby Blue product stock and pricing issues"""
+        print("\n🔍 Testing Baby Blue Product Stock and Pricing Issues...")
+        
+        # Step 1: Find Baby Blue product in database
+        baby_blue_product = None
+        try:
+            async with self.session.post(f"{API_BASE}/products/filter", json={"page": 1, "limit": 50}) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    products = data.get('products', [])
+                    
+                    # Look for Baby Blue product
+                    for product in products:
+                        if 'baby blue' in product.get('name', '').lower() or 'blue' in product.get('name', '').lower():
+                            baby_blue_product = product
+                            break
+                    
+                    if baby_blue_product:
+                        self.log_test("Find Baby Blue Product", True, f"Found: {baby_blue_product.get('name')}")
+                    else:
+                        self.log_test("Find Baby Blue Product", False, "Baby Blue product not found in database")
+                        return
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Find Baby Blue Product", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Find Baby Blue Product", False, f"Exception: {str(e)}")
+            return
+        
+        product_id = baby_blue_product['id']
+        
+        # Step 2: Get full product details to examine variant stock and pricing
+        try:
+            async with self.session.get(f"{API_BASE}/products/{product_id}") as resp:
+                if resp.status == 200:
+                    product_details = await resp.json()
+                    variants = product_details.get('variants', [])
+                    self.log_test("Get Baby Blue Product Details", True, f"Product has {len(variants)} variants")
+                    
+                    # Examine each variant's stock and pricing
+                    for i, variant in enumerate(variants):
+                        sku = variant.get('sku', 'Unknown')
+                        attributes = variant.get('attributes', {})
+                        pack_size = attributes.get('pack_size', 'Unknown')
+                        size_code = attributes.get('size_code', 'Unknown')
+                        
+                        # Check stock fields
+                        on_hand = variant.get('on_hand', 0)
+                        stock_qty = variant.get('stock_qty', 0)
+                        allocated = variant.get('allocated', 0)
+                        available = on_hand - allocated
+                        
+                        # Check pricing
+                        price_tiers = variant.get('price_tiers', [])
+                        price = price_tiers[0].get('price', 0) if price_tiers else 0
+                        
+                        self.log_test(f"Baby Blue Variant {i+1} Stock Analysis", True, 
+                                    f"SKU: {sku}, Size: {size_code}, Pack: {pack_size}pcs, on_hand: {on_hand}, stock_qty: {stock_qty}, available: {available}, price: ${price}")
+                        
+                        # Check if this matches the reported stock quantities (25, 35)
+                        if on_hand in [25, 35] or stock_qty in [25, 35]:
+                            self.log_test(f"Reported Stock Quantity Match", True, 
+                                        f"Found reported stock quantity: on_hand={on_hand}, stock_qty={stock_qty}")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Get Baby Blue Product Details", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Get Baby Blue Product Details", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 3: Test how in_stock field is calculated for product listing
+        try:
+            async with self.session.get(f"{API_BASE}/products") as resp:
+                if resp.status == 200:
+                    products_list = await resp.json()
+                    
+                    # Find Baby Blue in the listing
+                    baby_blue_in_list = None
+                    for product in products_list:
+                        if product.get('id') == product_id:
+                            baby_blue_in_list = product
+                            break
+                    
+                    if baby_blue_in_list:
+                        in_stock_status = baby_blue_in_list.get('in_stock', False)
+                        self.log_test("Customer Product Listing in_stock", True, 
+                                    f"Baby Blue shows in_stock: {in_stock_status}")
+                        
+                        # This is the key issue - customer sees "In Stock" but admin sees "Out of Stock"
+                        if in_stock_status:
+                            self.log_test("Customer Stock Status", True, "Customer sees 'In Stock'")
+                        else:
+                            self.log_test("Customer Stock Status", False, "Customer sees 'Out of Stock'")
+                    else:
+                        self.log_test("Baby Blue in Product Listing", False, "Baby Blue not found in product listing")
+                        
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Product Listing API", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Product Listing API", False, f"Exception: {str(e)}")
+        
+        # Step 4: Test admin inventory view
+        if self.admin_token:
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            try:
+                async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                    if resp.status == 200:
+                        inventory_data = await resp.json()
+                        
+                        # Find Baby Blue variants in admin inventory
+                        baby_blue_inventory = []
+                        for item in inventory_data:
+                            if product_id in item.get('variant_id', '') or 'blue' in item.get('product_name', '').lower():
+                                baby_blue_inventory.append(item)
+                        
+                        if baby_blue_inventory:
+                            self.log_test("Admin Inventory Baby Blue", True, f"Found {len(baby_blue_inventory)} Baby Blue inventory items")
+                            
+                            for item in baby_blue_inventory:
+                                on_hand = item.get('on_hand', 0)
+                                available = item.get('available', 0)
+                                is_low_stock = item.get('is_low_stock', False)
+                                
+                                self.log_test("Admin Inventory Item", True, 
+                                            f"SKU: {item.get('sku')}, on_hand: {on_hand}, available: {available}, low_stock: {is_low_stock}")
+                                
+                                # Check if admin shows "Out of Stock" when stock exists
+                                if on_hand > 0 and available <= 0:
+                                    self.log_test("Admin Stock Discrepancy", False, 
+                                                f"ISSUE: Admin shows out of stock but on_hand={on_hand}, available={available}")
+                        else:
+                            self.log_test("Admin Inventory Baby Blue", False, "Baby Blue not found in admin inventory")
+                            
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Admin Inventory API", False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Admin Inventory API", False, f"Exception: {str(e)}")
+        
+        # Step 5: Test variant pricing differences (50pcs vs 100pcs)
+        try:
+            async with self.session.get(f"{API_BASE}/products/{product_id}") as resp:
+                if resp.status == 200:
+                    product = await resp.json()
+                    variants = product.get('variants', [])
+                    
+                    # Group variants by pack size
+                    pack_size_pricing = {}
+                    for variant in variants:
+                        pack_size = variant.get('attributes', {}).get('pack_size')
+                        price_tiers = variant.get('price_tiers', [])
+                        if price_tiers and pack_size:
+                            price = price_tiers[0].get('price', 0)
+                            pack_size_pricing[pack_size] = price
+                    
+                    self.log_test("Pack Size Pricing Analysis", True, f"Pack size pricing: {pack_size_pricing}")
+                    
+                    # Check if 50pcs and 100pcs have same price (the reported issue)
+                    if 50 in pack_size_pricing and 100 in pack_size_pricing:
+                        price_50 = pack_size_pricing[50]
+                        price_100 = pack_size_pricing[100]
+                        
+                        if price_50 == price_100:
+                            self.log_test("Same Price Issue", False, 
+                                        f"ISSUE: Both 50pcs and 100pcs show same price ${price_50}")
+                        else:
+                            self.log_test("Different Pack Size Pricing", True, 
+                                        f"50pcs: ${price_50}, 100pcs: ${price_100}")
+                        
+                        # Check if both show $14.99 as reported
+                        if price_50 == 14.99 and price_100 == 14.99:
+                            self.log_test("Reported Price Issue", False, 
+                                        "CONFIRMED: Both variants show $14.99 as reported")
+                    else:
+                        self.log_test("Pack Size Variants", False, "Could not find 50pcs and 100pcs variants")
+                        
+        except Exception as e:
+            self.log_test("Variant Pricing Analysis", False, f"Exception: {str(e)}")
+        
+        # Step 6: Test stock calculation logic in product service
+        try:
+            # Test the stock calculation used in list_products method
+            async with self.session.get(f"{API_BASE}/products") as resp:
+                if resp.status == 200:
+                    products = await resp.json()
+                    baby_blue_listed = None
+                    
+                    for product in products:
+                        if product.get('id') == product_id:
+                            baby_blue_listed = product
+                            break
+                    
+                    if baby_blue_listed:
+                        listed_in_stock = baby_blue_listed.get('in_stock', False)
+                        
+                        # Now get the detailed product to compare
+                        async with self.session.get(f"{API_BASE}/products/{product_id}") as detail_resp:
+                            if detail_resp.status == 200:
+                                detailed_product = await detail_resp.json()
+                                variants = detailed_product.get('variants', [])
+                                
+                                # Calculate stock using the same logic as ProductService.list_products
+                                calculated_in_stock = any(v.get('stock_qty', 0) > 0 or v.get('on_hand', 0) > 0 for v in variants)
+                                
+                                self.log_test("Stock Calculation Logic", True, 
+                                            f"Listed in_stock: {listed_in_stock}, Calculated in_stock: {calculated_in_stock}")
+                                
+                                if listed_in_stock != calculated_in_stock:
+                                    self.log_test("Stock Calculation Mismatch", False, 
+                                                "ISSUE: Stock calculation inconsistency between listing and detail")
+                                
+                                # Show individual variant stock contributions
+                                for i, variant in enumerate(variants):
+                                    stock_qty = variant.get('stock_qty', 0)
+                                    on_hand = variant.get('on_hand', 0)
+                                    contributes_to_stock = stock_qty > 0 or on_hand > 0
+                                    
+                                    self.log_test(f"Variant {i+1} Stock Contribution", True, 
+                                                f"stock_qty: {stock_qty}, on_hand: {on_hand}, contributes: {contributes_to_stock}")
+                        
+        except Exception as e:
+            self.log_test("Stock Calculation Logic", False, f"Exception: {str(e)}")
     
     def print_summary(self):
         """Print test summary"""
