@@ -1199,6 +1199,305 @@ class BackendTester:
             except Exception as e:
                 self.log_test(f"Filter by '{test_cat}' Category", False, f"Exception: {str(e)}")
 
+    async def test_packing_interface_inventory_loading_debug(self):
+        """Debug the 'Failed to load inventory' issue in the packing interface"""
+        print("\n🔍 DEBUGGING PACKING INTERFACE INVENTORY LOADING ISSUE...")
+        print("Testing specific areas mentioned in review request:")
+        print("1. Admin Inventory API with proper admin token")
+        print("2. Response Structure verification")
+        print("3. Authentication Status testing")
+        print("4. CORS Headers check")
+        print("5. Network Connectivity testing")
+        
+        if not self.admin_token:
+            self.log_test("Admin Token Required", False, "No admin token available for inventory testing")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # TEST 1: Admin Inventory API with proper admin token
+        print("\n🔐 TEST 1: Admin Inventory API with Proper Admin Token")
+        try:
+            import time
+            start_time = time.time()
+            
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                response_time = time.time() - start_time
+                
+                if resp.status == 200:
+                    data = await resp.json()
+                    self.log_test("Admin Inventory API Status", True, f"Status 200 OK - Response time: {response_time:.3f}s")
+                    self.log_test("Admin Inventory Data Retrieved", True, f"Found {len(data)} inventory items")
+                    
+                    # Log detailed inventory data for debugging
+                    if data:
+                        sample_item = data[0]
+                        self.log_test("Sample Inventory Item Structure", True, 
+                                    f"Keys: {list(sample_item.keys())}")
+                        
+                        # Check for all required fields mentioned in the schema
+                        required_fields = ['variant_id', 'sku', 'product_name', 'on_hand', 'allocated', 
+                                         'available', 'safety_stock', 'low_stock_threshold', 'is_low_stock']
+                        missing_fields = [field for field in required_fields if field not in sample_item]
+                        
+                        if not missing_fields:
+                            self.log_test("Required Fields Present", True, "All required inventory fields present")
+                        else:
+                            self.log_test("Required Fields Present", False, f"Missing fields: {missing_fields}")
+                        
+                        # Log first few inventory items for debugging
+                        for i, item in enumerate(data[:3]):
+                            self.log_test(f"Inventory Item {i+1}", True, 
+                                        f"Product: {item.get('product_name', 'Unknown')}, "
+                                        f"SKU: {item.get('sku', 'Unknown')}, "
+                                        f"Available: {item.get('available', 0)}, "
+                                        f"On Hand: {item.get('on_hand', 0)}")
+                    else:
+                        self.log_test("Inventory Data Content", False, "No inventory items returned")
+                        
+                elif resp.status == 401:
+                    error_text = await resp.text()
+                    self.log_test("Admin Inventory API Authentication", False, 
+                                f"401 Unauthorized: {error_text}")
+                elif resp.status == 403:
+                    error_text = await resp.text()
+                    self.log_test("Admin Inventory API Authorization", False, 
+                                f"403 Forbidden: {error_text}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Admin Inventory API Status", False, 
+                                f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Admin Inventory API Exception", False, f"Exception: {str(e)}")
+        
+        # TEST 2: Response Structure Verification
+        print("\n📋 TEST 2: Response Structure Verification")
+        try:
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    
+                    # Check if response is a list
+                    if isinstance(data, list):
+                        self.log_test("Response Format", True, "Response is a list as expected")
+                    else:
+                        self.log_test("Response Format", False, f"Expected list, got {type(data)}")
+                        return
+                    
+                    if data:
+                        # Detailed structure validation
+                        item = data[0]
+                        
+                        # Check data types
+                        type_checks = [
+                            ('variant_id', str, item.get('variant_id')),
+                            ('sku', str, item.get('sku')),
+                            ('product_name', str, item.get('product_name')),
+                            ('on_hand', (int, float), item.get('on_hand')),
+                            ('allocated', (int, float), item.get('allocated')),
+                            ('available', (int, float), item.get('available')),
+                            ('safety_stock', (int, float), item.get('safety_stock')),
+                            ('low_stock_threshold', (int, float), item.get('low_stock_threshold')),
+                            ('is_low_stock', bool, item.get('is_low_stock'))
+                        ]
+                        
+                        for field_name, expected_type, value in type_checks:
+                            if value is not None:
+                                if isinstance(value, expected_type):
+                                    self.log_test(f"Field Type - {field_name}", True, f"{field_name}: {value} ({type(value).__name__})")
+                                else:
+                                    self.log_test(f"Field Type - {field_name}", False, 
+                                                f"Expected {expected_type}, got {type(value)} for {field_name}")
+                            else:
+                                self.log_test(f"Field Presence - {field_name}", False, f"{field_name} is None")
+                        
+                        # Check for negative values (data quality)
+                        numeric_fields = ['on_hand', 'allocated', 'available', 'safety_stock', 'low_stock_threshold']
+                        for field in numeric_fields:
+                            value = item.get(field, 0)
+                            if isinstance(value, (int, float)) and value < 0:
+                                self.log_test(f"Data Quality - {field}", False, f"Negative value: {field}={value}")
+                            else:
+                                self.log_test(f"Data Quality - {field}", True, f"{field}={value}")
+                        
+                else:
+                    self.log_test("Response Structure Test", False, f"Could not get data for structure test: {resp.status}")
+                    
+        except Exception as e:
+            self.log_test("Response Structure Test", False, f"Exception: {str(e)}")
+        
+        # TEST 3: Authentication Status Testing
+        print("\n🔑 TEST 3: Authentication Status Testing")
+        
+        # Test with no token
+        try:
+            async with self.session.get(f"{API_BASE}/admin/inventory") as resp:
+                if resp.status == 401:
+                    self.log_test("No Token Authentication", True, "Correctly returns 401 without token")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("No Token Authentication", False, 
+                                f"Expected 401, got {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("No Token Authentication", False, f"Exception: {str(e)}")
+        
+        # Test with invalid token
+        try:
+            invalid_headers = {"Authorization": "Bearer invalid_token_12345"}
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=invalid_headers) as resp:
+                if resp.status == 401:
+                    self.log_test("Invalid Token Authentication", True, "Correctly returns 401 with invalid token")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Invalid Token Authentication", False, 
+                                f"Expected 401, got {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Invalid Token Authentication", False, f"Exception: {str(e)}")
+        
+        # Test with malformed token
+        try:
+            malformed_headers = {"Authorization": "Bearer"}
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=malformed_headers) as resp:
+                if resp.status == 401:
+                    self.log_test("Malformed Token Authentication", True, "Correctly returns 401 with malformed token")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Malformed Token Authentication", False, 
+                                f"Expected 401, got {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Malformed Token Authentication", False, f"Exception: {str(e)}")
+        
+        # Test with wrong format token
+        try:
+            wrong_format_headers = {"Authorization": "Basic " + self.admin_token}
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=wrong_format_headers) as resp:
+                if resp.status == 401:
+                    self.log_test("Wrong Format Token Authentication", True, "Correctly returns 401 with wrong format token")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Wrong Format Token Authentication", False, 
+                                f"Expected 401, got {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Wrong Format Token Authentication", False, f"Exception: {str(e)}")
+        
+        # TEST 4: CORS Headers Check
+        print("\n🌐 TEST 4: CORS Headers Check")
+        try:
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                cors_headers = {
+                    'Access-Control-Allow-Origin': resp.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': resp.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': resp.headers.get('Access-Control-Allow-Headers'),
+                    'Access-Control-Allow-Credentials': resp.headers.get('Access-Control-Allow-Credentials')
+                }
+                
+                self.log_test("CORS Headers Present", True, f"CORS headers: {cors_headers}")
+                
+                # Check if CORS allows the frontend origin
+                allow_origin = resp.headers.get('Access-Control-Allow-Origin')
+                if allow_origin == '*' or BACKEND_URL in str(allow_origin):
+                    self.log_test("CORS Origin Check", True, f"Origin allowed: {allow_origin}")
+                else:
+                    self.log_test("CORS Origin Check", False, f"Origin may not be allowed: {allow_origin}")
+                
+                # Check if credentials are allowed
+                allow_credentials = resp.headers.get('Access-Control-Allow-Credentials')
+                if allow_credentials == 'true':
+                    self.log_test("CORS Credentials", True, "Credentials allowed")
+                else:
+                    self.log_test("CORS Credentials", False, f"Credentials setting: {allow_credentials}")
+                    
+        except Exception as e:
+            self.log_test("CORS Headers Check", False, f"Exception: {str(e)}")
+        
+        # TEST 5: Network Connectivity Testing
+        print("\n🌍 TEST 5: Network Connectivity Testing")
+        
+        # Test basic connectivity to API base
+        try:
+            async with self.session.get(f"{API_BASE}/health") as resp:
+                if resp.status == 200:
+                    self.log_test("API Base Connectivity", True, "Health endpoint accessible")
+                else:
+                    self.log_test("API Base Connectivity", False, f"Health endpoint returned {resp.status}")
+        except Exception as e:
+            self.log_test("API Base Connectivity", False, f"Exception: {str(e)}")
+        
+        # Test if the specific inventory endpoint is reachable
+        try:
+            # Use HEAD request to test connectivity without authentication
+            async with self.session.head(f"{API_BASE}/admin/inventory") as resp:
+                if resp.status in [401, 403]:  # Expected without auth
+                    self.log_test("Inventory Endpoint Connectivity", True, "Endpoint is reachable (returns auth error as expected)")
+                elif resp.status == 200:
+                    self.log_test("Inventory Endpoint Connectivity", True, "Endpoint is reachable")
+                else:
+                    self.log_test("Inventory Endpoint Connectivity", False, f"Unexpected status: {resp.status}")
+        except Exception as e:
+            self.log_test("Inventory Endpoint Connectivity", False, f"Exception: {str(e)}")
+        
+        # Test response time consistency
+        try:
+            response_times = []
+            for i in range(3):
+                start_time = time.time()
+                async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                    response_time = time.time() - start_time
+                    response_times.append(response_time)
+                    if resp.status != 200:
+                        break
+            
+            if response_times:
+                avg_time = sum(response_times) / len(response_times)
+                max_time = max(response_times)
+                self.log_test("Response Time Consistency", True, 
+                            f"Avg: {avg_time:.3f}s, Max: {max_time:.3f}s, Times: {[f'{t:.3f}' for t in response_times]}")
+                
+                if max_time > 5.0:  # If any request takes more than 5 seconds
+                    self.log_test("Response Time Performance", False, f"Slow response detected: {max_time:.3f}s")
+                else:
+                    self.log_test("Response Time Performance", True, "Response times acceptable")
+            else:
+                self.log_test("Response Time Test", False, "Could not measure response times")
+                
+        except Exception as e:
+            self.log_test("Response Time Test", False, f"Exception: {str(e)}")
+        
+        # ADDITIONAL DEBUG: Check for data inconsistency mentioned in previous testing
+        print("\n🔍 ADDITIONAL DEBUG: Data Inconsistency Check")
+        try:
+            # Get inventory items
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                if resp.status == 200:
+                    inventory_data = await resp.json()
+                    inventory_count = len(inventory_data)
+                    
+                    # Get products to check variant count
+                    async with self.session.get(f"{API_BASE}/products") as prod_resp:
+                        if prod_resp.status == 200:
+                            products_data = await prod_resp.json()
+                            total_variants = sum(len(p.get('variants', [])) for p in products_data)
+                            
+                            self.log_test("Data Consistency Check", True, 
+                                        f"Inventory items: {inventory_count}, Product variants: {total_variants}")
+                            
+                            if inventory_count > 0 and total_variants == 0:
+                                self.log_test("Data Inconsistency DETECTED", False, 
+                                            "Inventory items exist but products show 0 variants - this may cause frontend issues")
+                            elif inventory_count == 0:
+                                self.log_test("No Inventory Data", False, 
+                                            "No inventory items found - this would cause 'Failed to load inventory'")
+                            else:
+                                self.log_test("Data Consistency", True, "Inventory and product data appear consistent")
+                        else:
+                            self.log_test("Products API Check", False, f"Could not fetch products: {prod_resp.status}")
+                else:
+                    self.log_test("Data Consistency Check", False, f"Could not fetch inventory: {resp.status}")
+                    
+        except Exception as e:
+            self.log_test("Data Consistency Check", False, f"Exception: {str(e)}")
+
     async def test_pack_size_schema_structure(self):
         """Test product API and variant structure after pack_size schema changes"""
         print("\n📦 Testing Pack Size Schema Structure...")
