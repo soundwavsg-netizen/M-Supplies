@@ -1541,6 +1541,101 @@ class BackendTester:
                     
         except Exception as e:
             self.log_test("Malformed Request Test", False, f"Exception: {str(e)}")
+        
+        # TEST 11: Test exact frontend FormData format simulation
+        print("\n🔍 TEST 11: Exact Frontend FormData Format Simulation")
+        
+        try:
+            # Simulate the exact way frontend creates FormData
+            test_image7 = Image.new('RGB', (150, 150), color='gold')
+            image_buffer7 = io.BytesIO()
+            test_image7.save(image_buffer7, format='JPEG', quality=90)
+            image_buffer7.seek(0)
+            
+            # Create multiple files like frontend would
+            test_image8 = Image.new('RGB', (150, 150), color='silver')
+            image_buffer8 = io.BytesIO()
+            test_image8.save(image_buffer8, format='PNG')
+            image_buffer8.seek(0)
+            
+            # Simulate frontend FormData creation: files.forEach(file => formData.append('files', file))
+            form_data = aiohttp.FormData()
+            form_data.add_field('files', image_buffer7, filename='frontend_test1.jpg', content_type='image/jpeg')
+            form_data.add_field('files', image_buffer8, filename='frontend_test2.png', content_type='image/png')
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/images", 
+                                       data=form_data, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 200:
+                    try:
+                        data = json.loads(response_text)
+                        urls = data.get('urls', [])
+                        self.log_test("Frontend FormData Simulation", True, f"Successfully uploaded {len(urls)} images: {urls}")
+                    except json.JSONDecodeError:
+                        self.log_test("Frontend FormData Simulation", False, f"Invalid JSON response: {response_text}")
+                else:
+                    self.log_test("Frontend FormData Simulation", False, f"Status {resp.status}: {response_text}")
+                    # Log detailed error for debugging
+                    print(f"    DETAILED FRONTEND SIMULATION ERROR: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("Frontend FormData Simulation", False, f"Exception: {str(e)}")
+        
+        # TEST 12: Test with no files selected (common frontend issue)
+        print("\n🔍 TEST 12: No Files Selected Testing")
+        
+        try:
+            # Test when user clicks upload but doesn't select any files
+            form_data = aiohttp.FormData()
+            # Don't add any files - simulate empty file input
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/images", 
+                                       data=form_data, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 422:  # Validation error for missing files
+                    self.log_test("No Files Selected Validation", True, f"Correctly handled no files: {response_text}")
+                elif resp.status == 400:
+                    self.log_test("No Files Selected Validation", True, f"Bad request for no files: {response_text}")
+                else:
+                    self.log_test("No Files Selected Test", False, f"Unexpected response: Status {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("No Files Selected Test", False, f"Exception: {str(e)}")
+        
+        # TEST 13: Test with Content-Type header conflicts
+        print("\n🔍 TEST 13: Content-Type Header Conflicts Testing")
+        
+        try:
+            # Test with conflicting content-type headers (frontend might set wrong headers)
+            test_image9 = Image.new('RGB', (100, 100), color='navy')
+            image_buffer9 = io.BytesIO()
+            test_image9.save(image_buffer9, format='PNG')
+            image_buffer9.seek(0)
+            
+            form_data = aiohttp.FormData()
+            form_data.add_field('files', image_buffer9, filename='header_test.png', content_type='image/png')
+            
+            # Add conflicting headers that frontend might accidentally set
+            conflicting_headers = {
+                **headers,
+                'Content-Type': 'application/json'  # Wrong content type for multipart
+            }
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/images", 
+                                       data=form_data, headers=conflicting_headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 200:
+                    self.log_test("Content-Type Conflict Handling", True, "Server correctly handled conflicting headers")
+                elif resp.status == 400:
+                    self.log_test("Content-Type Conflict Detection", True, f"Server detected header conflict: {response_text}")
+                else:
+                    self.log_test("Content-Type Conflict Test", False, f"Status {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("Content-Type Conflict Test", False, f"Exception: {str(e)}")
 
     async def test_packing_interface_inventory_loading_debug(self):
         """Debug the 'Failed to load inventory' issue in the packing interface"""
