@@ -98,6 +98,7 @@ const Home = () => {
           </Link>
         </div>
       </section>
+      <ChatWidget />
     </div>
   );
 };
