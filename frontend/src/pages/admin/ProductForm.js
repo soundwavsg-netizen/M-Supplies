@@ -991,13 +991,16 @@ const ProductForm = () => {
                 </div>
 
                 <div>
-                  <Label>Initial Stock</Label>
+                  <Label>Initial Stock (packs)</Label>
                   <Input
                     type="number"
                     value={newVariant.on_hand}
                     onChange={(e) => handleVariantChange('on_hand', e.target.value)}
                     placeholder="0"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Number of packs in stock (each pack = {newVariant.pack_size || 50} pieces)
+                  </p>
                 </div>
 
                 <div>
