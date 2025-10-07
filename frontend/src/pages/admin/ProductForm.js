@@ -692,11 +692,12 @@ const ProductForm = () => {
                 </Select>
                 
                 {/* Color Management */}
-                {availableColors.length > 0 && (
+                {Array.isArray(availableColors) && availableColors.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     <span className="text-xs text-gray-500">Manage colors:</span>
                     {availableColors.map(color => {
-                      const colorStr = typeof color === 'string' ? color : String(color);
+                      const colorStr = typeof color === 'string' ? color : String(color || '');
+                      if (!colorStr) return null;
                       return (
                         <div key={colorStr} className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs">
                           <span className="capitalize">{colorStr}</span>
