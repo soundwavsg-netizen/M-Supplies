@@ -33,7 +33,11 @@ const PackingInterface = () => {
   const fetchInventory = async () => {
     try {
       setLoading(true);
-      const response = await adminInventoryAPI.list();
+      const token = localStorage.getItem('access_token');
+      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+      const response = await axios.get(`${BACKEND_URL}/api/admin/inventory`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setInventory(response.data);
       
       // Extract filter options
