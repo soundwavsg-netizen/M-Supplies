@@ -415,6 +415,47 @@ const ProductForm = () => {
     toast.success(`Type "${typeToDelete}" deleted`);
   };
 
+  const addNewCategory = async () => {
+    if (!newCategoryName.trim()) {
+      toast.error('Please enter a category name');
+      return;
+    }
+    
+    const categoryName = newCategoryName.trim().toLowerCase();
+    if (availableCategories.includes(categoryName)) {
+      toast.error('Category already exists');
+      return;
+    }
+    
+    const newCategories = [...availableCategories, categoryName];
+    setAvailableCategories(newCategories);
+    setProduct(prev => ({ ...prev, category: categoryName }));
+    setNewCategoryName('');
+    setShowAddCategory(false);
+    
+    // Save to backend
+    await updateSettings(availableColors, availableTypes, newCategories);
+    toast.success(`Category "${categoryName}" added successfully`);
+  };
+
+  const deleteCategory = async (categoryToDelete) => {
+    if (categoryToDelete === product.category) {
+      toast.error('Cannot delete the currently selected category');
+      return;
+    }
+    
+    if (!window.confirm(`Are you sure you want to delete category "${categoryToDelete}"?`)) {
+      return;
+    }
+    
+    const newCategories = availableCategories.filter(category => category !== categoryToDelete);
+    setAvailableCategories(newCategories);
+    
+    // Save to backend
+    await updateSettings(availableColors, availableTypes, newCategories);
+    toast.success(`Category "${categoryToDelete}" deleted`);
+  };
+
   // Fixed variant deletion function
   const deleteVariant = (index, variant) => {
     console.log('Delete variant called with:', { index, variant }); // Debug log
