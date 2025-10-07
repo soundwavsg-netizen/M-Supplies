@@ -38,6 +38,7 @@ const ProductForm = () => {
   const [availableTypes, setAvailableTypes] = useState(['normal', 'bubble wrap']);
   const [availableCategories, setAvailableCategories] = useState(['polymailers', 'accessories']);
   const [availablePackSizes, setAvailablePackSizes] = useState([25, 50, 100, 500, 1000]);
+  const [availablePieceQuantities, setAvailablePieceQuantities] = useState([1, 5, 10, 25, 50, 100]);
   const [showAddColor, setShowAddColor] = useState(false);
   const [showAddType, setShowAddType] = useState(false);
   const [showAddCategory, setShowAddCategory] = useState(false);
