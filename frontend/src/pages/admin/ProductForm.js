@@ -104,12 +104,15 @@ const ProductForm = () => {
       const response = await adminSettingsAPI.get();
       const settings = response.data;
       
-      // Set available colors and types from settings
+      // Set available colors, types, and categories from settings
       if (settings.available_colors) {
         setAvailableColors(settings.available_colors);
       }
       if (settings.available_types) {
         setAvailableTypes(settings.available_types);
+      }
+      if (settings.available_categories) {
+        setAvailableCategories(settings.available_categories);
       }
     } catch (err) {
       console.error('Failed to load settings:', err);
