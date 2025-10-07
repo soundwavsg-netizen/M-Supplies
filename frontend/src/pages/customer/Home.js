@@ -98,7 +98,10 @@ const Home = () => {
           </Link>
         </div>
       </section>
-      <ChatWidget />
+      <ChatWidget 
+        agentType="sales" 
+        currentPage="homepage" 
+      />
     </div>
   );
 };
