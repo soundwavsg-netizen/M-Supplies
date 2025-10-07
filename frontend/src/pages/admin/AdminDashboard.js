@@ -60,10 +60,15 @@ const AdminDashboard = () => {
 
         <div className="bg-white rounded-lg p-6">
           <h2 className="text-xl font-semibold text-slate-900 mb-4">Quick Actions</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
             <Link to="/admin/inventory">
               <Button className="w-full" variant="outline">
                 Manage Inventory
+              </Button>
+            </Link>
+            <Link to="/admin/packing">
+              <Button className="w-full" variant="default">
+                📦 Packing Interface
               </Button>
             </Link>
             <Link to="/admin/orders">
