@@ -60,14 +60,11 @@ const Promotions = () => {
   const CouponForm = ({ coupon, onClose, onSave }) => {
     const [formData, setFormData] = useState({
       code: coupon?.code || '',
-      description: coupon?.description || '',
-      discount_type: coupon?.discount_type || 'percentage',
-      discount_value: coupon?.discount_value || '',
-      usage_type: coupon?.usage_type || 'unlimited',
-      minimum_order_amount: coupon?.minimum_order_amount || '',
-      maximum_discount_amount: coupon?.maximum_discount_amount || '',
-      usage_limit: coupon?.usage_limit || '',
-      expires_at: coupon?.expires_at ? coupon.expires_at.split('T')[0] : '',
+      type: coupon?.type || 'percent',
+      value: coupon?.value || '',
+      min_order_amount: coupon?.min_order_amount || '',
+      valid_from: coupon?.valid_from ? coupon.valid_from.split('T')[0] : new Date().toISOString().split('T')[0],
+      valid_to: coupon?.valid_to ? coupon.valid_to.split('T')[0] : '',
       is_active: coupon?.is_active ?? true
     });
 
