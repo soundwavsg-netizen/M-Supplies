@@ -949,61 +949,12 @@ const ProductForm = () => {
                   )}
                 </div>
 
-                <div className="md:col-span-2">
-                  <Label>Pricing Tiers *</Label>
-                  <div className={`grid gap-2 mt-2 ${newVariant.price_tiers.length === 1 ? 'grid-cols-1' : newVariant.price_tiers.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-                    {newVariant.price_tiers.map((tier, index) => (
-                      <div key={tier.min_quantity}>
-                        <Label className="text-xs text-gray-600">
-                          {tier.min_quantity === 1 ? 'Each ($)' : `${tier.min_quantity} pcs ($)`}
-                        </Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={tier.price}
-                          onChange={(e) => handlePriceTierChange(index, e.target.value)}
-                          placeholder="0.00"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {product.type === 'bubble wrap'
-                      ? 'Bubble wrap: Price per individual piece with quantity discounts'
-                      : product.category === 'accessories' 
-                        ? 'Accessories sold individually' 
-                        : 'Price per pack - each pack size will use this base pricing (adjust individual prices after creation)'
-                    }
-                  </p>
-                </div>
-
-                <div>
-                  <Label>
-                    Initial Stock {product.type === 'bubble wrap' ? '(pieces)' : '(packs)'}
-                  </Label>
-                  <Input
-                    type="number"
-                    value={newVariant.on_hand}
-                    onChange={(e) => handleVariantChange('on_hand', e.target.value)}
-                    placeholder="0"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    {product.type === 'bubble wrap' 
-                      ? `Number of individual pieces in stock`
-                      : `Number of packs in stock (each pack = ${newVariant.pack_size || 50} pieces)`
-                    }
-                  </p>
-                </div>
-
-                <div>
-                  <Label>Safety Stock</Label>
-                  <Input
-                    type="number"
-                    value={newVariant.safety_stock}
-                    onChange={(e) => handleVariantChange('safety_stock', e.target.value)}
-                    placeholder="0"
-                  />
-                </div>
+              </div>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
+                <p className="text-sm text-blue-800">
+                  <strong>Note:</strong> After creating variants, you can set individual pricing and stock levels in the "Current Variants" section below.
+                </p>
               </div>
               
               <Button 
