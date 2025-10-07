@@ -853,6 +853,11 @@ async def main():
         await tester.test_admin_inventory_management()
         await tester.test_deep_link_support()
         
+        # Run new product update tests
+        await tester.test_product_update_with_variants()
+        await tester.test_complete_variant_replacement()
+        await tester.test_dynamic_field_updates()
+        
         # Print summary
         passed, failed = tester.print_summary()
         
