@@ -571,7 +571,33 @@ const ProductForm = () => {
                 <p className="text-xs text-gray-500 mt-1">Include color in product name (e.g., "Premium Polymailer - White")</p>
               </div>
               <div>
-                <Label>Category *</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Category *</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAddCategory(true)}
+                    className="h-8 px-2 text-xs"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Add Category
+                  </Button>
+                </div>
+                
+                {showAddCategory ? (
+                  <div className="flex gap-2 mb-2">
+                    <Input
+                      placeholder="Enter new category name"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button type="button" variant="default" onClick={addNewCategory} size="sm">Add</Button>
+                    <Button type="button" variant="outline" onClick={() => setShowAddCategory(false)} size="sm">Cancel</Button>
+                  </div>
+                ) : null}
+                
                 <Select 
                   value={product.category} 
                   onValueChange={(value) => handleProductChange('category', value)}
@@ -580,8 +606,25 @@ const ProductForm = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="polymailers">Polymailers</SelectItem>
-                    <SelectItem value="accessories">Accessories</SelectItem>
+                    {availableCategories.map(category => (
+                      <SelectItem key={category} value={category}>
+                        <div className="flex items-center justify-between w-full">
+                          <span className="capitalize">{category.replace(/([a-z])([A-Z])/g, '$1 $2')}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteCategory(category);
+                            }}
+                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 ml-2"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
