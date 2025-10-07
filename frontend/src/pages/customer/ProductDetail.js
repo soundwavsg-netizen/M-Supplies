@@ -178,44 +178,50 @@ const ProductDetail = () => {
                   </div>
 
                   {/* Quantity */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Quantity
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="w-8 h-8 rounded border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50"
-                        disabled={quantity <= 1}
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        min="1"
-                        max="1000"
-                        value={quantity}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value) || 1;
-                          setQuantity(Math.max(1, Math.min(1000, value)));
-                        }}
-                        className="w-20 px-3 py-2 border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                        data-testid="quantity-input"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setQuantity(Math.min(1000, quantity + 1))}
-                        className="w-8 h-8 rounded border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50"
-                        disabled={quantity >= 1000}
-                      >
-                        +
-                      </button>
+                  {selectedVariant && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Quantity
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                          className="w-8 h-8 rounded border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50"
+                          disabled={quantity <= 1}
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          max={Math.max(1, selectedVariant.available || (selectedVariant.on_hand || selectedVariant.stock_qty || 0) - (selectedVariant.allocated || 0) - (selectedVariant.safety_stock || 0))}
+                          value={quantity}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value) || 1;
+                            const maxStock = Math.max(1, selectedVariant.available || (selectedVariant.on_hand || selectedVariant.stock_qty || 0) - (selectedVariant.allocated || 0) - (selectedVariant.safety_stock || 0));
+                            setQuantity(Math.max(1, Math.min(maxStock, value)));
+                          }}
+                          className="w-20 px-3 py-2 border border-gray-300 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          data-testid="quantity-input"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const maxStock = Math.max(1, selectedVariant.available || (selectedVariant.on_hand || selectedVariant.stock_qty || 0) - (selectedVariant.allocated || 0) - (selectedVariant.safety_stock || 0));
+                            setQuantity(Math.min(maxStock, quantity + 1));
+                          }}
+                          className="w-8 h-8 rounded border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50"
+                          disabled={quantity >= Math.max(1, selectedVariant.available || (selectedVariant.on_hand || selectedVariant.stock_qty || 0) - (selectedVariant.allocated || 0) - (selectedVariant.safety_stock || 0))}
+                        >
+                          +
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Maximum available: {Math.max(0, selectedVariant.available || (selectedVariant.on_hand || selectedVariant.stock_qty || 0) - (selectedVariant.allocated || 0) - (selectedVariant.safety_stock || 0))} units
+                      </p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Enter any quantity from 1 to 1000
-                    </p>
-                  </div>
+                  )}
                 </div>
               )}
 
