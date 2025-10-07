@@ -305,7 +305,9 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Price Range $0 Issue Investigation"
+    - "Duplicate Categories Issue Investigation"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
