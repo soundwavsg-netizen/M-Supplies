@@ -77,18 +77,18 @@ const Promotions = () => {
         return;
       }
       
-      if (!formData.description.trim()) {
-        toast.error('Description is required');
-        return;
-      }
-      
-      if (!formData.discount_value || parseFloat(formData.discount_value) <= 0) {
+      if (!formData.value || parseFloat(formData.value) <= 0) {
         toast.error('Discount value must be greater than 0');
         return;
       }
       
-      if (formData.discount_type === 'percentage' && parseFloat(formData.discount_value) > 100) {
+      if (formData.type === 'percent' && parseFloat(formData.value) > 100) {
         toast.error('Percentage discount cannot exceed 100%');
+        return;
+      }
+      
+      if (!formData.valid_from) {
+        toast.error('Valid from date is required');
         return;
       }
       
