@@ -56,7 +56,36 @@ class PromotionRepository:
         """List all coupons"""
         cursor = self.coupons.find().skip(skip).limit(limit).sort("created_at", -1)
         coupons = await cursor.to_list(length=limit)
-        return [Coupon(**coupon) for coupon in coupons]
+        
+        # Transform main coupon schema to promotion coupon schema
+        transformed_coupons = []
+        for coupon in coupons:
+            try:
+                # Map main coupon schema fields to promotion schema fields
+                transformed_coupon = {
+                    "id": coupon.get("id"),
+                    "code": coupon.get("code"),
+                    "description": coupon.get("description", f"Coupon {coupon.get('code', 'N/A')}"),  # Default description
+                    "discount_type": "percentage" if coupon.get("type") == "percent" else "fixed",
+                    "discount_value": coupon.get("value", 0),
+                    "usage_type": "unlimited",  # Default usage type
+                    "minimum_order_amount": coupon.get("min_order_amount", 0),
+                    "maximum_discount_amount": None,
+                    "usage_limit": coupon.get("max_uses"),
+                    "expires_at": coupon.get("valid_to"),
+                    "is_active": coupon.get("is_active", True),
+                    "created_at": coupon.get("created_at"),
+                    "updated_at": coupon.get("created_at"),  # Use created_at if updated_at not available
+                    "usage_count": coupon.get("used_count", 0),
+                    "status": "active" if coupon.get("is_active", True) else "disabled"
+                }
+                transformed_coupons.append(Coupon(**transformed_coupon))
+            except Exception as e:
+                # Skip invalid coupons and log the error
+                print(f"Warning: Could not transform coupon {coupon.get('id', 'unknown')}: {e}")
+                continue
+        
+        return transformed_coupons
 
     async def update_coupon(self, coupon_id: str, update_data: CouponUpdate) -> Optional[Coupon]:
         """Update coupon"""
