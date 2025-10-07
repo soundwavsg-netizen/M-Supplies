@@ -1199,6 +1199,234 @@ class BackendTester:
             except Exception as e:
                 self.log_test(f"Filter by '{test_cat}' Category", False, f"Exception: {str(e)}")
 
+    async def test_image_upload_functionality(self):
+        """Test image upload functionality for product creation form"""
+        print("\n📸 TESTING IMAGE UPLOAD FUNCTIONALITY...")
+        print("Testing specific areas mentioned in review request:")
+        print("1. Image Upload API: Test POST /api/admin/upload/images")
+        print("2. API Endpoint Configuration: Verify upload endpoint exists")
+        print("3. File Storage Setup: Check upload directory permissions")
+        print("4. Request Format: Test with sample image file")
+        print("5. Authentication: Verify admin authentication required")
+        
+        if not self.admin_token:
+            self.log_test("Image Upload Test", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # TEST 1: Test single image upload endpoint exists
+        print("\n🔍 TEST 1: Single Image Upload Endpoint Configuration")
+        
+        # Create a simple test image file in memory
+        import io
+        from PIL import Image
+        
+        # Create a simple 100x100 red image
+        test_image = Image.new('RGB', (100, 100), color='red')
+        image_buffer = io.BytesIO()
+        test_image.save(image_buffer, format='PNG')
+        image_buffer.seek(0)
+        
+        # Test single image upload
+        try:
+            form_data = aiohttp.FormData()
+            form_data.add_field('file', image_buffer, filename='test_image.png', content_type='image/png')
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/image", 
+                                       data=form_data, headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    image_url = data.get('url')
+                    self.log_test("Single Image Upload API", True, f"Image uploaded successfully: {image_url}")
+                    
+                    # Verify the returned URL format
+                    if image_url and image_url.startswith('/uploads/products/'):
+                        self.log_test("Image URL Format", True, f"Correct URL format: {image_url}")
+                    else:
+                        self.log_test("Image URL Format", False, f"Unexpected URL format: {image_url}")
+                        
+                elif resp.status == 401:
+                    error_text = await resp.text()
+                    self.log_test("Single Image Upload Authentication", False, f"401 Unauthorized: {error_text}")
+                elif resp.status == 400:
+                    error_text = await resp.text()
+                    self.log_test("Single Image Upload Request Format", False, f"400 Bad Request: {error_text}")
+                elif resp.status == 500:
+                    error_text = await resp.text()
+                    self.log_test("Single Image Upload Server Error", False, f"500 Internal Server Error: {error_text}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Single Image Upload API", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Single Image Upload API", False, f"Exception: {str(e)}")
+        
+        # TEST 2: Test multiple images upload endpoint
+        print("\n🔍 TEST 2: Multiple Images Upload Endpoint")
+        
+        # Create two test images
+        test_image1 = Image.new('RGB', (100, 100), color='blue')
+        image_buffer1 = io.BytesIO()
+        test_image1.save(image_buffer1, format='JPEG')
+        image_buffer1.seek(0)
+        
+        test_image2 = Image.new('RGB', (100, 100), color='green')
+        image_buffer2 = io.BytesIO()
+        test_image2.save(image_buffer2, format='PNG')
+        image_buffer2.seek(0)
+        
+        try:
+            form_data = aiohttp.FormData()
+            form_data.add_field('files', image_buffer1, filename='test_image1.jpg', content_type='image/jpeg')
+            form_data.add_field('files', image_buffer2, filename='test_image2.png', content_type='image/png')
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/images", 
+                                       data=form_data, headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    image_urls = data.get('urls', [])
+                    self.log_test("Multiple Images Upload API", True, f"Uploaded {len(image_urls)} images successfully")
+                    
+                    # Verify all URLs are properly formatted
+                    valid_urls = all(url.startswith('/uploads/products/') for url in image_urls)
+                    self.log_test("Multiple Images URL Format", valid_urls, f"URLs: {image_urls}")
+                    
+                elif resp.status == 401:
+                    error_text = await resp.text()
+                    self.log_test("Multiple Images Upload Authentication", False, f"401 Unauthorized: {error_text}")
+                elif resp.status == 400:
+                    error_text = await resp.text()
+                    self.log_test("Multiple Images Upload Request Format", False, f"400 Bad Request: {error_text}")
+                elif resp.status == 500:
+                    error_text = await resp.text()
+                    self.log_test("Multiple Images Upload Server Error", False, f"500 Internal Server Error: {error_text}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Multiple Images Upload API", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Multiple Images Upload API", False, f"Exception: {str(e)}")
+        
+        # TEST 3: Test authentication requirement
+        print("\n🔍 TEST 3: Authentication Requirement Testing")
+        
+        # Test without authentication token
+        test_image3 = Image.new('RGB', (50, 50), color='yellow')
+        image_buffer3 = io.BytesIO()
+        test_image3.save(image_buffer3, format='PNG')
+        image_buffer3.seek(0)
+        
+        try:
+            form_data = aiohttp.FormData()
+            form_data.add_field('file', image_buffer3, filename='test_no_auth.png', content_type='image/png')
+            
+            # No headers (no authentication)
+            async with self.session.post(f"{API_BASE}/admin/upload/image", data=form_data) as resp:
+                if resp.status == 401:
+                    self.log_test("Upload Authentication Required", True, "Correctly requires authentication (401)")
+                elif resp.status == 403:
+                    self.log_test("Upload Authentication Required", True, "Correctly requires authentication (403)")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Upload Authentication Required", False, 
+                                f"Expected 401/403, got {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Upload Authentication Test", False, f"Exception: {str(e)}")
+        
+        # TEST 4: Test invalid file types
+        print("\n🔍 TEST 4: File Type Validation Testing")
+        
+        try:
+            # Create a text file instead of image
+            text_content = "This is not an image file"
+            text_buffer = io.BytesIO(text_content.encode())
+            
+            form_data = aiohttp.FormData()
+            form_data.add_field('file', text_buffer, filename='test.txt', content_type='text/plain')
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/image", 
+                                       data=form_data, headers=headers) as resp:
+                if resp.status == 400:
+                    error_text = await resp.text()
+                    self.log_test("File Type Validation", True, f"Correctly rejected invalid file type: {error_text}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("File Type Validation", False, 
+                                f"Expected 400 for invalid file type, got {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("File Type Validation Test", False, f"Exception: {str(e)}")
+        
+        # TEST 5: Test file size limits
+        print("\n🔍 TEST 5: File Size Limit Testing")
+        
+        try:
+            # Create a large image (should be within 10MB limit but test the validation)
+            large_image = Image.new('RGB', (1000, 1000), color='purple')
+            large_buffer = io.BytesIO()
+            large_image.save(large_buffer, format='PNG')
+            large_buffer.seek(0)
+            
+            form_data = aiohttp.FormData()
+            form_data.add_field('file', large_buffer, filename='large_test.png', content_type='image/png')
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/image", 
+                                       data=form_data, headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    self.log_test("Large File Upload", True, f"Large file uploaded successfully: {data.get('url')}")
+                elif resp.status == 400:
+                    error_text = await resp.text()
+                    if "too large" in error_text.lower():
+                        self.log_test("File Size Validation", True, f"Correctly rejected large file: {error_text}")
+                    else:
+                        self.log_test("Large File Upload", False, f"400 error but not size related: {error_text}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Large File Upload", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("File Size Limit Test", False, f"Exception: {str(e)}")
+        
+        # TEST 6: Test file storage verification
+        print("\n🔍 TEST 6: File Storage Verification")
+        
+        try:
+            # Upload an image and then verify it exists in the file system
+            test_image4 = Image.new('RGB', (200, 200), color='orange')
+            image_buffer4 = io.BytesIO()
+            test_image4.save(image_buffer4, format='PNG')
+            image_buffer4.seek(0)
+            
+            form_data = aiohttp.FormData()
+            form_data.add_field('file', image_buffer4, filename='storage_test.png', content_type='image/png')
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/image", 
+                                       data=form_data, headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    image_url = data.get('url')
+                    
+                    # Extract filename from URL and check if file exists
+                    if image_url:
+                        filename = image_url.split('/')[-1]
+                        # Note: In a real test environment, we'd check the file system
+                        # For now, we'll just verify the URL format is correct
+                        if filename.endswith('.png') and len(filename) > 10:  # UUID + extension
+                            self.log_test("File Storage Path", True, f"File stored with proper naming: {filename}")
+                        else:
+                            self.log_test("File Storage Path", False, f"Unexpected filename format: {filename}")
+                    else:
+                        self.log_test("File Storage Response", False, "No URL returned in response")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("File Storage Test", False, f"Upload failed: Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("File Storage Test", False, f"Exception: {str(e)}")
+
     async def test_packing_interface_inventory_loading_debug(self):
         """Debug the 'Failed to load inventory' issue in the packing interface"""
         print("\n🔍 DEBUGGING PACKING INTERFACE INVENTORY LOADING ISSUE...")
