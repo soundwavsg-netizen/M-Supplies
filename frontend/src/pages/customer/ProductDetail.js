@@ -150,12 +150,18 @@ const ProductDetail = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {product.variants.map((variant) => (
-                          <SelectItem key={variant.id} value={variant.id}>
-                            {variant.attributes.size} - {variant.attributes.color}
-                            {variant.stock_qty === 0 && ' (Out of Stock)'}
-                          </SelectItem>
-                        ))}
+                        {product.variants.map((variant) => {
+                          const size = variant.attributes?.size_code || `${variant.attributes?.width_cm}x${variant.attributes?.height_cm}cm`;
+                          const packSize = variant.attributes?.pack_size || variant.pack_size || 50;
+                          const isOutOfStock = (variant.on_hand || variant.stock_qty || 0) === 0;
+                          
+                          return (
+                            <SelectItem key={variant.id} value={variant.id}>
+                              {size} - {packSize} {product.type === 'bubble wrap' ? 'pieces' : 'pcs/pack'}
+                              {isOutOfStock && ' (Out of Stock)'}
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   </div>
