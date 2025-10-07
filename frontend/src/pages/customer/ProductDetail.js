@@ -140,50 +140,77 @@ const ProductDetail = () => {
                 </div>
               )}
 
-              {/* Variant Selection */}
+              {/* Variant Selection - Two Step Process */}
               {product.variants && product.variants.length > 0 && (
                 <div className="space-y-4">
+                  {/* Step 1: Select Dimensions */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Variant
+                      Step 1: Select Size
                     </label>
                     <Select
-                      value={selectedVariant?.id}
-                      onValueChange={(val) => {
-                        const variant = product.variants.find(v => v.id === val);
-                        setSelectedVariant(variant);
-                        // Adjust quantity if current quantity exceeds new variant's available stock
-                        if (variant) {
-                          const maxStock = Math.max(1, variant.available || (variant.on_hand || variant.stock_qty || 0) - (variant.allocated || 0) - (variant.safety_stock || 0));
-                          if (quantity > maxStock) {
-                            setQuantity(Math.min(quantity, maxStock));
-                          }
-                        }
+                      value={selectedDimension}
+                      onValueChange={(dimension) => {
+                        setSelectedDimension(dimension);
+                        setSelectedPackSize(''); // Reset pack size when dimension changes
+                        setSelectedVariant(null); // Reset selected variant
                       }}
                     >
-                      <SelectTrigger data-testid="variant-select">
-                        <SelectValue />
+                      <SelectTrigger data-testid="dimension-select">
+                        <SelectValue placeholder="Choose dimensions" />
                       </SelectTrigger>
                       <SelectContent>
-                        {product.variants.map((variant) => {
-                          const width = variant.attributes?.width_cm || variant.width_cm;
-                          const height = variant.attributes?.height_cm || variant.height_cm;
-                          // Always show dimensions with cm units
-                          const size = `${width}×${height} cm`;
-                          const packSize = variant.attributes?.pack_size || variant.pack_size || 50;
-                          const availableStock = variant.available || (variant.on_hand || variant.stock_qty || 0) - (variant.allocated || 0) - (variant.safety_stock || 0);
-                          const isOutOfStock = availableStock <= 0;
-                          
-                          return (
-                            <SelectItem key={variant.id} value={variant.id}>
-                              {size} - {packSize} {product.type === 'bubble wrap' ? 'pieces' : 'pcs/pack'}
-                              {isOutOfStock ? ' (Out of Stock)' : ` (${availableStock} available)`}
-                            </SelectItem>
-                          );
-                        })}
+                        {availableDimensions.map((dimension) => (
+                          <SelectItem key={dimension} value={dimension}>
+                            {dimension}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* Step 2: Select Pack Size (only shown after dimension is selected) */}
+                  {selectedDimension && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Step 2: Select Pack Size
+                      </label>
+                      <Select
+                        value={selectedPackSize}
+                        onValueChange={(packSize) => {
+                          setSelectedPackSize(packSize);
+                          // Find the variant with selected dimension and pack size
+                          const variant = product.variants.find(v => {
+                            const width = v.attributes?.width_cm || v.width_cm;
+                            const height = v.attributes?.height_cm || v.height_cm;
+                            const size = `${width}×${height} cm`;
+                            const vPackSize = v.attributes?.pack_size || v.pack_size || 50;
+                            return size === selectedDimension && vPackSize.toString() === packSize;
+                          });
+                          setSelectedVariant(variant);
+                          // Adjust quantity if needed
+                          if (variant) {
+                            const maxStock = Math.max(1, variant.available || (variant.on_hand || variant.stock_qty || 0) - (variant.allocated || 0) - (variant.safety_stock || 0));
+                            if (quantity > maxStock) {
+                              setQuantity(Math.min(quantity, maxStock));
+                            }
+                          }
+                        }}
+                      >
+                        <SelectTrigger data-testid="pack-size-select">
+                          <SelectValue placeholder="Choose pack size" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availablePackSizes.map((option) => (
+                            <SelectItem key={option.packSize} value={option.packSize}>
+                              {option.packSize} {product.type === 'bubble wrap' ? 'pieces' : 'pcs/pack'}
+                              {option.availableStock <= 0 ? ' (Out of Stock)' : ` (${option.availableStock} available)`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                   {/* Quantity */}
                   {selectedVariant && (
