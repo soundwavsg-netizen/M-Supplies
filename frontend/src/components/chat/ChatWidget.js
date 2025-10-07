@@ -158,67 +158,29 @@ const ChatWidget = ({
     }
   };
 
-  // Placeholder for actual Emergent agent integration
-  const simulateAgentResponse = async (message, context) => {
-    // This is where you'll integrate with your Emergent custom agent
-    // For now, providing contextual responses based on page and agent type
-    
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
-
-    const responses = {
-      homepage: {
-        main: {
-          "show me polymailers": "Great choice! We have premium polymailers in various sizes. Our most popular are:\n\n📦 25×35cm (50pcs) - Perfect for small items\n📦 32×43cm (50pcs) - Great for clothing\n📦 45×60cm (25pcs) - Ideal for larger packages\n\nWould you like to see pricing or learn about bulk discounts?",
-          "sizes": "We offer polymailers in these popular sizes:\n\n• 25×35cm - Small items, accessories\n• 32×43cm - Clothing, books\n• 45×60cm - Large items, shoes\n• Custom sizes available for bulk orders\n\nWhat type of products will you be shipping?",
-          "pricing": "Our competitive pricing includes:\n\n💰 Individual packs from $7.99\n💰 Bulk discounts up to 30% off\n💰 VIP customer exclusive pricing\n\nWant me to calculate pricing for your specific needs?"
-        },
-        sales: {
-          "bulk": "Excellent! Our bulk pricing offers amazing savings:\n\n🎯 100+ units: 15% off\n🎯 500+ units: 25% off  \n🎯 1000+ units: 30% off\n\nPlus, VIP customers get exclusive codes like VIP10 for additional savings!",
-          "vip": "Join our VIP program for:\n\n⭐ Exclusive discount codes\n⭐ Early access to new products\n⭐ Free gifts on qualifying orders\n⭐ Priority customer support\n\nShall I help you sign up?"
-        }
-      },
-      product: {
-        sizing: {
-          "size": `For ${context.product?.name || 'this product'}, I recommend:\n\n📏 Measure your items first\n📏 Add 2-3cm buffer space\n📏 Consider pack quantity vs shipping frequency\n\nWhat dimensions are your items?`,
-          "right size": "Let me help you find the perfect fit! \n\n🎯 What are you planning to pack?\n🎯 Approximate item dimensions?\n🎯 How many items per day?\n\nI'll recommend the optimal size and quantity!"
-        }
-      },
-      support: {
-        care: {
-          "track": "I'd be happy to help track your order!\n\n📋 Please provide your order number\n📋 Or the email used for purchase\n\nI'll get you the latest shipping updates right away!",
-          "return": "Our return policy is customer-friendly:\n\n✅ 30-day return window\n✅ Items in original condition\n✅ Free return shipping on defects\n✅ Quick refund processing\n\nDo you need to return a specific order?"
-        }
-      }
-    };
-
-    const pageResponses = responses[context.page] || responses.homepage;
-    const agentResponses = pageResponses[context.agentType] || pageResponses.main || {};
-    
-    // Find matching response
-    const lowerMessage = message.toLowerCase();
-    for (const [key, response] of Object.entries(agentResponses)) {
-      if (lowerMessage.includes(key)) {
-        return {
-          content: response,
-          actions: key === 'bulk' ? [{ type: 'view_pricing', label: 'View Bulk Pricing' }] : []
-        };
-      }
-    }
-
-    // Default contextual response
-    const defaultResponses = {
-      homepage: "I'd be happy to help you find the right packaging solutions for your business! Could you tell me more about what you're looking for?",
-      product: `Great question about ${context.product?.name || 'this product'}! I'm here to help with sizing, materials, and recommendations. What specific information do you need?`,
-      support: "I'm here to help resolve any questions or issues you might have. Could you provide more details about what you need assistance with?"
-    };
-
-    return {
-      content: defaultResponses[context.page] || defaultResponses.homepage
-    };
-  };
-
   const handleSuggestionClick = (suggestion) => {
     sendMessage(suggestion);
+  };
+
+  // Get agent config for UI display (fallback when session not ready)
+  const getAgentConfig = () => {
+    const configs = {
+      homepage: {
+        main: { name: "M Supplies Assistant", avatar: "🏪" },
+        sales: { name: "Sales Expert", avatar: "💼" }
+      },
+      product: {
+        main: { name: "Product Expert", avatar: "📦" },
+        sizing: { name: "Sizing Specialist", avatar: "📏" }
+      },
+      support: {
+        main: { name: "Support Team", avatar: "🛠️" },
+        care: { name: "Customer Care", avatar: "💝" }
+      }
+    };
+    
+    const pageConfig = configs[currentPage] || configs.homepage;
+    return pageConfig[agentType] || pageConfig.main;
   };
 
   const config = getAgentConfig();
