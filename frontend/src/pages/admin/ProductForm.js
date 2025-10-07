@@ -1113,15 +1113,21 @@ const ProductForm = () => {
                         />
                       </div>
                       <div>
-                        <Label className="text-xs text-gray-600">Stock (packs)</Label>
+                        <Label className="text-xs text-gray-600">
+                          Stock {product.type === 'bubble wrap' ? '(pieces)' : '(packs)'}
+                        </Label>
                         <div className="flex gap-1">
                           <Input
                             type="number"
                             value={variant.on_hand || ''}
                             onChange={(e) => updateVariant(index, 'on_hand', parseInt(e.target.value))}
                             className="text-sm"
-                            placeholder="Packs"
-                            title={`Total pieces: ${(variant.on_hand || 0) * (variant.pack_size || 50)}`}
+                            placeholder={product.type === 'bubble wrap' ? 'Pieces' : 'Packs'}
+                            title={
+                              product.type === 'bubble wrap' 
+                                ? `Individual pieces in stock`
+                                : `Total pieces: ${(variant.on_hand || 0) * (variant.pack_size || 50)}`
+                            }
                           />
                           <Button
                             type="button"
