@@ -3323,16 +3323,16 @@ class BackendTester:
             self.log_test("Customer Product Access After Fix", False, f"Exception: {str(e)}")
 
 async def main():
-    """Run backend tests focused on apricot product pricing fix"""
-    print("🚀 Starting M Supplies Backend API Tests - Apricot Product Pricing Fix")
+    """Run backend tests focused on packing interface inventory loading issue"""
+    print("🚀 Starting M Supplies Backend API Tests - Packing Interface Inventory Loading Debug")
     print(f"Testing against: {API_BASE}")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Apricot product pricing fix (as specifically requested in review)
-        await tester.test_apricot_product_pricing_fix()
+        # PRIORITY TEST: Packing interface inventory loading issue (as specifically requested in review)
+        await tester.test_packing_interface_inventory_loading()
         
         # Print summary
         passed, failed = tester.print_summary()
