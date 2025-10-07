@@ -126,3 +126,4 @@ class BusinessSettings(BaseModel):
     available_categories: List[str] = [
         "polymailers", "accessories", "custom printing", "packaging supplies"
     ]
+    available_pack_sizes: List[int] = [25, 50, 100, 500, 1000]
