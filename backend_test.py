@@ -1207,6 +1207,237 @@ class BackendTester:
             except Exception as e:
                 self.log_test(f"Filter by '{test_cat}' Category", False, f"Exception: {str(e)}")
 
+    async def test_packing_interface_image_investigation(self):
+        """Investigate why the packing interface isn't showing product images"""
+        print("\n🔍 INVESTIGATING PACKING INTERFACE IMAGE DISPLAY ISSUE...")
+        print("User reported: Image upload works in ProductForm but packing interface doesn't display images")
+        print("Packing interface expects 'item.product_image' field but this might not be populated")
+        print("\nTesting:")
+        print("1. Admin Inventory API Response Structure")
+        print("2. Product Image Fields in Inventory Items")
+        print("3. Image URL Format Verification")
+        print("4. Product-Inventory Relationship for Images")
+        
+        if not self.admin_token:
+            self.log_test("Packing Interface Investigation", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # TEST 1: Check Admin Inventory API Response Structure
+        print("\n🔍 TEST 1: Admin Inventory API Response Structure")
+        
+        try:
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                if resp.status == 200:
+                    inventory_data = await resp.json()
+                    self.log_test("Admin Inventory API Access", True, f"Retrieved {len(inventory_data)} inventory items")
+                    
+                    if inventory_data:
+                        # Examine the structure of the first inventory item
+                        first_item = inventory_data[0]
+                        available_fields = list(first_item.keys())
+                        self.log_test("Inventory Item Fields", True, f"Available fields: {available_fields}")
+                        
+                        # Check for image-related fields
+                        image_fields = [field for field in available_fields if 'image' in field.lower()]
+                        if image_fields:
+                            self.log_test("Image Fields Found", True, f"Image-related fields: {image_fields}")
+                            for field in image_fields:
+                                field_value = first_item.get(field)
+                                self.log_test(f"Image Field '{field}' Value", True, f"Value: {field_value}")
+                        else:
+                            self.log_test("Image Fields Found", False, "No image-related fields found in inventory items")
+                        
+                        # Check if product_image field exists (what packing interface expects)
+                        if 'product_image' in first_item:
+                            product_image_value = first_item['product_image']
+                            self.log_test("Product Image Field", True, f"product_image: {product_image_value}")
+                        else:
+                            self.log_test("Product Image Field", False, "product_image field missing from inventory items")
+                        
+                        # Log sample inventory item structure
+                        sample_item = {k: v for k, v in first_item.items() if k in ['variant_id', 'sku', 'product_name', 'product_image', 'images']}
+                        self.log_test("Sample Inventory Item", True, f"Sample: {sample_item}")
+                        
+                    else:
+                        self.log_test("Inventory Data Available", False, "No inventory items found")
+                        return
+                        
+                elif resp.status == 401:
+                    self.log_test("Admin Inventory API Access", False, "Authentication failed - invalid admin token")
+                    return
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Admin Inventory API Access", False, f"Status {resp.status}: {error_text}")
+                    return
+                    
+        except Exception as e:
+            self.log_test("Admin Inventory API Access", False, f"Exception: {str(e)}")
+            return
+        
+        # TEST 2: Check Product API for Image Fields
+        print("\n🔍 TEST 2: Product API Image Fields Analysis")
+        
+        try:
+            async with self.session.get(f"{API_BASE}/products?limit=10") as resp:
+                if resp.status == 200:
+                    products_data = await resp.json()
+                    self.log_test("Products API Access", True, f"Retrieved {len(products_data)} products")
+                    
+                    if products_data:
+                        first_product = products_data[0]
+                        product_fields = list(first_product.keys())
+                        
+                        # Check for image fields in products
+                        product_image_fields = [field for field in product_fields if 'image' in field.lower()]
+                        if product_image_fields:
+                            self.log_test("Product Image Fields", True, f"Product image fields: {product_image_fields}")
+                            for field in product_image_fields:
+                                field_value = first_product.get(field)
+                                self.log_test(f"Product Field '{field}'", True, f"Value: {field_value}")
+                        else:
+                            self.log_test("Product Image Fields", False, "No image fields found in products")
+                        
+                        # Check variants for image fields
+                        variants = first_product.get('variants', [])
+                        if variants:
+                            first_variant = variants[0]
+                            variant_fields = list(first_variant.keys())
+                            variant_image_fields = [field for field in variant_fields if 'image' in field.lower()]
+                            
+                            if variant_image_fields:
+                                self.log_test("Variant Image Fields", True, f"Variant image fields: {variant_image_fields}")
+                                for field in variant_image_fields:
+                                    field_value = first_variant.get(field)
+                                    self.log_test(f"Variant Field '{field}'", True, f"Value: {field_value}")
+                            else:
+                                self.log_test("Variant Image Fields", False, "No image fields found in variants")
+                        
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Products API Access", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Products API Access", False, f"Exception: {str(e)}")
+        
+        # TEST 3: Check Individual Product Details for Images
+        print("\n🔍 TEST 3: Individual Product Details Image Analysis")
+        
+        if inventory_data:
+            # Get a product ID from inventory to check detailed product info
+            sample_variant_id = inventory_data[0]['variant_id']
+            
+            # Find the product that contains this variant
+            try:
+                async with self.session.get(f"{API_BASE}/products?limit=50") as resp:
+                    if resp.status == 200:
+                        all_products = await resp.json()
+                        target_product_id = None
+                        
+                        for product in all_products:
+                            variants = product.get('variants', [])
+                            for variant in variants:
+                                if variant.get('id') == sample_variant_id:
+                                    target_product_id = product['id']
+                                    break
+                            if target_product_id:
+                                break
+                        
+                        if target_product_id:
+                            self.log_test("Found Product for Variant", True, f"Product ID: {target_product_id}")
+                            
+                            # Get detailed product info
+                            async with self.session.get(f"{API_BASE}/products/{target_product_id}") as detail_resp:
+                                if detail_resp.status == 200:
+                                    detailed_product = await detail_resp.json()
+                                    
+                                    # Check for images in detailed product
+                                    product_images = detailed_product.get('images', [])
+                                    self.log_test("Product Images Array", True, f"Images: {product_images}")
+                                    
+                                    # Check variants in detailed product
+                                    detailed_variants = detailed_product.get('variants', [])
+                                    for variant in detailed_variants:
+                                        if variant.get('id') == sample_variant_id:
+                                            variant_images = variant.get('images', [])
+                                            self.log_test("Variant Images", True, f"Variant images: {variant_images}")
+                                            break
+                                    
+                                else:
+                                    error_text = await detail_resp.text()
+                                    self.log_test("Product Detail API", False, f"Status {detail_resp.status}: {error_text}")
+                        else:
+                            self.log_test("Find Product for Variant", False, "Could not find product containing the sample variant")
+                            
+            except Exception as e:
+                self.log_test("Product Detail Analysis", False, f"Exception: {str(e)}")
+        
+        # TEST 4: Test Image URL Format and Accessibility
+        print("\n🔍 TEST 4: Image URL Format and Accessibility Testing")
+        
+        # Test the image serving endpoint format
+        test_image_urls = [
+            f"{API_BASE}/images/test-image.png",
+            f"{BACKEND_URL}/uploads/products/test-image.png",
+            f"{API_BASE}/uploads/products/test-image.png"
+        ]
+        
+        for test_url in test_image_urls:
+            try:
+                async with self.session.get(test_url) as resp:
+                    content_type = resp.headers.get('content-type', 'unknown')
+                    if resp.status == 404:
+                        self.log_test(f"Image URL Format Test", True, f"URL {test_url} - 404 (expected for non-existent image)")
+                    elif resp.status == 200:
+                        self.log_test(f"Image URL Format Test", True, f"URL {test_url} - 200 OK, Content-Type: {content_type}")
+                    else:
+                        self.log_test(f"Image URL Format Test", False, f"URL {test_url} - Status {resp.status}, Content-Type: {content_type}")
+                        
+            except Exception as e:
+                self.log_test(f"Image URL Test", False, f"URL {test_url} - Exception: {str(e)}")
+        
+        # TEST 5: Check if inventory service should populate product_image field
+        print("\n🔍 TEST 5: Product-Inventory Relationship Analysis")
+        
+        if inventory_data and len(inventory_data) > 0:
+            # Analyze the relationship between products and inventory
+            sample_inventory_item = inventory_data[0]
+            product_name = sample_inventory_item.get('product_name', 'Unknown')
+            variant_id = sample_inventory_item.get('variant_id', 'Unknown')
+            
+            self.log_test("Inventory-Product Relationship", True, 
+                        f"Product: {product_name}, Variant ID: {variant_id}")
+            
+            # Check if we can find the corresponding product and its images
+            try:
+                async with self.session.get(f"{API_BASE}/products?search={product_name}&limit=5") as resp:
+                    if resp.status == 200:
+                        search_results = await resp.json()
+                        if search_results:
+                            matching_product = search_results[0]
+                            product_images = matching_product.get('images', [])
+                            
+                            if product_images:
+                                self.log_test("Product Has Images", True, f"Found {len(product_images)} images: {product_images}")
+                                
+                                # This is the key finding - if products have images but inventory doesn't include them
+                                if 'product_image' not in sample_inventory_item and product_images:
+                                    self.log_test("CRITICAL ISSUE IDENTIFIED", False, 
+                                                f"Product has images {product_images} but inventory item lacks 'product_image' field")
+                                    self.log_test("SOLUTION NEEDED", False, 
+                                                "Admin inventory API should populate 'product_image' field from product data")
+                            else:
+                                self.log_test("Product Images Check", True, "Product has no images (expected if no images uploaded)")
+                        else:
+                            self.log_test("Product Search", False, f"No products found matching '{product_name}'")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Product Search API", False, f"Status {resp.status}: {error_text}")
+                        
+            except Exception as e:
+                self.log_test("Product Search", False, f"Exception: {str(e)}")
+
     async def test_image_upload_422_debug(self):
         """Debug the specific 422 validation error for image uploads"""
         print("\n🚨 DEBUGGING 422 IMAGE UPLOAD VALIDATION ERROR...")
