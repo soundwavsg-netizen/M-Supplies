@@ -117,24 +117,23 @@ const ProductForm = () => {
     }
   };
 
-  const fetchSettings = async () => {
+  const updateSettings = async (colors, types) => {
     try {
+      // Get current settings first
       const response = await adminSettingsAPI.get();
-      const settings = response.data;
+      const currentSettings = response.data;
       
-      // Set available colors and types from settings
-      if (settings.available_colors) {
-        setAvailableColors(settings.available_colors);
-      }
-      if (settings.available_types) {
-        setAvailableTypes(settings.available_types);
-      }
+      // Update with new colors and types
+      const updatedSettings = {
+        ...currentSettings,
+        available_colors: colors,
+        available_types: types
+      };
+      
+      await adminSettingsAPI.update(updatedSettings);
     } catch (err) {
-      console.error('Failed to load settings:', err);
-      // Don't show error toast for settings as it's not critical
-      // Set default values if settings fail to load
-      setAvailableColors(['white', 'black', 'clear']);
-      setAvailableTypes(['normal', 'premium', 'bubble wrap']);
+      console.error('Failed to update settings:', err);
+      toast.error('Failed to save color/type changes');
     }
   };
 
