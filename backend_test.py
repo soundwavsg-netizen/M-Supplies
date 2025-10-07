@@ -3731,10 +3731,7 @@ async def main():
         await tester.authenticate()
         
         # PRIORITY TEST: Packing interface inventory loading issue (as specifically requested in review)
-        await tester.test_packing_interface_inventory_loading()
-        
-        # Additional detailed debugging
-        await tester.test_detailed_inventory_analysis()
+        await tester.test_packing_interface_inventory_loading_debug()
         
         # Print summary
         passed, failed = tester.print_summary()
