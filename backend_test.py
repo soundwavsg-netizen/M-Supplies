@@ -2626,6 +2626,106 @@ class BackendTester:
             except Exception as e:
                 self.log_test("Inventory-Product Consistency", False, f"Exception: {str(e)}")
 
+    async def test_detailed_inventory_analysis(self):
+        """Detailed analysis of inventory data for debugging packing interface issues"""
+        print("\n🔍 Detailed Inventory Analysis for Packing Interface...")
+        
+        if not self.admin_token:
+            self.log_test("Detailed Inventory Analysis", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Get inventory data
+        try:
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                if resp.status == 200:
+                    inventory_data = await resp.json()
+                    
+                    print(f"\n📊 INVENTORY DATA ANALYSIS:")
+                    print(f"Total inventory items: {len(inventory_data)}")
+                    
+                    # Analyze each inventory item
+                    for i, item in enumerate(inventory_data, 1):
+                        print(f"\n  Item {i}:")
+                        print(f"    Variant ID: {item.get('variant_id')}")
+                        print(f"    SKU: {item.get('sku')}")
+                        print(f"    Product Name: {item.get('product_name')}")
+                        print(f"    On Hand: {item.get('on_hand', 0)}")
+                        print(f"    Allocated: {item.get('allocated', 0)}")
+                        print(f"    Available: {item.get('available', 0)}")
+                        print(f"    Safety Stock: {item.get('safety_stock', 0)}")
+                        print(f"    Low Stock Threshold: {item.get('low_stock_threshold', 0)}")
+                        print(f"    Is Low Stock: {item.get('is_low_stock', False)}")
+                        
+                        # Check for any null or undefined values
+                        null_fields = []
+                        for field in ['variant_id', 'sku', 'product_name', 'on_hand', 'allocated', 'available']:
+                            if item.get(field) is None:
+                                null_fields.append(field)
+                        
+                        if null_fields:
+                            print(f"    ⚠️ NULL FIELDS: {null_fields}")
+                    
+                    self.log_test("Detailed Inventory Analysis", True, f"Analyzed {len(inventory_data)} inventory items")
+                    
+                    # Check for data quality issues
+                    issues = []
+                    for item in inventory_data:
+                        # Check for negative values
+                        if item.get('on_hand', 0) < 0:
+                            issues.append(f"Negative on_hand: {item.get('sku')}")
+                        if item.get('available', 0) < 0:
+                            issues.append(f"Negative available: {item.get('sku')}")
+                        
+                        # Check for missing required fields
+                        if not item.get('variant_id'):
+                            issues.append(f"Missing variant_id: {item.get('sku')}")
+                        if not item.get('sku'):
+                            issues.append(f"Missing SKU: {item.get('variant_id')}")
+                    
+                    if issues:
+                        self.log_test("Inventory Data Quality", False, f"Found {len(issues)} issues: {issues[:3]}")
+                    else:
+                        self.log_test("Inventory Data Quality", True, "No data quality issues found")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Detailed Inventory Analysis", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Detailed Inventory Analysis", False, f"Exception: {str(e)}")
+        
+        # Get products data for comparison
+        try:
+            async with self.session.get(f"{API_BASE}/products") as resp:
+                if resp.status == 200:
+                    products_data = await resp.json()
+                    
+                    print(f"\n📦 PRODUCTS DATA ANALYSIS:")
+                    print(f"Total products: {len(products_data)}")
+                    
+                    total_variants = 0
+                    for i, product in enumerate(products_data, 1):
+                        variants = product.get('variants', [])
+                        total_variants += len(variants)
+                        print(f"  Product {i}: {product.get('name')} - {len(variants)} variants")
+                        
+                        # Show first few variant IDs for comparison
+                        if variants:
+                            variant_ids = [v.get('id') for v in variants[:3]]
+                            print(f"    Sample variant IDs: {variant_ids}")
+                    
+                    print(f"Total variants across all products: {total_variants}")
+                    self.log_test("Products Data Analysis", True, f"Found {len(products_data)} products with {total_variants} total variants")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Products Data Analysis", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Products Data Analysis", False, f"Exception: {str(e)}")
+
     def print_summary(self):
         """Print test summary"""
         print("\n" + "="*60)
