@@ -1,27 +1,20 @@
 <analysis>
-The AI engineer effectively addressed user requests across multiple phases, starting with critical bug fixes, then implementing complex filtering, enhancing branding, and finally building out robust admin product management. Key achievements include fixing a critical frontend compilation error by creating a missing , setting up CI guardrails, implementing a comprehensive product filtering system with deep-linking capabilities on the backend and frontend, and integrating dynamic, responsive M Supplies logos. Significant effort was also dedicated to refining the admin product form, adding image uploads, implementing quantity-based pricing tiers (25, 50, 100 pcs, with conditional logic for premium products), and introducing product/variant deletion. The work concluded with diagnosing a persistent could not validate credentials error during product updates, indicating an authentication token issue.
+The previous AI engineer successfully transitioned the M Supplies application from an MVP to a more robust, feature-rich platform. Initial efforts focused on critical bug fixes like a frontend compilation error, followed by comprehensive product filtering, branding enhancements with dynamic logos, and robust admin product management. Key achievements include deep-linkable product filtering, dynamic image uploads, and conditional quantity-based pricing. A significant portion of the recent work involved debugging and refining core features. The engineer systematically addressed multiple user-reported issues, including an authentication error during product updates, ensuring data persistence for variants and dynamic options (colors, types, categories), resolving a React child runtime error, implementing flexible pack-size logic for variants, fixing customer-facing pricing and stock displays, and finally, rectifying product deletion cascades and enabling granular allocated inventory management. Each problem was investigated, root causes identified, and solutions implemented with thorough testing and user feedback loops.
 </analysis>
 
 <product_requirements>
-The user, Sean, requested a production-ready e-commerce site, M Supplies, for polymailers and accessories, comprising customer and admin portals. Core goals include a smooth shopping experience with multi-variant products, and robust admin tools.
+The user, Sean, requested a production-ready e-commerce site, M Supplies, for polymailers and accessories, featuring both customer and admin portals. The core objective is a seamless shopping experience for multi-variant products, backed by comprehensive admin tools.
 
 **Implemented Features:**
-- **Centralized Multi-channel Inventory:** Core logic for , ,  stock, and an .
-- **Rebranding:** Application renamed to M Supplies, reflected in headers, footers, and dynamically managed logos.
-- **Frontend Bug Fixes:** Resolved critical compilation issues, ensuring  success and a working application preview.
-- **CI Guardrails:** Integrated ESLint and Prettier, with npm scripts for  and .
-- **Product Filtering & Sorting:** Advanced filters (color, size, type, category, price range, availability) and sorting (best sellers, price, newest) on the  page, with URL persistence (deep-linkable). Implemented business rule: bubble wrap type restricts color to white.
-- **Admin Product Management:**
-    -   CRUD for products with variants, images, SEO fields.
-    -   Dynamic image upload.
-    -   Conditional quantity-based pricing tiers (25, 50, 100 pcs, or 50, 100 for Premium Polymailers).
-    -   Product-level color and type selection, with variants representing dimensions.
-    -   Dynamic management (add/delete) of available colors and types from dropdowns.
-    -   Edit and delete functionality for products and individual variants with confirmation.
-    -   Add New Product and Manage Products buttons on the admin inventory page.
--   **Core E-commerce:** Initial setup of authentication (JWT), product catalog, cart, and orders. GST calculation.
-
-**Pending Requirements:** Full Google OAuth, PDF invoice/packing slip, Stripe PayNow/GrabPay, advanced image processing, full business settings page, complete Shopee integration, Storybook, Playwright E2E tests.
+-   **Centralized Multi-channel Inventory**: Core logic for , ,  stock, and an .
+-   **Rebranding**: Application renamed to M Supplies, with dynamic logos in headers and footers.
+-   **Frontend Bug Fixes**: Resolved critical compilation issues, ensuring successful builds.
+-   **CI Guardrails**: ESLint and Prettier integrated, with npm scripts for  and .
+-   **Product Filtering & Sorting**: Advanced filters (category, color, size, type, price, availability) and sorting on the  page, with deep-linkable URL persistence. A business rule enforces bubble wrap type restricts color to white.
+-   **Admin Product Management**: CRUD for products with variants, images, SEO fields. Dynamic image upload. Conditional quantity-based pricing tiers (25, 50, 100 pcs; 50, 100 for Premium Polymailers; 1, 5, 10, etc. for Bubble Wrap sold by pieces). Product-level color, type, and category selection with variant attributes representing dimensions and pack size. Dynamic management (add/delete) of available colors, types, and categories globally via settings. Edit and delete functionality for products and individual variants with confirmation. Add New Product and Manage Products buttons on admin inventory page.
+-   **Customer Product Page**: Displays products with variants, allows selection based on pack sizes, and accurately shows stock and pricing ranges. Flexible quantity input (1 to 1000).
+-   **Core E-commerce**: Initial setup of authentication (JWT), product catalog, cart, and orders. GST calculation.
+-   **Inventory Management**: Dynamic SKU count on admin dashboard. Allocated stock explained and made adjustable via the stock adjustment modal. Product deletion correctly cascades to delete variants and updates inventory views.
 </product_requirements>
 
 <key_technical_concepts>
@@ -30,7 +23,7 @@ The user, Sean, requested a production-ready e-commerce site, M Supplies, for po
 -   **Frontend**: React, Tailwind CSS, Shadcn UI, React Router, Context API, ESLint, Prettier.
 -   **Backend**: FastAPI, Pydantic, layered architecture (schemas, repositories, services, API routers), JWT, Passlib.
 -   **Inventory**: Centralized  with , ,  stock.
--   **File Storage**: Local for images (future S3/R2).
+-   **File Storage**: Local for images.
 -   **URL Routing**: Deep-linkable routes, URL query parameters for filtering.
 -   **Authentication**: JWT-based for API access.
 </key_technical_concepts>
@@ -42,89 +35,53 @@ The application uses a standard full-stack architecture with React for the front
 
 **Key Files and Changes:**
 -   :
-    -   **Importance:** Main FastAPI application entry point, defines all API routes.
-    -   **Changes:**
-        -   Integrated new API routes for product filtering (, ).
-        -   Corrected route ordering to prevent conflicts (specific routes before parameterized ones like ).
-        -   Updated imports to include new schemas.
+    -   **Importance**: Main FastAPI application entry point, defines API routes.
+    -   **Changes**: Integrated new API routes for product filtering, correct route ordering. Updated  to cascade deletion to variants. Modified  to filter for active products.
 -   :
-    -   **Importance:** Defines Pydantic models for product data validation and serialization, crucial for API contracts.
-    -   **Changes:**
-        -   Updated  and  schemas to include explicit , , , and .
-        -   Added , ,  schemas for filtering.
-        -   Modified  and  schemas to include product-level , , , and  for proper product editing and update API.
+    -   **Importance**: Pydantic models for product data.
+    -   **Changes**: Updated , , ,  to include  (moved into ), and , , .
 -   :
-    -   **Importance:** Handles direct MongoDB interactions for product-related data.
-    -   **Changes:**
-        -   Implemented new methods , , ,  to support advanced filtering logic.
-        -   Fixed price range aggregation logic.
-        -   Excluded MongoDB  field in aggregation pipelines to prevent serialization errors.
+    -   **Importance**: Pydantic models for inventory and business settings.
+    -   **Changes**: Extended  to include , , , , .  schema updated to support  (on_hand/allocated) and .
 -   :
-    -   **Importance:** Contains business logic for product operations.
-    -   **Changes:**
-        -   Updated  to accept  and .
-        -   Added  to retrieve dynamic filter options.
-        -   Updated  method to correctly return product details including variants.
+    -   **Importance**: Handles MongoDB interactions for products.
+    -   **Changes**: Implemented , , , . Modified  for proper variant handling. Added .
 -   :
-    -   **Importance:** Script to populate the database with initial products and variants, including diverse data for testing filtering and new product structures.
-    -   **Changes:** Created to seed specific polymailers (normal, bubble wrap in various colors/sizes) and accessories.
+    -   **Importance**: Business logic for product operations.
+    -   **Changes**: Updated , , . Modified  to explicitly manage variant lifecycle (delete/insert). Updated  stock calculation to check both  and .
 -   :
-    -   **Importance:** Main React component, configures  for application navigation.
-    -   **Changes:**
-        -   Added new routes  to enable editing of existing products.
+    -   **Importance**: Business logic for inventory operations.
+    -   **Changes**: Updated  to handle adjustments for both  and  quantities, and correctly update the  document in the database.
 -   :
-    -   **Importance:** Customer-facing page for displaying product listings.
-    -   **Changes:**
-        -   Completely refactored to integrate advanced filtering (category, color, size, type, price, availability), sorting, and search.
-        -   Fixed a critical bug related to  with an empty string value.
+    -   **Importance**: Populates initial database data.
+    -   **Changes**: Updated to include new  fields and diverse product/variant data for new schemas and testing.
 -   :
-    -   **Importance:** Admin interface for creating and editing product details, including variants.
-    -   **Changes:**
-        -   Created as a missing file to resolve compilation errors.
-        -   Refactored to handle product-level  and  fields, removing them from variant-level.
-        -   Implemented image upload functionality (state management, file input, API calls).
-        -   Replaced single price input with dynamic quantity-based pricing tiers (25, 50, 100 pcs or 50, 100 pcs for premium polymailers).
-        -   Added inline editing capabilities for existing variants.
-        -   Implemented dynamic management for colors and types (add/delete functionality with confirmation).
-        -   Fixed data structure mismatch when populating existing variants from backend API.
-        -   Fixed an issue where the  function was not properly confirmed, leading to perceived non-functionality.
-        -   Updated 's update logic to correctly send the new data structure to the backend.
--    (Admin Products List):
-    -   **Importance:** Admin interface for listing and managing products.
-    -   **Changes:**
-        -   Improved visibility of Edit buttons on product cards.
-        -   Added Delete buttons for products, with confirmation dialogs.
+    -   **Importance**: Main React component, handles routing.
+    -   **Changes**: Added/updated routes like , .
 -   :
-    -   **Importance:** Admin page for viewing and managing centralized inventory.
-    -   **Changes:**
-        -   Added Add New Product and Manage Products buttons for quick access to product creation and listing.
+    -   **Importance**: Customer-facing product listings.
+    -   **Changes**: Refactored for advanced filtering/sorting.
 -   :
-    -   **Importance:** Reusable React component for displaying the M Supplies logo.
-    -   **Changes:**
-        -   Created to centralize logo display logic.
-        -   Updated to use provided  and .
-        -   Adjusted dimensions and responsiveness for header, footer, and mobile views based on user feedback.
+    -   **Importance**: Customer-facing single product view.
+    -   **Changes**: Updated variant selection dropdown to show dimensions and pack sizes. Fixed stock checking to use . Replaced quantity dropdown with a flexible number input. Added authentication check for Add to Cart.
 -   :
-    -   **Importance:** Application-wide navigation bar.
-    -   **Changes:** Integrated the new  component.
+    -   **Importance**: Admin interface for product CRUD.
+    -   **Changes**: Created/refactored for product-level attributes. Implemented image upload. Replaced single price with quantity-based tiers. Dynamically manages colors, types, categories. Uses proper API calls (, , , ). Fixed React rendering issues (Buttons in SelectItems). Implemented multiple variant creation for different pack sizes. Updated pricing logic to be pack-based. Conditional display of pack/piece quantities for bubble wrap.
 -   :
-    -   **Importance:** Application-wide footer.
-    -   **Changes:** Integrated the new  component.
+    -   **Importance**: Admin product list.
+    -   **Changes**: Improved Edit buttons, added Delete buttons. Fixed stock status calculation.
 -   :
-    -   **Importance:** Directory for static assets like logos.
-    -   **Changes:** Created, initially with placeholder SVG files, later replaced with actual PNG logos (, ).
+    -   **Importance**: Admin inventory view.
+    -   **Changes**: Added Add New Product and Manage Products buttons. Uses .
 -   :
-    -   **Importance:** Site favicon.
-    -   **Changes:** Created a placeholder SVG favicon.
+    -   **Importance**: Admin overview.
+    -   **Changes**: Replaced hardcoded 38 SKUs with a dynamic count.
 -   :
-    -   **Importance:** Manages frontend dependencies and scripts.
-    -   **Changes:** Added Prettier, updated linting and build scripts.
+    -   **Importance**: Modal for adjusting stock.
+    -   **Changes**: Updated to include a stock type selector (on_hand/allocated) and adjust both quantities.
 -   :
-    -   **Importance:** Configures ESLint for code quality and consistency.
-    -   **Changes:** Created, configured for React, TypeScript, and adjusted rules for  aliases and quote styles.
--   :
-    -   **Importance:** Configures Prettier for code formatting.
-    -   **Changes:** Created to enforce consistent code style.
+    -   **Importance**: Centralized API calls.
+    -   **Changes**: Added  for managing global settings. Added .
 </code_architecture>
 
 <pending_tasks>
@@ -134,27 +91,21 @@ The application uses a standard full-stack architecture with React for the front
 -   Playwright E2E tests.
 -   Stripe PayNow/GrabPay integration.
 -   Image processing/resizing after upload.
--   Full settings page for business configuration beyond just the name.
+-   Full settings page for business configuration beyond just the name, colors, types, categories.
 -   Complete Shopee integration (beyond CSV import/webhook stub).
--   Addressing the could not validate credentials (401 Unauthorized) error for product updates.
 </pending_tasks>
 
 <current_work>
-Immediately prior to this summary, the AI engineer was addressing a critical authentication error during product updates. The user reported, Error when update product. It says could not validate credentials.
+Immediately prior to this summary, the AI engineer successfully addressed a series of critical inventory and product management issues based on user feedback.
 
-The AI engineer investigated the backend logs and confirmed multiple  responses, indicating a JWT token issue. This implies the token is either expired, missing from the request, or invalid. The system successfully logs in and fetches product data, but fails on modification operations.
+1.  **Dynamic SKU Count on Admin Dashboard**: The hardcoded 38 SKUs on the  dashboard was replaced with a dynamic count that reflects the actual number of active product variants in the system.
+2.  **Product Deletion Cascade**: The product deletion functionality was enhanced to perform a complete cleanup. Previously, deleting a product would only soft-delete the product itself, leaving its variants and associated inventory records intact. Now, deleting a product also explicitly deletes all its associated variants from the database.
+3.  **Inventory View Filtering**: The  API endpoint was modified to retrieve and display only *active* products and their variants, ensuring that deleted items do not clutter the inventory view.
+4.  **Allocated Stock Management**: The concept of Allocated stock (stock reserved for pending orders) was clarified. An interface was added to the  page's  allowing administrators to explicitly adjust both On Hand and Allocated quantities. This enables real-time management of stock reservations. The backend  and  schema were updated to support these granular adjustments.
 
-This issue surfaced after extensive work on the admin product management, which included:
--   Implementing dynamic image upload in .
--   Refactoring pricing tiers to be quantity-based (25, 50, or 100 pcs, with conditional logic for Premium Polymailers).
--   Restructuring product creation/editing to have product-level  and  fields, with variants representing only .
--   Adding dynamic  and  functionality within the .
--   Implementing comprehensive product and variant deletion with confirmation dialogs.
--   Fixing a previous  error by updating the backend  and  schemas in  to include , , , and .
-
-The 401 error suggests an underlying problem with how the frontend handles or sends the authentication token for PUT requests, potentially an expiration or incorrect header attachment, which was not the focus of the previous schema and UI changes.
+These changes were thoroughly tested, and the system now correctly handles product deletions, provides accurate SKU counts, and offers full control over inventory allocation.
 </current_work>
 
 <optional_next_step>
-Investigate and fix the 401 Unauthorized error by checking JWT token handling in the frontend for PUT requests.
+Investigate and build the one-page real-time stock inventory interface for packing operations.
 </optional_next_step>
