@@ -90,9 +90,10 @@ class ProductService:
                 detail="Product not found"
             )
         
-        # Get variants
+        # Get variants and transform attributes
         variants = await self.product_repo.get_variants_by_product(product_id)
-        product['variants'] = variants
+        transformed_variants = [self._transform_variant_attributes(variant) for variant in variants]
+        product['variants'] = transformed_variants
         
         return product
     
