@@ -352,7 +352,7 @@ const ProductForm = () => {
     setShowAddColor(false);
     
     // Save to backend
-    await updateSettings(newColors, availableTypes);
+    await updateSettings(newColors, availableTypes, availableCategories);
     toast.success(`Color "${colorName}" added successfully`);
   };
 
