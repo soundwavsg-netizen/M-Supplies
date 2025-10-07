@@ -1082,6 +1082,178 @@ class BackendTester:
         except Exception as e:
             self.log_test("Pricing Calculation Logic", False, f"Exception: {str(e)}")
 
+    async def test_coupon_creation_validation_error(self):
+        """Test the exact coupon creation API call that the frontend is making"""
+        print("\n🎯 Testing Coupon Creation Validation Error...")
+        print("Testing the exact payloads that frontend should be sending")
+        
+        if not self.admin_token:
+            self.log_test("Coupon Creation Test", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Test 1: Full payload as specified in review request
+        print("\n📝 Test 1: Full payload with all fields")
+        full_payload = {
+            "code": "VIP10",
+            "type": "percent", 
+            "value": 10,
+            "min_order_amount": 0,
+            "valid_from": "2025-01-07T12:00:00.000Z",
+            "valid_to": None,
+            "is_active": True
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/admin/coupons", 
+                                       json=full_payload, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 200:
+                    data = await resp.json()
+                    self.log_test("Full Payload Coupon Creation", True, 
+                                f"Coupon created successfully: {data.get('code')}")
+                elif resp.status == 422:
+                    try:
+                        error_data = await resp.json() if response_text else {}
+                        self.log_test("Full Payload Coupon Creation", False, 
+                                    f"422 Validation Error: {error_data}")
+                        
+                        # Extract specific field errors
+                        if 'detail' in error_data:
+                            for error in error_data['detail']:
+                                field_path = ' -> '.join(str(x) for x in error.get('loc', []))
+                                error_msg = error.get('msg', 'Unknown error')
+                                error_type = error.get('type', 'Unknown type')
+                                self.log_test(f"Field Error: {field_path}", False, 
+                                            f"Type: {error_type}, Message: {error_msg}")
+                    except:
+                        self.log_test("Full Payload Coupon Creation", False, 
+                                    f"422 Error (raw): {response_text}")
+                else:
+                    self.log_test("Full Payload Coupon Creation", False, 
+                                f"Status {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("Full Payload Coupon Creation", False, f"Exception: {str(e)}")
+        
+        # Test 2: Minimal required fields only
+        print("\n📝 Test 2: Minimal required fields only")
+        minimal_payload = {
+            "code": "TEST10",
+            "type": "percent",
+            "value": 10,
+            "valid_from": "2025-01-07T12:00:00.000Z"
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/admin/coupons", 
+                                       json=minimal_payload, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 200:
+                    data = await resp.json()
+                    self.log_test("Minimal Payload Coupon Creation", True, 
+                                f"Coupon created successfully: {data.get('code')}")
+                elif resp.status == 422:
+                    try:
+                        error_data = await resp.json() if response_text else {}
+                        self.log_test("Minimal Payload Coupon Creation", False, 
+                                    f"422 Validation Error: {error_data}")
+                        
+                        # Extract specific field errors
+                        if 'detail' in error_data:
+                            for error in error_data['detail']:
+                                field_path = ' -> '.join(str(x) for x in error.get('loc', []))
+                                error_msg = error.get('msg', 'Unknown error')
+                                error_type = error.get('type', 'Unknown type')
+                                self.log_test(f"Minimal Field Error: {field_path}", False, 
+                                            f"Type: {error_type}, Message: {error_msg}")
+                    except:
+                        self.log_test("Minimal Payload Coupon Creation", False, 
+                                    f"422 Error (raw): {response_text}")
+                else:
+                    self.log_test("Minimal Payload Coupon Creation", False, 
+                                f"Status {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("Minimal Payload Coupon Creation", False, f"Exception: {str(e)}")
+        
+        # Test 3: Check API endpoint accessibility
+        print("\n📝 Test 3: API endpoint accessibility check")
+        try:
+            async with self.session.get(f"{API_BASE}/admin/coupons", headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    self.log_test("Coupon API Endpoint Access", True, 
+                                f"Endpoint accessible, found {len(data)} existing coupons")
+                else:
+                    response_text = await resp.text()
+                    self.log_test("Coupon API Endpoint Access", False, 
+                                f"Status {resp.status}: {response_text}")
+        except Exception as e:
+            self.log_test("Coupon API Endpoint Access", False, f"Exception: {str(e)}")
+        
+        # Test 4: Authentication check
+        print("\n📝 Test 4: Authentication requirement check")
+        try:
+            async with self.session.post(f"{API_BASE}/admin/coupons", 
+                                       json=minimal_payload) as resp:
+                if resp.status == 401:
+                    self.log_test("Coupon API Authentication Required", True, 
+                                "Correctly requires authentication (401 without token)")
+                else:
+                    response_text = await resp.text()
+                    self.log_test("Coupon API Authentication Required", False, 
+                                f"Expected 401, got {resp.status}: {response_text}")
+        except Exception as e:
+            self.log_test("Coupon API Authentication Required", False, f"Exception: {str(e)}")
+        
+        # Test 5: Test with wrong field names (simulate frontend issue)
+        print("\n📝 Test 5: Test with wrong field names (frontend issue simulation)")
+        wrong_payload = {
+            "code": "WRONG10",
+            "discount_type": "percentage",  # Wrong field name
+            "discount_value": 10,           # Wrong field name
+            "minimum_order_amount": 0,      # Wrong field name
+            "description": "Test coupon",   # Unsupported field
+            "usage_type": "single_use",     # Unsupported field
+            "valid_from": "2025-01-07T12:00:00.000Z"
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/admin/coupons", 
+                                       json=wrong_payload, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 422:
+                    try:
+                        error_data = await resp.json() if response_text else {}
+                        self.log_test("Wrong Field Names Test", True, 
+                                    f"Correctly rejected wrong field names: {error_data}")
+                        
+                        # Extract specific field errors to show what's missing
+                        if 'detail' in error_data:
+                            missing_fields = []
+                            for error in error_data['detail']:
+                                if error.get('type') == 'missing':
+                                    field_path = ' -> '.join(str(x) for x in error.get('loc', []))
+                                    missing_fields.append(field_path)
+                            
+                            if missing_fields:
+                                self.log_test("Missing Required Fields", True, 
+                                            f"Missing fields identified: {missing_fields}")
+                    except:
+                        self.log_test("Wrong Field Names Test", True, 
+                                    f"Correctly rejected (raw): {response_text}")
+                else:
+                    self.log_test("Wrong Field Names Test", False, 
+                                f"Expected 422, got {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("Wrong Field Names Test", False, f"Exception: {str(e)}")
+
     async def test_duplicate_categories_issue(self):
         """Test and investigate the duplicate categories issue"""
         print("\n🔍 Testing Duplicate Categories Issue...")
