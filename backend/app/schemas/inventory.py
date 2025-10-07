@@ -123,3 +123,6 @@ class BusinessSettings(BaseModel):
     available_types: List[str] = [
         "normal", "bubble wrap", "tool", "consumable"
     ]
+    available_categories: List[str] = [
+        "polymailers", "accessories", "custom printing", "packaging supplies"
+    ]
