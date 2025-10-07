@@ -331,8 +331,8 @@ const PackingInterface = () => {
                   
                   {/* Stock Display */}
                   <div className="text-center mb-3">
-                    <div className="text-lg font-bold text-gray-900">{item.on_hand}</div>
-                    <div className="text-xs text-gray-500">on hand</div>
+                    <div className="text-lg font-bold text-gray-900">{item.available}</div>
+                    <div className="text-xs text-gray-500">available</div>
                   </div>
                   
                   {/* Action Buttons */}
