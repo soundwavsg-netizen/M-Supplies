@@ -2122,16 +2122,376 @@ class BackendTester:
         except Exception as e:
             self.log_test("GET /api/products", False, f"Exception: {str(e)}")
 
+    async def test_simplified_variant_creation_and_pricing(self):
+        """Test the simplified variant creation and pricing system workflow"""
+        print("\n🎯 Testing Simplified Variant Creation and Pricing System...")
+        
+        if not self.admin_token:
+            self.log_test("Simplified Variant Creation Test", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Test with existing Baby Blue product ID as specified
+        baby_blue_product_id = "6084a6ff-1911-488b-9288-2bc95e50cafa"
+        
+        # Step 1: Test Product Creation API with default pricing structure
+        print("\n📝 Step 1: Testing Product Creation with Default Pricing...")
+        
+        new_product_data = {
+            "name": "Test Simplified Variant Product",
+            "description": "Testing simplified variant creation process",
+            "category": "polymailers",
+            "color": "white",
+            "type": "normal",
+            "variants": [
+                {
+                    "sku": f"TEST-SIMPLE-001",
+                    "attributes": {
+                        "width_cm": 20,
+                        "height_cm": 25,
+                        "size_code": "20x25",
+                        "type": "normal",
+                        "color": "white",
+                        "pack_size": 50
+                    },
+                    "price_tiers": [{"min_quantity": 1, "price": 0}],  # Default pricing with 0 values
+                    "stock_qty": 0,  # Default stock
+                    "on_hand": 0,
+                    "allocated": 0,
+                    "safety_stock": 0,
+                    "low_stock_threshold": 5
+                },
+                {
+                    "sku": f"TEST-SIMPLE-002",
+                    "attributes": {
+                        "width_cm": 25,
+                        "height_cm": 30,
+                        "size_code": "25x30",
+                        "type": "normal",
+                        "color": "white",
+                        "pack_size": 100
+                    },
+                    "price_tiers": [{"min_quantity": 1, "price": 0}],  # Default pricing with 0 values
+                    "stock_qty": 0,  # Default stock
+                    "on_hand": 0,
+                    "allocated": 0,
+                    "safety_stock": 0,
+                    "low_stock_threshold": 5
+                }
+            ]
+        }
+        
+        created_product_id = None
+        try:
+            async with self.session.post(f"{API_BASE}/admin/products", 
+                                       json=new_product_data, headers=headers) as resp:
+                if resp.status == 200:
+                    created_product = await resp.json()
+                    created_product_id = created_product.get('id')
+                    variants = created_product.get('variants', [])
+                    
+                    self.log_test("Product Creation with Default Pricing", True, 
+                                f"Created product with {len(variants)} variants")
+                    
+                    # Verify default pricing structure
+                    for i, variant in enumerate(variants):
+                        price_tiers = variant.get('price_tiers', [])
+                        if price_tiers and price_tiers[0].get('price') == 0:
+                            self.log_test(f"Default Pricing - Variant {i+1}", True, 
+                                        f"Price tier with 0 value: {price_tiers[0]}")
+                        else:
+                            self.log_test(f"Default Pricing - Variant {i+1}", False, 
+                                        f"Expected price 0, got: {price_tiers}")
+                        
+                        # Verify default stock
+                        on_hand = variant.get('on_hand', 0)
+                        stock_qty = variant.get('stock_qty', 0)
+                        if on_hand == 0 and stock_qty == 0:
+                            self.log_test(f"Default Stock - Variant {i+1}", True, 
+                                        f"on_hand: {on_hand}, stock_qty: {stock_qty}")
+                        else:
+                            self.log_test(f"Default Stock - Variant {i+1}", False, 
+                                        f"Expected 0 stock, got on_hand: {on_hand}, stock_qty: {stock_qty}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Product Creation with Default Pricing", False, 
+                                f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Product Creation with Default Pricing", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 2: Test Product Update API to update variants with real pricing and stock
+        print("\n💰 Step 2: Testing Product Update with Real Pricing and Stock...")
+        
+        if created_product_id:
+            # Get the created product to update its variants
+            try:
+                async with self.session.get(f"{API_BASE}/products/{created_product_id}") as resp:
+                    if resp.status == 200:
+                        product_to_update = await resp.json()
+                        variants_to_update = product_to_update.get('variants', [])
+                        
+                        # Update variants with real pricing and stock
+                        for i, variant in enumerate(variants_to_update):
+                            if i == 0:
+                                variant['price_tiers'] = [{"min_quantity": 1, "price": 8.99}]
+                                variant['on_hand'] = 50
+                                variant['stock_qty'] = 50
+                            elif i == 1:
+                                variant['price_tiers'] = [{"min_quantity": 1, "price": 15.99}]
+                                variant['on_hand'] = 75
+                                variant['stock_qty'] = 75
+                        
+                        update_payload = {
+                            "variants": variants_to_update
+                        }
+                        
+                        async with self.session.put(f"{API_BASE}/admin/products/{created_product_id}", 
+                                                  json=update_payload, headers=headers) as update_resp:
+                            if update_resp.status == 200:
+                                updated_product = await update_resp.json()
+                                updated_variants = updated_product.get('variants', [])
+                                
+                                self.log_test("Product Update with Real Pricing", True, 
+                                            f"Updated {len(updated_variants)} variants")
+                                
+                                # Verify pricing updates
+                                for i, variant in enumerate(updated_variants):
+                                    price_tiers = variant.get('price_tiers', [])
+                                    expected_prices = [8.99, 15.99]
+                                    
+                                    if i < len(expected_prices) and price_tiers:
+                                        actual_price = price_tiers[0].get('price', 0)
+                                        expected_price = expected_prices[i]
+                                        
+                                        if actual_price == expected_price:
+                                            self.log_test(f"Updated Pricing - Variant {i+1}", True, 
+                                                        f"Price updated to ${actual_price}")
+                                        else:
+                                            self.log_test(f"Updated Pricing - Variant {i+1}", False, 
+                                                        f"Expected ${expected_price}, got ${actual_price}")
+                                    
+                                    # Verify stock updates
+                                    on_hand = variant.get('on_hand', 0)
+                                    expected_stock = [50, 75]
+                                    if i < len(expected_stock):
+                                        expected = expected_stock[i]
+                                        if on_hand == expected:
+                                            self.log_test(f"Updated Stock - Variant {i+1}", True, 
+                                                        f"Stock updated to {on_hand}")
+                                        else:
+                                            self.log_test(f"Updated Stock - Variant {i+1}", False, 
+                                                        f"Expected {expected}, got {on_hand}")
+                            else:
+                                error_text = await update_resp.text()
+                                self.log_test("Product Update with Real Pricing", False, 
+                                            f"Status {update_resp.status}: {error_text}")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Get Product for Update", False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Product Update with Real Pricing", False, f"Exception: {str(e)}")
+        
+        # Step 3: Test Product Listing API for price range calculation
+        print("\n📊 Step 3: Testing Product Listing Price Range Calculation...")
+        
+        try:
+            async with self.session.get(f"{API_BASE}/products") as resp:
+                if resp.status == 200:
+                    products = await resp.json()
+                    
+                    # Find our created product in the listing
+                    test_product = None
+                    for product in products:
+                        if product.get('id') == created_product_id:
+                            test_product = product
+                            break
+                    
+                    if test_product:
+                        price_range = test_product.get('price_range', {})
+                        min_price = price_range.get('min', 0)
+                        max_price = price_range.get('max', 0)
+                        
+                        # Expected price range: $8.99 - $15.99
+                        if min_price == 8.99 and max_price == 15.99:
+                            self.log_test("Price Range Calculation", True, 
+                                        f"Correct price range: ${min_price} - ${max_price}")
+                        else:
+                            self.log_test("Price Range Calculation", False, 
+                                        f"Expected $8.99 - $15.99, got ${min_price} - ${max_price}")
+                    else:
+                        self.log_test("Find Product in Listing", False, "Created product not found in listing")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Product Listing API", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Product Listing API", False, f"Exception: {str(e)}")
+        
+        # Step 4: Test Product Detail API for customer access
+        print("\n👤 Step 4: Testing Customer Product Detail Access...")
+        
+        if created_product_id:
+            try:
+                # Test without admin headers (customer access)
+                async with self.session.get(f"{API_BASE}/products/{created_product_id}") as resp:
+                    if resp.status == 200:
+                        customer_product = await resp.json()
+                        customer_variants = customer_product.get('variants', [])
+                        
+                        self.log_test("Customer Product Detail Access", True, 
+                                    f"Customer can access product with {len(customer_variants)} variants")
+                        
+                        # Verify customer sees updated pricing
+                        for i, variant in enumerate(customer_variants):
+                            price_tiers = variant.get('price_tiers', [])
+                            expected_prices = [8.99, 15.99]
+                            
+                            if i < len(expected_prices) and price_tiers:
+                                actual_price = price_tiers[0].get('price', 0)
+                                expected_price = expected_prices[i]
+                                
+                                if actual_price == expected_price:
+                                    self.log_test(f"Customer Sees Updated Price - Variant {i+1}", True, 
+                                                f"Customer sees ${actual_price}")
+                                else:
+                                    self.log_test(f"Customer Sees Updated Price - Variant {i+1}", False, 
+                                                f"Customer expected ${expected_price}, sees ${actual_price}")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Customer Product Detail Access", False, 
+                                    f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Customer Product Detail Access", False, f"Exception: {str(e)}")
+        
+        # Step 5: Test with existing Baby Blue product
+        print("\n🔵 Step 5: Testing with Existing Baby Blue Product...")
+        
+        try:
+            # Get current Baby Blue product details
+            async with self.session.get(f"{API_BASE}/products/{baby_blue_product_id}") as resp:
+                if resp.status == 200:
+                    baby_blue_product = await resp.json()
+                    baby_blue_variants = baby_blue_product.get('variants', [])
+                    
+                    self.log_test("Baby Blue Product Access", True, 
+                                f"Found Baby Blue product with {len(baby_blue_variants)} variants")
+                    
+                    # Test updating Baby Blue variants with new pricing
+                    if baby_blue_variants:
+                        updated_baby_blue_variants = []
+                        for i, variant in enumerate(baby_blue_variants):
+                            updated_variant = variant.copy()
+                            # Update with new pricing structure
+                            if i == 0:
+                                updated_variant['price_tiers'] = [{"min_quantity": 1, "price": 9.99}]
+                                updated_variant['on_hand'] = 25
+                            elif i == 1:
+                                updated_variant['price_tiers'] = [{"min_quantity": 1, "price": 17.99}]
+                                updated_variant['on_hand'] = 30
+                            updated_baby_blue_variants.append(updated_variant)
+                        
+                        baby_blue_update_payload = {
+                            "variants": updated_baby_blue_variants
+                        }
+                        
+                        async with self.session.put(f"{API_BASE}/admin/products/{baby_blue_product_id}", 
+                                                  json=baby_blue_update_payload, headers=headers) as update_resp:
+                            if update_resp.status == 200:
+                                self.log_test("Baby Blue Product Update", True, "Successfully updated Baby Blue pricing")
+                                
+                                # Verify customer can see updated Baby Blue pricing
+                                async with self.session.get(f"{API_BASE}/products/{baby_blue_product_id}") as customer_resp:
+                                    if customer_resp.status == 200:
+                                        customer_baby_blue = await customer_resp.json()
+                                        customer_bb_variants = customer_baby_blue.get('variants', [])
+                                        
+                                        if customer_bb_variants:
+                                            first_variant_price = customer_bb_variants[0].get('price_tiers', [{}])[0].get('price', 0)
+                                            if first_variant_price == 9.99:
+                                                self.log_test("Baby Blue Customer Price Visibility", True, 
+                                                            f"Customer sees updated price: ${first_variant_price}")
+                                            else:
+                                                self.log_test("Baby Blue Customer Price Visibility", False, 
+                                                            f"Expected $9.99, customer sees ${first_variant_price}")
+                                    else:
+                                        error_text = await customer_resp.text()
+                                        self.log_test("Baby Blue Customer Access", False, 
+                                                    f"Status {customer_resp.status}: {error_text}")
+                            else:
+                                error_text = await update_resp.text()
+                                self.log_test("Baby Blue Product Update", False, 
+                                            f"Status {update_resp.status}: {error_text}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Baby Blue Product Access", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Baby Blue Product Testing", False, f"Exception: {str(e)}")
+        
+        # Step 6: Test price range calculation with updated products
+        print("\n📈 Step 6: Testing Price Range Calculation After Updates...")
+        
+        try:
+            async with self.session.get(f"{API_BASE}/products") as resp:
+                if resp.status == 200:
+                    products = await resp.json()
+                    
+                    # Check Baby Blue product price range
+                    baby_blue_in_listing = None
+                    for product in products:
+                        if product.get('id') == baby_blue_product_id:
+                            baby_blue_in_listing = product
+                            break
+                    
+                    if baby_blue_in_listing:
+                        bb_price_range = baby_blue_in_listing.get('price_range', {})
+                        bb_min_price = bb_price_range.get('min', 0)
+                        bb_max_price = bb_price_range.get('max', 0)
+                        
+                        self.log_test("Baby Blue Price Range in Listing", True, 
+                                    f"Baby Blue price range: ${bb_min_price} - ${bb_max_price}")
+                        
+                        # Verify price range reflects updated variant pricing
+                        if bb_min_price > 0 and bb_max_price > bb_min_price:
+                            self.log_test("Price Range Reflects Updates", True, 
+                                        "Price range correctly calculated from updated variants")
+                        else:
+                            self.log_test("Price Range Reflects Updates", False, 
+                                        f"Invalid price range: ${bb_min_price} - ${bb_max_price}")
+                    else:
+                        self.log_test("Baby Blue in Product Listing", False, "Baby Blue not found in product listing")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Final Product Listing Check", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Final Price Range Check", False, f"Exception: {str(e)}")
+        
+        # Cleanup: Delete the test product we created
+        if created_product_id:
+            try:
+                async with self.session.delete(f"{API_BASE}/admin/products/{created_product_id}", 
+                                             headers=headers) as resp:
+                    if resp.status == 200:
+                        self.log_test("Test Product Cleanup", True, "Test product deleted successfully")
+                    else:
+                        self.log_test("Test Product Cleanup", False, f"Failed to delete test product: {resp.status}")
+            except Exception as e:
+                self.log_test("Test Product Cleanup", False, f"Exception during cleanup: {str(e)}")
+
 async def main():
-    """Run backend tests focused on product listing for editing"""
-    print("🚀 Starting M Supplies Backend API Tests - Product Listing for Editing")
+    """Run backend tests focused on simplified variant creation and pricing"""
+    print("🚀 Starting M Supplies Backend API Tests - Simplified Variant Creation and Pricing")
     print(f"Testing against: {API_BASE}")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Product listing for editing (as specifically requested)
+        # PRIORITY TEST: Simplified variant creation and pricing system (as specifically requested)
+        await tester.test_simplified_variant_creation_and_pricing()
+        
+        # Additional test: Product listing for editing
         await tester.test_product_listing_for_editing()
         
         # Print summary
