@@ -6091,6 +6091,178 @@ class BackendTester:
         print("- Kept only valid price tiers with min_quantity: 1")
         print("- Customers should now see proper pricing when selecting champagne pink variants")
 
+    async def test_coupon_creation_validation_debug(self):
+        """Debug the coupon creation validation error as requested in review"""
+        print("\n🎯 DEBUGGING COUPON CREATION VALIDATION ERROR...")
+        print("User reported: Getting 'field required, field required, field required' when creating coupon")
+        print("Sample data provided:")
+        print(json.dumps({
+            "code": "VIP10",
+            "description": "VIP Customer 10% Discount", 
+            "discount_type": "percentage",
+            "discount_value": 10,
+            "usage_type": "unlimited",
+            "minimum_order_amount": 0,
+            "is_active": True
+        }, indent=2))
+        
+        if not self.admin_token:
+            self.log_test("Coupon Creation Debug", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Step 1: Test with user's original data to reproduce the error
+        print("\n🔍 STEP 1: Testing with User's Original Data")
+        
+        user_sample_data = {
+            "code": "VIP10",
+            "description": "VIP Customer 10% Discount", 
+            "discount_type": "percentage",
+            "discount_value": 10,
+            "usage_type": "unlimited",
+            "minimum_order_amount": 0,
+            "is_active": True
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/admin/coupons", 
+                                       json=user_sample_data, headers=headers) as resp:
+                if resp.status == 200:
+                    self.log_test("User Sample Data - Coupon Creation", True, "Coupon created successfully")
+                    coupon_data = await resp.json()
+                    print(f"Created coupon: {coupon_data}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("User Sample Data - Coupon Creation", False, 
+                                f"Status {resp.status}: {error_text}")
+                    
+                    # Try to parse validation error details
+                    try:
+                        error_json = json.loads(error_text)
+                        if 'detail' in error_json:
+                            detail = error_json['detail']
+                            if isinstance(detail, list):
+                                missing_fields = []
+                                for error in detail:
+                                    if error.get('type') == 'missing':
+                                        field_path = ' -> '.join(str(x) for x in error.get('loc', []))
+                                        missing_fields.append(field_path)
+                                
+                                if missing_fields:
+                                    self.log_test("Missing Fields Identified", True, 
+                                                f"Missing required fields: {missing_fields}")
+                                else:
+                                    self.log_test("Validation Error Analysis", True, f"Validation errors: {detail}")
+                            else:
+                                self.log_test("Error Detail", True, f"Error: {detail}")
+                    except:
+                        self.log_test("Error Parsing", True, f"Raw error: {error_text}")
+                        
+        except Exception as e:
+            self.log_test("User Sample Data Test", False, f"Exception: {str(e)}")
+        
+        # Step 2: Check the actual coupon schema requirements
+        print("\n🔍 STEP 2: Analyzing Coupon Schema Requirements")
+        
+        # Based on the coupon.py schema, the correct fields should be:
+        correct_coupon_data = {
+            "code": "VIP10",
+            "type": "percent",  # Changed from discount_type to type, and percentage to percent
+            "value": 10.0,      # Changed from discount_value to value
+            "min_order_amount": 0.0,  # Changed from minimum_order_amount to min_order_amount
+            "valid_from": "2024-01-01T00:00:00Z",  # Added required field
+            "valid_to": "2024-12-31T23:59:59Z",    # Added required field
+            "is_active": True
+        }
+        
+        print("Corrected data based on coupon.py schema:")
+        print(json.dumps(correct_coupon_data, indent=2))
+        
+        try:
+            async with self.session.post(f"{API_BASE}/admin/coupons", 
+                                       json=correct_coupon_data, headers=headers) as resp:
+                if resp.status == 200:
+                    self.log_test("Corrected Schema - Coupon Creation", True, "Coupon created successfully with correct schema")
+                    coupon_data = await resp.json()
+                    print(f"Created coupon: {coupon_data}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Corrected Schema - Coupon Creation", False, 
+                                f"Status {resp.status}: {error_text}")
+                        
+        except Exception as e:
+            self.log_test("Corrected Schema Test", False, f"Exception: {str(e)}")
+        
+        # Step 3: Test field-by-field to identify specific issues
+        print("\n🔍 STEP 3: Field-by-Field Validation Testing")
+        
+        # Test minimal required fields
+        minimal_data = {
+            "code": "TEST123",
+            "type": "percent",
+            "value": 5.0,
+            "valid_from": "2024-01-01T00:00:00Z",
+            "valid_to": "2024-12-31T23:59:59Z"
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/admin/coupons", 
+                                       json=minimal_data, headers=headers) as resp:
+                if resp.status == 200:
+                    self.log_test("Minimal Required Fields", True, "Coupon created with minimal fields")
+                    coupon_data = await resp.json()
+                    print(f"Minimal coupon: {coupon_data}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Minimal Required Fields", False, 
+                                f"Status {resp.status}: {error_text}")
+                        
+        except Exception as e:
+            self.log_test("Minimal Fields Test", False, f"Exception: {str(e)}")
+        
+        # Step 4: Test with fixed discount type
+        print("\n🔍 STEP 4: Testing Fixed Discount Type")
+        
+        fixed_discount_data = {
+            "code": "FIXED5",
+            "type": "fixed",    # Test fixed type instead of percent
+            "value": 5.0,       # $5 off
+            "min_order_amount": 25.0,
+            "valid_from": "2024-01-01T00:00:00Z",
+            "valid_to": "2024-12-31T23:59:59Z",
+            "is_active": True
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/admin/coupons", 
+                                       json=fixed_discount_data, headers=headers) as resp:
+                if resp.status == 200:
+                    self.log_test("Fixed Discount Type", True, "Fixed discount coupon created successfully")
+                    coupon_data = await resp.json()
+                    print(f"Fixed discount coupon: {coupon_data}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Fixed Discount Type", False, 
+                                f"Status {resp.status}: {error_text}")
+                        
+        except Exception as e:
+            self.log_test("Fixed Discount Test", False, f"Exception: {str(e)}")
+        
+        # Step 5: Provide field mapping summary
+        print("\n📋 FIELD MAPPING SUMMARY:")
+        print("User's data → Correct schema mapping:")
+        print("- description → NOT SUPPORTED (remove this field)")
+        print("- discount_type: 'percentage' → type: 'percent'")
+        print("- discount_value → value")
+        print("- usage_type → NOT SUPPORTED (remove this field)")
+        print("- minimum_order_amount → min_order_amount")
+        print("- ADD REQUIRED: valid_from (datetime)")
+        print("- ADD REQUIRED: valid_to (datetime)")
+        
+        self.log_test("Field Mapping Analysis Complete", True, 
+                    "Identified schema mismatch between user data and backend expectations")
+
 async def main():
     """Run backend tests focused on Champagne Pink Product Pricing Issue"""
     print("🚀 Starting M Supplies Backend API Tests - Champagne Pink Product Pricing Fix")
