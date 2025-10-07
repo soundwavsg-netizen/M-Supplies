@@ -18,8 +18,16 @@ const ChatWidget = ({
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [sessionId] = useState(() => `msupplies_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const [sessionId, setSessionId] = useState(null);
   const messagesEndRef = useRef(null);
+
+  // Use the Emergent agent hook
+  const { 
+    createSession, 
+    sendToAgent, 
+    isConnecting, 
+    connectionStatus 
+  } = useEmergentAgent();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
