@@ -12,6 +12,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const StockAdjustmentModal = ({ variant, onClose, onSuccess }) => {
   const [adjustmentType, setAdjustmentType] = useState('change');
+  const [stockType, setStockType] = useState('on_hand'); // New: on_hand or allocated
   const [value, setValue] = useState(0);
   const [reason, setReason] = useState('manual_adjustment');
   const [notes, setNotes] = useState('');
