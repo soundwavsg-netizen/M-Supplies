@@ -1074,6 +1074,131 @@ class BackendTester:
         except Exception as e:
             self.log_test("Pricing Calculation Logic", False, f"Exception: {str(e)}")
 
+    async def test_duplicate_categories_issue(self):
+        """Test and investigate the duplicate categories issue"""
+        print("\n🔍 Testing Duplicate Categories Issue...")
+        
+        # Step 1: Check current database categories via filter options
+        try:
+            async with self.session.get(f"{API_BASE}/products/filter-options") as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    categories = data.get('categories', [])
+                    
+                    self.log_test("Filter Options Categories Retrieved", True, f"Found categories: {categories}")
+                    
+                    # Check for case-sensitive duplicates
+                    lowercase_categories = [cat.lower() for cat in categories]
+                    unique_lowercase = set(lowercase_categories)
+                    
+                    if len(categories) != len(unique_lowercase):
+                        duplicate_categories = []
+                        for cat in unique_lowercase:
+                            matching_cats = [c for c in categories if c.lower() == cat]
+                            if len(matching_cats) > 1:
+                                duplicate_categories.extend(matching_cats)
+                        
+                        self.log_test("Duplicate Categories Issue CONFIRMED", False, 
+                                    f"Found case-sensitive duplicates: {duplicate_categories}")
+                    else:
+                        self.log_test("Duplicate Categories Check", True, "No case-sensitive duplicates found")
+                    
+                    # Specifically check for Polymailers/polymailers
+                    polymailer_variants = [cat for cat in categories if 'polymailer' in cat.lower()]
+                    if len(polymailer_variants) > 1:
+                        self.log_test("Polymailers Duplicate Issue", False, 
+                                    f"Found polymailers duplicates: {polymailer_variants}")
+                    else:
+                        self.log_test("Polymailers Category Check", True, f"Polymailers category: {polymailer_variants}")
+                        
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Filter Options API", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Filter Options API", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 2: Get all products and check their category values
+        try:
+            async with self.session.get(f"{API_BASE}/products?limit=100") as resp:
+                if resp.status == 200:
+                    products = await resp.json()
+                    
+                    # Collect all category values from products
+                    product_categories = {}
+                    for product in products:
+                        category = product.get('category', 'Unknown')
+                        if category not in product_categories:
+                            product_categories[category] = []
+                        product_categories[category].append({
+                            'id': product.get('id'),
+                            'name': product.get('name', 'Unknown')
+                        })
+                    
+                    self.log_test("Product Categories Analysis", True, 
+                                f"Found category distribution: {list(product_categories.keys())}")
+                    
+                    # Check for case variations
+                    for category, products_list in product_categories.items():
+                        self.log_test(f"Category '{category}' Products", True, 
+                                    f"{len(products_list)} products: {[p['name'] for p in products_list[:3]]}")
+                    
+                    # Identify products that need category standardization
+                    uppercase_categories = [cat for cat in product_categories.keys() if cat != cat.lower()]
+                    if uppercase_categories:
+                        self.log_test("Categories Needing Standardization", False, 
+                                    f"Found uppercase categories: {uppercase_categories}")
+                        
+                        for cat in uppercase_categories:
+                            products_with_uppercase = product_categories[cat]
+                            self.log_test(f"Products with '{cat}' category", True, 
+                                        f"Count: {len(products_with_uppercase)}, Examples: {[p['name'] for p in products_with_uppercase[:2]]}")
+                    else:
+                        self.log_test("Category Case Consistency", True, "All categories are lowercase")
+                        
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Products List API", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Products List API", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 3: Test filtering by both case variations to see the impact
+        test_categories = ['Polymailers', 'polymailers']
+        for test_cat in test_categories:
+            try:
+                filter_request = {
+                    "filters": {"categories": [test_cat]},
+                    "page": 1,
+                    "limit": 20
+                }
+                
+                async with self.session.post(f"{API_BASE}/products/filter", json=filter_request) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        products = data.get('products', [])
+                        total = data.get('total', 0)
+                        
+                        self.log_test(f"Filter by '{test_cat}' Category", True, 
+                                    f"Found {total} products")
+                        
+                        if products:
+                            # Check what categories the returned products actually have
+                            returned_categories = set()
+                            for product in products:
+                                returned_categories.add(product.get('category', 'Unknown'))
+                            
+                            self.log_test(f"Returned Categories for '{test_cat}' Filter", True, 
+                                        f"Products have categories: {list(returned_categories)}")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test(f"Filter by '{test_cat}' Category", False, f"Status {resp.status}: {error_text}")
+                        
+            except Exception as e:
+                self.log_test(f"Filter by '{test_cat}' Category", False, f"Exception: {str(e)}")
+
     async def test_pack_size_schema_structure(self):
         """Test product API and variant structure after pack_size schema changes"""
         print("\n📦 Testing Pack Size Schema Structure...")
