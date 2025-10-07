@@ -95,12 +95,13 @@ const Promotions = () => {
       try {
         const token = localStorage.getItem('access_token');
         const payload = {
-          ...formData,
-          discount_value: parseFloat(formData.discount_value),
-          minimum_order_amount: formData.minimum_order_amount ? parseFloat(formData.minimum_order_amount) : 0,
-          maximum_discount_amount: formData.maximum_discount_amount ? parseFloat(formData.maximum_discount_amount) : null,
-          usage_limit: formData.usage_limit ? parseInt(formData.usage_limit) : null,
-          expires_at: formData.expires_at ? new Date(formData.expires_at).toISOString() : null
+          code: formData.code.toUpperCase(),
+          type: formData.type,
+          value: parseFloat(formData.value),
+          min_order_amount: formData.min_order_amount ? parseFloat(formData.min_order_amount) : 0,
+          valid_from: new Date(formData.valid_from).toISOString(),
+          valid_to: formData.valid_to ? new Date(formData.valid_to).toISOString() : null,
+          is_active: formData.is_active
         };
 
         if (coupon) {
