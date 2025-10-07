@@ -22,6 +22,69 @@ const Cart = () => {
   
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
+  const validateCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error('Please enter a coupon code');
+      return;
+    }
+
+    try {
+      setCouponLoading(true);
+      
+      // Get user ID if logged in
+      const token = localStorage.getItem('access_token');
+      let userId = null;
+      if (token) {
+        try {
+          const userResponse = await axios.get(`${BACKEND_URL}/api/users/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          userId = userResponse.data.id;
+        } catch (error) {
+          // User not logged in, continue without userId
+        }
+      }
+
+      const validationData = {
+        coupon_code: couponCode.toUpperCase(),
+        order_subtotal: cart.subtotal,
+        user_id: userId
+      };
+
+      const response = await axios.post(`${BACKEND_URL}/api/promotions/validate`, validationData);
+      
+      if (response.data.valid) {
+        setAppliedCoupon(response.data.applied_coupon);
+        setDiscountAmount(response.data.discount_amount);
+        setAvailableGifts(response.data.available_gift_tiers || []);
+        toast.success(`Coupon applied! You saved ${formatPrice(response.data.discount_amount)}`);
+        
+        if (response.data.available_gift_tiers?.length > 0) {
+          toast.success(`You qualify for free gifts! Select them at checkout.`);
+        }
+      } else {
+        toast.error(response.data.error_message || 'Invalid coupon code');
+        removeCoupon();
+      }
+    } catch (error) {
+      console.error('Coupon validation error:', error);
+      toast.error(error.response?.data?.detail || 'Failed to validate coupon');
+      removeCoupon();
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
+    setAvailableGifts([]);
+    setCouponCode('');
+  };
+
+  // Calculate final total with discount
+  const finalTotal = cart.total - discountAmount;
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
