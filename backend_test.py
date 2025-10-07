@@ -1207,6 +1207,258 @@ class BackendTester:
             except Exception as e:
                 self.log_test(f"Filter by '{test_cat}' Category", False, f"Exception: {str(e)}")
 
+    async def test_baby_blue_variant_creation(self):
+        """Create variants for Baby Blue product to fix missing variant dropdown issue"""
+        print("\n🎯 CREATING VARIANTS FOR BABY BLUE PRODUCT...")
+        print("User reported: Baby Blue product exists but has 0 variants, causing missing dropdown")
+        print("Product ID: 6084a6ff-1911-488b-9288-2bc95e50cafa")
+        print("Creating 2 variants as specified in requirements:")
+        print("1. Baby Blue 50pcs - 25x35cm, $8.99, 20 on_hand")
+        print("2. Baby Blue 100pcs - 25x35cm, $15.99, 30 on_hand")
+        
+        if not self.admin_token:
+            self.log_test("Baby Blue Variant Creation", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        baby_blue_product_id = "6084a6ff-1911-488b-9288-2bc95e50cafa"
+        
+        # Step 1: Verify Baby Blue product exists and check current variants
+        print("\n🔍 STEP 1: Verifying Baby Blue Product Status")
+        
+        try:
+            async with self.session.get(f"{API_BASE}/products/{baby_blue_product_id}") as resp:
+                if resp.status == 200:
+                    baby_blue_product = await resp.json()
+                    current_variants = baby_blue_product.get('variants', [])
+                    self.log_test("Baby Blue Product Found", True, 
+                                f"Product: {baby_blue_product.get('name')}, Current variants: {len(current_variants)}")
+                    
+                    if len(current_variants) == 0:
+                        self.log_test("Variant Count Verification", True, "Confirmed: Baby Blue has 0 variants (explains missing dropdown)")
+                    else:
+                        self.log_test("Variant Count Verification", False, f"Unexpected: Found {len(current_variants)} variants")
+                        
+                elif resp.status == 404:
+                    self.log_test("Baby Blue Product Found", False, "Baby Blue product not found with specified ID")
+                    return
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Baby Blue Product Found", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Baby Blue Product Found", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 2: Create the two required variants
+        print("\n🔧 STEP 2: Creating Baby Blue Product Variants")
+        
+        # Variant 1: Baby Blue 50pcs
+        variant_1 = {
+            "sku": "POLYMAILERS_PREMIUM_BABY_BLUE_25x35_50",
+            "attributes": {
+                "width_cm": 25,
+                "height_cm": 35,
+                "size_code": "25x35",
+                "type": "normal",
+                "color": "baby blue",
+                "pack_size": 50
+            },
+            "price_tiers": [{"min_quantity": 1, "price": 8.99}],
+            "on_hand": 20,
+            "allocated": 0,
+            "safety_stock": 5,
+            "low_stock_threshold": 10
+        }
+        
+        # Variant 2: Baby Blue 100pcs
+        variant_2 = {
+            "sku": "POLYMAILERS_PREMIUM_BABY_BLUE_25x35_100",
+            "attributes": {
+                "width_cm": 25,
+                "height_cm": 35,
+                "size_code": "25x35",
+                "type": "normal",
+                "color": "baby blue",
+                "pack_size": 100
+            },
+            "price_tiers": [{"min_quantity": 1, "price": 15.99}],
+            "on_hand": 30,
+            "allocated": 0,
+            "safety_stock": 5,
+            "low_stock_threshold": 10
+        }
+        
+        # Create update payload with the new variants
+        update_payload = {
+            "variants": [variant_1, variant_2]
+        }
+        
+        # Step 3: Send the update request to create variants
+        try:
+            async with self.session.put(f"{API_BASE}/admin/products/{baby_blue_product_id}", 
+                                      json=update_payload, headers=headers) as resp:
+                if resp.status == 200:
+                    updated_product = await resp.json()
+                    new_variants = updated_product.get('variants', [])
+                    self.log_test("Baby Blue Variants Created", True, f"Successfully created {len(new_variants)} variants")
+                    
+                    # Verify variant details
+                    for i, variant in enumerate(new_variants):
+                        pack_size = variant.get('attributes', {}).get('pack_size')
+                        price = variant.get('price_tiers', [{}])[0].get('price', 0)
+                        on_hand = variant.get('on_hand', 0)
+                        sku = variant.get('sku', '')
+                        
+                        self.log_test(f"Variant {i+1} Details", True, 
+                                    f"Pack: {pack_size}pcs, Price: ${price}, Stock: {on_hand}, SKU: {sku}")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Baby Blue Variants Created", False, f"Status {resp.status}: {error_text}")
+                    return
+                    
+        except Exception as e:
+            self.log_test("Baby Blue Variants Created", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 4: Verify variants persist by refetching the product
+        print("\n✅ STEP 3: Verifying Variant Persistence")
+        
+        try:
+            async with self.session.get(f"{API_BASE}/products/{baby_blue_product_id}") as resp:
+                if resp.status == 200:
+                    refetched_product = await resp.json()
+                    persisted_variants = refetched_product.get('variants', [])
+                    
+                    if len(persisted_variants) == 2:
+                        self.log_test("Variant Persistence", True, f"Both variants persisted successfully")
+                        
+                        # Check specific variant details
+                        variant_50 = None
+                        variant_100 = None
+                        
+                        for variant in persisted_variants:
+                            pack_size = variant.get('attributes', {}).get('pack_size')
+                            if pack_size == 50:
+                                variant_50 = variant
+                            elif pack_size == 100:
+                                variant_100 = variant
+                        
+                        if variant_50:
+                            price_50 = variant_50.get('price_tiers', [{}])[0].get('price', 0)
+                            stock_50 = variant_50.get('on_hand', 0)
+                            self.log_test("50pcs Variant Verification", True, f"Price: ${price_50}, Stock: {stock_50}")
+                        else:
+                            self.log_test("50pcs Variant Verification", False, "50pcs variant not found")
+                        
+                        if variant_100:
+                            price_100 = variant_100.get('price_tiers', [{}])[0].get('price', 0)
+                            stock_100 = variant_100.get('on_hand', 0)
+                            self.log_test("100pcs Variant Verification", True, f"Price: ${price_100}, Stock: {stock_100}")
+                        else:
+                            self.log_test("100pcs Variant Verification", False, "100pcs variant not found")
+                            
+                    else:
+                        self.log_test("Variant Persistence", False, f"Expected 2 variants, found {len(persisted_variants)}")
+                        
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Variant Persistence Check", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Variant Persistence Check", False, f"Exception: {str(e)}")
+        
+        # Step 5: Test customer product page to verify dropdown functionality
+        print("\n🛒 STEP 4: Testing Customer Product Page Dropdown")
+        
+        try:
+            async with self.session.get(f"{API_BASE}/products/{baby_blue_product_id}") as resp:
+                if resp.status == 200:
+                    customer_product = await resp.json()
+                    customer_variants = customer_product.get('variants', [])
+                    
+                    self.log_test("Customer Product Access", True, f"Customer can access Baby Blue product")
+                    
+                    if len(customer_variants) == 2:
+                        self.log_test("Customer Variant Dropdown Data", True, "Customer will see 2 variant options")
+                        
+                        # Simulate what customer dropdown will show
+                        dropdown_options = []
+                        for variant in customer_variants:
+                            attrs = variant.get('attributes', {})
+                            size_code = attrs.get('size_code', '')
+                            pack_size = attrs.get('pack_size', 0)
+                            on_hand = variant.get('on_hand', 0)
+                            allocated = variant.get('allocated', 0)
+                            safety_stock = variant.get('safety_stock', 0)
+                            available = max(0, on_hand - allocated - safety_stock)
+                            
+                            dropdown_text = f"{size_code} cm - {pack_size} pcs/pack ({available} available)"
+                            dropdown_options.append(dropdown_text)
+                        
+                        expected_options = [
+                            "25×35 cm - 50 pcs/pack (15 available)",
+                            "25×35 cm - 100 pcs/pack (25 available)"
+                        ]
+                        
+                        self.log_test("Dropdown Options Generated", True, f"Options: {dropdown_options}")
+                        
+                        # Verify the dropdown options match expectations
+                        options_match = all(any(expected in actual for actual in dropdown_options) for expected in expected_options)
+                        if options_match:
+                            self.log_test("Expected Dropdown Format", True, "Dropdown will show correct format")
+                        else:
+                            self.log_test("Expected Dropdown Format", False, f"Expected: {expected_options}, Got: {dropdown_options}")
+                            
+                    else:
+                        self.log_test("Customer Variant Dropdown Data", False, f"Customer sees {len(customer_variants)} variants instead of 2")
+                        
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Customer Product Access", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Customer Product Access", False, f"Exception: {str(e)}")
+        
+        # Step 6: Test product listing to ensure Baby Blue shows correct price range
+        print("\n💰 STEP 5: Testing Product Listing Price Range")
+        
+        try:
+            async with self.session.get(f"{API_BASE}/products") as resp:
+                if resp.status == 200:
+                    products = await resp.json()
+                    
+                    # Find Baby Blue in the listing
+                    baby_blue_listing = None
+                    for product in products:
+                        if product.get('id') == baby_blue_product_id:
+                            baby_blue_listing = product
+                            break
+                    
+                    if baby_blue_listing:
+                        price_range = baby_blue_listing.get('price_range', {})
+                        min_price = price_range.get('min', 0)
+                        max_price = price_range.get('max', 0)
+                        
+                        expected_min = 8.99
+                        expected_max = 15.99
+                        
+                        if min_price == expected_min and max_price == expected_max:
+                            self.log_test("Product Listing Price Range", True, f"Shows ${min_price} - ${max_price}")
+                        else:
+                            self.log_test("Product Listing Price Range", False, 
+                                        f"Expected ${expected_min} - ${expected_max}, got ${min_price} - ${max_price}")
+                    else:
+                        self.log_test("Baby Blue in Product Listing", False, "Baby Blue not found in product listing")
+                        
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Product Listing Check", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Product Listing Check", False, f"Exception: {str(e)}")
+
     async def test_packing_interface_image_investigation(self):
         """Investigate why the packing interface isn't showing product images"""
         print("\n🔍 INVESTIGATING PACKING INTERFACE IMAGE DISPLAY ISSUE...")
