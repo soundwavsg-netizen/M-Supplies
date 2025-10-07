@@ -1089,9 +1089,21 @@ const ProductForm = () => {
             {product.variants.length > 0 && (
               <div className="space-y-2">
                 <h3 className="font-medium text-slate-900">Current Variants - Click to Edit</h3>
-                {product.variants.map((variant, index) => (
-                  <div key={variant.id || index} className="p-4 border rounded-lg bg-white">
-                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {product.variants.map((variant, index) => {
+                  const width = variant.attributes?.width_cm || variant.width_cm || 0;
+                  const height = variant.attributes?.height_cm || variant.height_cm || 0;
+                  const packSize = variant.attributes?.pack_size || variant.pack_size || 50;
+                  const variantTitle = product.type === 'bubble wrap' 
+                    ? `${width}×${height}cm - ${packSize} pieces`
+                    : `${width}×${height}cm - ${packSize} pcs/pack`;
+                  
+                  return (
+                    <div key={variant.id || index} className="p-4 border rounded-lg bg-white">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-medium text-slate-700">{variantTitle}</h4>
+                        <span className="text-xs text-gray-500">SKU: {variant.sku || 'Auto-generated'}</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                       <div>
                         <Label className="text-xs text-gray-600">Width (cm)</Label>
                         <Input
