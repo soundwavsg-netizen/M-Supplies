@@ -6441,23 +6441,29 @@ async def main():
     print(f"Testing against: {API_BASE}")
     print("🎯 FOCUS: Debug coupon creation validation error")
     print("User Issue: Getting 'field required, field required, field required' when creating coupon")
-    print("Sample data causing error:")
-    print(json.dumps({
+    print("Testing exact payloads from review request:")
+    print("1. Full payload:", json.dumps({
         "code": "VIP10",
-        "description": "VIP Customer 10% Discount", 
-        "discount_type": "percentage",
-        "discount_value": 10,
-        "usage_type": "unlimited",
-        "minimum_order_amount": 0,
+        "type": "percent", 
+        "value": 10,
+        "min_order_amount": 0,
+        "valid_from": "2025-01-07T12:00:00.000Z",
+        "valid_to": None,
         "is_active": True
+    }, indent=2))
+    print("2. Minimal payload:", json.dumps({
+        "code": "TEST10",
+        "type": "percent",
+        "value": 10,
+        "valid_from": "2025-01-07T12:00:00.000Z"
     }, indent=2))
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Debug coupon creation validation error
-        await tester.test_coupon_creation_validation_debug()
+        # PRIORITY TEST: Test exact coupon creation payloads from review request
+        await tester.test_coupon_creation_validation_error()
         
         # Print summary
         passed, failed = tester.print_summary()
