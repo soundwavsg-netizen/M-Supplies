@@ -393,7 +393,7 @@ const ProductForm = () => {
     setShowAddType(false);
     
     // Save to backend
-    await updateSettings(availableColors, newTypes);
+    await updateSettings(availableColors, newTypes, availableCategories);
     toast.success(`Type "${typeName}" added successfully`);
   };
 
