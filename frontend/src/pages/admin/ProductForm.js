@@ -389,7 +389,7 @@ const ProductForm = () => {
     toast.success(`Type "${typeName}" added successfully`);
   };
 
-  const deleteType = (typeToDelete) => {
+  const deleteType = async (typeToDelete) => {
     if (typeToDelete === product.type) {
       toast.error('Cannot delete the currently selected type');
       return;
@@ -399,7 +399,11 @@ const ProductForm = () => {
       return;
     }
     
-    setAvailableTypes(prev => prev.filter(type => type !== typeToDelete));
+    const newTypes = availableTypes.filter(type => type !== typeToDelete);
+    setAvailableTypes(newTypes);
+    
+    // Save to backend
+    await updateSettings(availableColors, newTypes);
     toast.success(`Type "${typeToDelete}" deleted`);
   };
 
