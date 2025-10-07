@@ -1,25 +1,64 @@
 import { useState, useCallback } from 'react';
 
 /**
- * Hook to integrate with Emergent Custom Agent
- * This is where you'll connect to your M Supplies agent
+ * Hook to integrate with Emergent Custom Agent via our backend
  */
 export const useEmergentAgent = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
 
-  // Replace these with your actual Emergent agent configuration
-  const EMERGENT_AGENT_CONFIG = {
-    // Add your agent endpoint or configuration here
-    agentId: process.env.REACT_APP_EMERGENT_AGENT_ID || 'msupplies-agent',
-    apiKey: process.env.REACT_APP_EMERGENT_API_KEY,
-    baseUrl: process.env.REACT_APP_EMERGENT_BASE_URL || 'https://api.emergent.sh'
-  };
+  // Get backend URL from environment
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
 
   /**
-   * Send message to Emergent Custom Agent
+   * Create a new chat session
+   * @param {object} context - Session context (agentType, page, product, cart)
+   * @returns {Promise<object>} Session info with welcome message
+   */
+  const createSession = useCallback(async (context = {}) => {
+    try {
+      setIsConnecting(true);
+      setConnectionStatus('connecting');
+
+      const response = await fetch(`${BACKEND_URL}/api/chat/sessions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          agent_type: context.agentType || 'main',
+          page_context: context.page || 'homepage',
+          product_context: context.product || null,
+          cart_context: context.cart || null,
+          user_id: context.userId || null
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Session creation failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setConnectionStatus('connected');
+
+      return {
+        sessionId: data.session_id,
+        welcomeMessage: data.welcome_message
+      };
+
+    } catch (error) {
+      console.error('Session creation error:', error);
+      setConnectionStatus('error');
+      throw error;
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [BACKEND_URL]);
+
+  /**
+   * Send message to agent
    * @param {string} message - User message
-   * @param {object} context - Context information (page, product, cart, etc.)
+   * @param {object} context - Context information (sessionId, page, product, cart, etc.)
    * @returns {Promise<object>} Agent response
    */
   const sendToAgent = useCallback(async (message, context = {}) => {
@@ -27,54 +66,93 @@ export const useEmergentAgent = () => {
       setIsConnecting(true);
       setConnectionStatus('connecting');
 
-      // Prepare the request payload for your Emergent agent
-      const payload = {
-        message: message,
-        context: {
-          ...context,
-          timestamp: new Date().toISOString(),
-          userAgent: navigator.userAgent,
-          url: window.location.href
-        },
-        agentType: context.agentType || 'main',
-        sessionId: context.sessionId
-      };
+      if (!context.sessionId) {
+        throw new Error('Session ID is required');
+      }
 
-      // Example API call structure - adjust based on your Emergent agent setup
-      const response = await fetch(`${EMERGENT_AGENT_CONFIG.baseUrl}/agent/chat`, {
+      const response = await fetch(`${BACKEND_URL}/api/chat/sessions/${context.sessionId}/messages`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${EMERGENT_AGENT_CONFIG.apiKey}`,
-          'X-Agent-ID': EMERGENT_AGENT_CONFIG.agentId
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          message: message,
+          session_id: context.sessionId,
+          agent_type: context.agentType || 'main',
+          page_context: context.page || 'homepage',
+          product_context: context.product || null,
+          cart_context: context.cart || null
+        })
       });
 
       if (!response.ok) {
-        throw new Error(`Agent request failed: ${response.status}`);
+        throw new Error(`Message send failed: ${response.status}`);
       }
 
       const data = await response.json();
       setConnectionStatus('connected');
 
       return {
-        content: data.response || data.message,
+        content: data.content,
         actions: data.actions || [],
         suggestions: data.suggestions || [],
-        metadata: data.metadata || {}
+        agentName: data.agent_name,
+        agentAvatar: data.agent_avatar,
+        messageId: data.message_id,
+        timestamp: data.timestamp
       };
 
     } catch (error) {
-      console.error('Emergent Agent Error:', error);
+      console.error('Message send error:', error);
       setConnectionStatus('error');
       
-      // Fallback to local responses if agent is unavailable
+      // Fallback to local responses if backend is unavailable
       return getFallbackResponse(message, context);
     } finally {
       setIsConnecting(false);
     }
-  }, []);
+  }, [BACKEND_URL]);
+
+  /**
+   * Get chat history
+   * @param {string} sessionId - Session ID
+   * @param {number} limit - Message limit
+   * @returns {Promise<Array>} Chat messages
+   */
+  const getChatHistory = useCallback(async (sessionId, limit = 50) => {
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/api/chat/sessions/${sessionId}/history?limit=${limit}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`History fetch failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('History fetch error:', error);
+      return [];
+    }
+  }, [BACKEND_URL]);
+
+  /**
+   * Close chat session
+   * @param {string} sessionId - Session ID
+   * @returns {Promise<boolean>} Success status
+   */
+  const closeSession = useCallback(async (sessionId) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/chat/sessions/${sessionId}`, {
+        method: 'DELETE'
+      });
+
+      return response.ok;
+    } catch (error) {
+      console.error('Session close error:', error);
+      return false;
+    }
+  }, [BACKEND_URL]);
 
   /**
    * Get specialized sub-agent response based on context
@@ -85,7 +163,6 @@ export const useEmergentAgent = () => {
   const sendToSubAgent = useCallback(async (message, context = {}) => {
     const subAgentContext = {
       ...context,
-      isSubAgent: true,
       specialization: getAgentSpecialization(context.agentType, context.page)
     };
 
@@ -115,7 +192,7 @@ export const useEmergentAgent = () => {
   };
 
   /**
-   * Fallback responses when Emergent agent is unavailable
+   * Fallback responses when backend is unavailable
    */
   const getFallbackResponse = (message, context) => {
     const lowerMessage = message.toLowerCase();
@@ -127,7 +204,9 @@ export const useEmergentAgent = () => {
         actions: [
           { type: 'size_guide', label: 'View Size Guide' },
           { type: 'contact', label: 'Speak to Expert' }
-        ]
+        ],
+        agentName: 'M Supplies Assistant',
+        agentAvatar: '🏪'
       };
     }
 
@@ -137,7 +216,9 @@ export const useEmergentAgent = () => {
         actions: [
           { type: 'view_pricing', label: 'View Pricing' },
           { type: 'bulk_quote', label: 'Get Bulk Quote' }
-        ]
+        ],
+        agentName: 'M Supplies Assistant',
+        agentAvatar: '🏪'
       };
     }
 
@@ -146,7 +227,9 @@ export const useEmergentAgent = () => {
         content: "I can help you track your order! Please provide your order number or email address and I'll get you the latest shipping updates.",
         actions: [
           { type: 'track_order', label: 'Track Order' }
-        ]
+        ],
+        agentName: 'M Supplies Assistant',
+        agentAvatar: '🏪'
       };
     }
 
@@ -155,29 +238,33 @@ export const useEmergentAgent = () => {
       content: `Thanks for your question! I'm here to help with M Supplies ${context.page === 'product' ? 'product information' : 'and packaging solutions'}. Could you provide more details about what you're looking for?`,
       suggestions: context.page === 'product' 
         ? ['Product specifications', 'Size recommendations', 'Quantity advice']
-        : ['Browse products', 'Bulk pricing', 'Customer support']
+        : ['Browse products', 'Bulk pricing', 'Customer support'],
+      agentName: 'M Supplies Assistant',
+      agentAvatar: '🏪'
     };
   };
 
   /**
-   * Initialize agent session with context
+   * Initialize agent session with context - creates session and returns welcome message
    */
   const initializeAgent = useCallback(async (context) => {
     try {
-      const initMessage = `User visiting ${context.page} page${context.product ? ` for ${context.product.name}` : ''}`;
-      await sendToAgent(initMessage, { ...context, isInitialization: true });
+      return await createSession(context);
     } catch (error) {
       console.error('Agent initialization error:', error);
+      return null;
     }
-  }, [sendToAgent]);
+  }, [createSession]);
 
   return {
+    createSession,
     sendToAgent,
     sendToSubAgent,
+    getChatHistory,
+    closeSession,
     initializeAgent,
     isConnecting,
-    connectionStatus,
-    config: EMERGENT_AGENT_CONFIG
+    connectionStatus
   };
 };
 
