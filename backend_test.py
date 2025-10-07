@@ -2907,6 +2907,231 @@ class BackendTester:
             except Exception as e:
                 self.log_test("Test Product Cleanup", False, f"Exception during cleanup: {str(e)}")
 
+    async def test_apricot_product_pricing_fix(self):
+        """Test the apricot product pricing fix as requested in review"""
+        print("\n🍑 Testing Apricot Product Pricing Fix...")
+        
+        if not self.admin_token:
+            self.log_test("Apricot Pricing Fix", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Step 1: Find the apricot product
+        apricot_product = None
+        try:
+            async with self.session.get(f"{API_BASE}/products?limit=100") as resp:
+                if resp.status == 200:
+                    products = await resp.json()
+                    
+                    # Look for apricot product
+                    for product in products:
+                        if 'apricot' in product.get('name', '').lower():
+                            apricot_product = product
+                            break
+                    
+                    if apricot_product:
+                        self.log_test("Find Apricot Product", True, f"Found: {apricot_product.get('name')}")
+                    else:
+                        self.log_test("Find Apricot Product", False, "Apricot product not found")
+                        return
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Find Apricot Product", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Find Apricot Product", False, f"Exception: {str(e)}")
+            return
+        
+        product_id = apricot_product['id']
+        
+        # Step 2: Get full product details to examine current pricing issue
+        try:
+            async with self.session.get(f"{API_BASE}/products/{product_id}") as resp:
+                if resp.status == 200:
+                    original_product = await resp.json()
+                    original_variants = original_product.get('variants', [])
+                    self.log_test("Get Apricot Product Details", True, f"Product has {len(original_variants)} variants")
+                    
+                    # Log current problematic pricing
+                    for i, variant in enumerate(original_variants):
+                        price_tiers = variant.get('price_tiers', [])
+                        pack_size = variant.get('attributes', {}).get('pack_size', 'Unknown')
+                        
+                        self.log_test(f"Current Pricing - Variant {i+1} ({pack_size}pcs)", True, 
+                                    f"Price tiers: {price_tiers}")
+                        
+                        # Check for $0 values in price_tiers
+                        zero_prices = [tier for tier in price_tiers if tier.get('price', 0) == 0.0]
+                        if zero_prices:
+                            self.log_test(f"Zero Price Issue - Variant {i+1}", False, 
+                                        f"Found {len(zero_prices)} price tiers with $0 values")
+                        else:
+                            self.log_test(f"Zero Price Check - Variant {i+1}", True, "No $0 values found")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Get Apricot Product Details", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Get Apricot Product Details", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 3: Check current price range in product listing (should show $0 to $17)
+        try:
+            async with self.session.get(f"{API_BASE}/products") as resp:
+                if resp.status == 200:
+                    products = await resp.json()
+                    apricot_in_listing = None
+                    
+                    for product in products:
+                        if product.get('id') == product_id:
+                            apricot_in_listing = product
+                            break
+                    
+                    if apricot_in_listing:
+                        price_range = apricot_in_listing.get('price_range', 'Unknown')
+                        self.log_test("Current Price Range in Listing", True, f"Price range: {price_range}")
+                        
+                        if '$0' in str(price_range):
+                            self.log_test("Price Range Issue Confirmed", False, 
+                                        f"Price range contains $0: {price_range}")
+                        else:
+                            self.log_test("Price Range Check", True, f"No $0 in price range: {price_range}")
+                    else:
+                        self.log_test("Find Apricot in Listing", False, "Apricot product not found in listing")
+                        
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Check Current Price Range", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Check Current Price Range", False, f"Exception: {str(e)}")
+        
+        # Step 4: Apply the fix - Update price_tiers to remove $0 values
+        if len(original_variants) >= 2:
+            fixed_variants = []
+            
+            for i, variant in enumerate(original_variants):
+                fixed_variant = variant.copy()
+                pack_size = variant.get('attributes', {}).get('pack_size', 50)
+                
+                # Apply the fix as specified in the review request
+                if pack_size == 50:
+                    # Variant 1 (50pcs): Set to simple single-tier pricing $8.99
+                    fixed_variant['price_tiers'] = [{'min_quantity': 1, 'price': 8.99}]
+                elif pack_size == 100:
+                    # Variant 2 (100pcs): Set to simple single-tier pricing $17.0
+                    fixed_variant['price_tiers'] = [{'min_quantity': 1, 'price': 17.0}]
+                else:
+                    # Keep original pricing for other variants, but remove any $0 values
+                    original_tiers = variant.get('price_tiers', [])
+                    fixed_tiers = [tier for tier in original_tiers if tier.get('price', 0) > 0]
+                    if not fixed_tiers:
+                        fixed_tiers = [{'min_quantity': 1, 'price': 10.0}]  # Default price
+                    fixed_variant['price_tiers'] = fixed_tiers
+                
+                fixed_variants.append(fixed_variant)
+            
+            update_payload = {
+                "variants": fixed_variants
+            }
+            
+            # Step 5: Send the fix via PUT /api/admin/products/{product_id}
+            try:
+                async with self.session.put(f"{API_BASE}/admin/products/{product_id}", 
+                                          json=update_payload, headers=headers) as resp:
+                    if resp.status == 200:
+                        updated_product = await resp.json()
+                        self.log_test("Apricot Pricing Fix Applied", True, "Price update request successful")
+                        
+                        # Verify the fix in the response
+                        updated_variants_response = updated_product.get('variants', [])
+                        for i, variant in enumerate(updated_variants_response):
+                            price_tiers = variant.get('price_tiers', [])
+                            pack_size = variant.get('attributes', {}).get('pack_size', 'Unknown')
+                            
+                            # Check no $0 values remain
+                            zero_prices = [tier for tier in price_tiers if tier.get('price', 0) == 0.0]
+                            if zero_prices:
+                                self.log_test(f"Fix Verification - Variant {i+1}", False, 
+                                            f"Still has {len(zero_prices)} $0 price tiers")
+                            else:
+                                self.log_test(f"Fix Verification - Variant {i+1}", True, 
+                                            f"{pack_size}pcs: {price_tiers}")
+                        
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Apricot Pricing Fix Applied", False, f"Status {resp.status}: {error_text}")
+                        return
+            except Exception as e:
+                self.log_test("Apricot Pricing Fix Applied", False, f"Exception: {str(e)}")
+                return
+        
+        # Step 6: Verify the fix by checking the price range in product listing
+        try:
+            async with self.session.get(f"{API_BASE}/products") as resp:
+                if resp.status == 200:
+                    products = await resp.json()
+                    apricot_after_fix = None
+                    
+                    for product in products:
+                        if product.get('id') == product_id:
+                            apricot_after_fix = product
+                            break
+                    
+                    if apricot_after_fix:
+                        new_price_range = apricot_after_fix.get('price_range', 'Unknown')
+                        self.log_test("Price Range After Fix", True, f"New price range: {new_price_range}")
+                        
+                        # Check if it shows "$8.99 to $17" instead of "$0 to $17"
+                        if '$8.99' in str(new_price_range) and '$17' in str(new_price_range) and '$0' not in str(new_price_range):
+                            self.log_test("Apricot Pricing Fix SUCCESS", True, 
+                                        f"Price range now shows correct values: {new_price_range}")
+                        elif '$0' not in str(new_price_range):
+                            self.log_test("Zero Price Removal SUCCESS", True, 
+                                        f"No more $0 in price range: {new_price_range}")
+                        else:
+                            self.log_test("Apricot Pricing Fix INCOMPLETE", False, 
+                                        f"Price range still contains $0: {new_price_range}")
+                    else:
+                        self.log_test("Verify Fix in Listing", False, "Apricot product not found in listing after fix")
+                        
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Verify Price Range Fix", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Verify Price Range Fix", False, f"Exception: {str(e)}")
+        
+        # Step 7: Final verification - Customer can see correct pricing
+        try:
+            async with self.session.get(f"{API_BASE}/products/{product_id}") as resp:
+                if resp.status == 200:
+                    customer_product = await resp.json()
+                    customer_variants = customer_product.get('variants', [])
+                    
+                    self.log_test("Customer Product Access After Fix", True, 
+                                f"Customer can access fixed product: {customer_product.get('name')}")
+                    
+                    # Verify customer sees the correct pricing
+                    for i, variant in enumerate(customer_variants):
+                        price_tiers = variant.get('price_tiers', [])
+                        pack_size = variant.get('attributes', {}).get('pack_size', 'Unknown')
+                        
+                        if price_tiers:
+                            first_price = price_tiers[0].get('price', 0)
+                            if first_price > 0:
+                                self.log_test(f"Customer Pricing - {pack_size}pcs", True, f"${first_price}")
+                            else:
+                                self.log_test(f"Customer Pricing - {pack_size}pcs", False, 
+                                            f"Customer still sees $0 price: ${first_price}")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Customer Product Access After Fix", False, f"Status {resp.status}: {error_text}")
+            
+        except Exception as e:
+            self.log_test("Customer Product Access After Fix", False, f"Exception: {str(e)}")
+
 async def main():
     """Run backend tests focused on duplicate categories issue"""
     print("🚀 Starting M Supplies Backend API Tests - Duplicate Categories Investigation")
