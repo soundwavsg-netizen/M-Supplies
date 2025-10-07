@@ -1011,7 +1011,9 @@ const ProductForm = () => {
                 </div>
 
                 <div>
-                  <Label>Initial Stock (packs)</Label>
+                  <Label>
+                    Initial Stock {product.type === 'bubble wrap' ? '(pieces)' : '(packs)'}
+                  </Label>
                   <Input
                     type="number"
                     value={newVariant.on_hand}
@@ -1019,7 +1021,10 @@ const ProductForm = () => {
                     placeholder="0"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Number of packs in stock (each pack = {newVariant.pack_size || 50} pieces)
+                    {product.type === 'bubble wrap' 
+                      ? `Number of individual pieces in stock`
+                      : `Number of packs in stock (each pack = ${newVariant.pack_size || 50} pieces)`
+                    }
                   </p>
                 </div>
 
