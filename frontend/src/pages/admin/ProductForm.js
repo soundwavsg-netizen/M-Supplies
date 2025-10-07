@@ -348,7 +348,7 @@ const ProductForm = () => {
     toast.success(`Color "${colorName}" added successfully`);
   };
 
-  const deleteColor = (colorToDelete) => {
+  const deleteColor = async (colorToDelete) => {
     if (colorToDelete === product.color) {
       toast.error('Cannot delete the currently selected color');
       return;
@@ -358,7 +358,11 @@ const ProductForm = () => {
       return;
     }
     
-    setAvailableColors(prev => prev.filter(color => color !== colorToDelete));
+    const newColors = availableColors.filter(color => color !== colorToDelete);
+    setAvailableColors(newColors);
+    
+    // Save to backend
+    await updateSettings(newColors, availableTypes);
     toast.success(`Color "${colorToDelete}" deleted`);
   };
 
