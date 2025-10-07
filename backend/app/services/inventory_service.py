@@ -184,22 +184,49 @@ class InventoryService:
         on_hand = variant.get('on_hand', 0)
         allocated = variant.get('allocated', 0)
         
-        if adjustment.adjustment_type == 'set':
-            if adjustment.on_hand_value is None:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="on_hand_value is required for 'set' adjustment type"
-                )
-            new_on_hand = adjustment.on_hand_value
-            on_hand_change = new_on_hand - on_hand
-        else:  # change
-            if adjustment.on_hand_change is None:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="on_hand_change is required for 'change' adjustment type"
-                )
-            on_hand_change = adjustment.on_hand_change
-            new_on_hand = on_hand + on_hand_change
+        # Initialize changes
+        on_hand_change = 0
+        allocated_change = 0
+        new_on_hand = on_hand
+        new_allocated = allocated
+        
+        # Handle on_hand adjustments
+        if adjustment.on_hand_value is not None or adjustment.on_hand_change is not None:
+            if adjustment.adjustment_type == 'set':
+                if adjustment.on_hand_value is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="on_hand_value is required for 'set' adjustment type"
+                    )
+                new_on_hand = adjustment.on_hand_value
+                on_hand_change = new_on_hand - on_hand
+            else:  # change
+                if adjustment.on_hand_change is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="on_hand_change is required for 'change' adjustment type"
+                    )
+                on_hand_change = adjustment.on_hand_change
+                new_on_hand = on_hand + on_hand_change
+        
+        # Handle allocated adjustments
+        if adjustment.allocated_value is not None or adjustment.allocated_change is not None:
+            if adjustment.adjustment_type == 'set':
+                if adjustment.allocated_value is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="allocated_value is required for 'set' adjustment type"
+                    )
+                new_allocated = adjustment.allocated_value
+                allocated_change = new_allocated - allocated
+            else:  # change
+                if adjustment.allocated_change is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="allocated_change is required for 'change' adjustment type"
+                    )
+                allocated_change = adjustment.allocated_change
+                new_allocated = allocated + allocated_change
         
         # Create ledger entry
         ledger_entry = {
