@@ -98,10 +98,7 @@ const Home = () => {
           </Link>
         </div>
       </section>
-      <ChatWidget 
-        agentType="sales" 
-        currentPage="homepage" 
-      />
+      <SmartChatWidget />
     </div>
   );
 };
