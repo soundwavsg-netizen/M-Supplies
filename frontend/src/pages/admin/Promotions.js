@@ -146,27 +146,15 @@ const Promotions = () => {
 
     return (
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="code">Coupon Code *</Label>
-            <Input
-              id="code"
-              value={formData.code}
-              onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
-              placeholder="VIP10, SAVE15, etc."
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="description">Description *</Label>
-            <Input
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="VIP customer discount"
-              required
-            />
-          </div>
+        <div>
+          <Label htmlFor="code">Coupon Code *</Label>
+          <Input
+            id="code"
+            value={formData.code}
+            onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
+            placeholder="VIP10, SAVE15, etc."
+            required
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
