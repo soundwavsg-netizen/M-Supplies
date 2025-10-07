@@ -321,8 +321,8 @@ const PackingInterface = () => {
                   backgroundRepeat: 'no-repeat'
                 }}
               >
-                {/* Overlay for readability */}
-                <div className="absolute inset-0 bg-white bg-opacity-90 rounded-lg"></div>
+                {/* Overlay for readability - reduced opacity to show product color */}
+                <div className="absolute inset-0 bg-white bg-opacity-40 rounded-lg"></div>
                 
                 {/* Content */}
                 <div className="relative z-10">
