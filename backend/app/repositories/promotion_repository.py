@@ -45,7 +45,32 @@ class PromotionRepository:
     async def get_coupon_by_code(self, code: str) -> Optional[Coupon]:
         """Get coupon by code"""
         coupon_doc = await self.coupons.find_one({"code": code.upper()})
-        return Coupon(**coupon_doc) if coupon_doc else None
+        if not coupon_doc:
+            return None
+        
+        try:
+            # Transform main coupon schema to promotion schema
+            transformed_coupon = {
+                "id": coupon_doc.get("id"),
+                "code": coupon_doc.get("code"),
+                "description": coupon_doc.get("description", f"Coupon {coupon_doc.get('code', 'N/A')}"),
+                "discount_type": "percentage" if coupon_doc.get("type") == "percent" else "fixed",
+                "discount_value": coupon_doc.get("value", 0),
+                "usage_type": "unlimited",
+                "minimum_order_amount": coupon_doc.get("min_order_amount", 0),
+                "maximum_discount_amount": None,
+                "usage_limit": coupon_doc.get("max_uses"),
+                "expires_at": coupon_doc.get("valid_to"),
+                "is_active": coupon_doc.get("is_active", True),
+                "created_at": coupon_doc.get("created_at"),
+                "updated_at": coupon_doc.get("created_at"),
+                "usage_count": coupon_doc.get("used_count", 0),
+                "status": "active" if coupon_doc.get("is_active", True) else "disabled"
+            }
+            return Coupon(**transformed_coupon)
+        except Exception as e:
+            print(f"Warning: Could not transform coupon {coupon_doc.get('id', 'unknown')}: {e}")
+            return None
 
     async def get_coupon_by_id(self, coupon_id: str) -> Optional[Coupon]:
         """Get coupon by ID"""
