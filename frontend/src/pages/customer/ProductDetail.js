@@ -159,7 +159,9 @@ const ProductDetail = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {product.variants.map((variant) => {
-                          const size = variant.attributes?.size_code || `${variant.attributes?.width_cm}x${variant.attributes?.height_cm}cm`;
+                          const width = variant.attributes?.width_cm;
+                          const height = variant.attributes?.height_cm;
+                          const size = variant.attributes?.size_code || `${width}×${height} cm`;
                           const packSize = variant.attributes?.pack_size || variant.pack_size || 50;
                           const isOutOfStock = (variant.on_hand || variant.stock_qty || 0) === 0;
                           
