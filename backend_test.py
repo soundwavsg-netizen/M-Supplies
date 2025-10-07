@@ -436,6 +436,384 @@ class BackendTester:
                         self.log_test(test_name, False, f"Status {resp.status}: {error_text}")
             except Exception as e:
                 self.log_test(test_name, False, f"Exception: {str(e)}")
+
+    async def test_product_update_with_variants(self):
+        """Test product update functionality with variant changes"""
+        print("\n🔄 Testing Product Update with Variant Changes...")
+        
+        if not self.admin_token:
+            self.log_test("Product Update Test", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Step 1: Get a product with variants
+        try:
+            async with self.session.post(f"{API_BASE}/products/filter", json={"page": 1, "limit": 1}) as resp:
+                if resp.status != 200:
+                    self.log_test("Get Product for Update", False, f"Failed to get products: {resp.status}")
+                    return
+                
+                data = await resp.json()
+                products = data.get('products', [])
+                if not products:
+                    self.log_test("Get Product for Update", False, "No products found")
+                    return
+                
+                product_id = products[0]['id']
+                self.log_test("Get Product for Update", True, f"Found product ID: {product_id}")
+                
+        except Exception as e:
+            self.log_test("Get Product for Update", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 2: Get full product details
+        try:
+            async with self.session.get(f"{API_BASE}/products/{product_id}") as resp:
+                if resp.status != 200:
+                    self.log_test("Get Product Details", False, f"Failed to get product details: {resp.status}")
+                    return
+                
+                original_product = await resp.json()
+                original_variants = original_product.get('variants', [])
+                self.log_test("Get Product Details", True, f"Product has {len(original_variants)} variants")
+                
+        except Exception as e:
+            self.log_test("Get Product Details", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 3: Create update payload with variant changes
+        if len(original_variants) < 2:
+            self.log_test("Variant Update Test", False, "Need at least 2 variants for testing")
+            return
+        
+        # Remove one existing variant and add a new one
+        updated_variants = original_variants[1:]  # Remove first variant
+        
+        # Add a new variant
+        new_variant = {
+            "sku": f"TEST-{product_id}-NEW",
+            "attributes": {
+                "width_cm": 30,
+                "height_cm": 40,
+                "size_code": "30x40",
+                "type": "normal",
+                "color": "white"
+            },
+            "price_tiers": [{"min_quantity": 1, "price": 1.50}],
+            "stock_qty": 100,
+            "on_hand": 100,
+            "allocated": 0,
+            "safety_stock": 10,
+            "low_stock_threshold": 5
+        }
+        updated_variants.append(new_variant)
+        
+        update_payload = {
+            "color": "pastel pink",  # Update product-level color
+            "type": "bubble wrap",   # Update product-level type
+            "variants": updated_variants
+        }
+        
+        # Step 4: Send update request
+        try:
+            async with self.session.put(f"{API_BASE}/admin/products/{product_id}", 
+                                      json=update_payload, headers=headers) as resp:
+                if resp.status == 200:
+                    updated_product = await resp.json()
+                    self.log_test("Product Update Request", True, "Update request successful")
+                    
+                    # Verify changes
+                    new_variants = updated_product.get('variants', [])
+                    
+                    # Check variant count changed
+                    if len(new_variants) == len(original_variants):
+                        self.log_test("Variant Count Change", True, f"Variant count: {len(new_variants)}")
+                    else:
+                        self.log_test("Variant Count Change", False, 
+                                    f"Expected {len(original_variants)}, got {len(new_variants)}")
+                    
+                    # Check product-level fields updated
+                    if updated_product.get('color') == 'pastel pink':
+                        self.log_test("Product Color Update", True, "Color updated to pastel pink")
+                    else:
+                        self.log_test("Product Color Update", False, 
+                                    f"Expected 'pastel pink', got '{updated_product.get('color')}'")
+                    
+                    if updated_product.get('type') == 'bubble wrap':
+                        self.log_test("Product Type Update", True, "Type updated to bubble wrap")
+                    else:
+                        self.log_test("Product Type Update", False, 
+                                    f"Expected 'bubble wrap', got '{updated_product.get('type')}'")
+                    
+                    # Check new variant exists
+                    new_variant_found = any(v['sku'] == f"TEST-{product_id}-NEW" for v in new_variants)
+                    self.log_test("New Variant Added", new_variant_found, 
+                                f"New variant {'found' if new_variant_found else 'not found'}")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Product Update Request", False, f"Status {resp.status}: {error_text}")
+                    return
+                    
+        except Exception as e:
+            self.log_test("Product Update Request", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 5: Verify persistence by fetching the product again
+        try:
+            async with self.session.get(f"{API_BASE}/products/{product_id}") as resp:
+                if resp.status == 200:
+                    refetched_product = await resp.json()
+                    
+                    # Check if changes persisted
+                    if refetched_product.get('color') == 'pastel pink':
+                        self.log_test("Color Persistence", True, "Color change persisted")
+                    else:
+                        self.log_test("Color Persistence", False, 
+                                    f"Color not persisted: {refetched_product.get('color')}")
+                    
+                    if refetched_product.get('type') == 'bubble wrap':
+                        self.log_test("Type Persistence", True, "Type change persisted")
+                    else:
+                        self.log_test("Type Persistence", False, 
+                                    f"Type not persisted: {refetched_product.get('type')}")
+                    
+                    refetched_variants = refetched_product.get('variants', [])
+                    new_variant_persisted = any(v['sku'] == f"TEST-{product_id}-NEW" for v in refetched_variants)
+                    self.log_test("Variant Persistence", new_variant_persisted, 
+                                f"New variant {'persisted' if new_variant_persisted else 'not persisted'}")
+                    
+                    # Check if old variant was removed
+                    if original_variants:
+                        old_variant_sku = original_variants[0]['sku']
+                        old_variant_removed = not any(v['sku'] == old_variant_sku for v in refetched_variants)
+                        self.log_test("Variant Removal", old_variant_removed, 
+                                    f"Old variant {'removed' if old_variant_removed else 'still exists'}")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Persistence Verification", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Persistence Verification", False, f"Exception: {str(e)}")
+
+    async def test_complete_variant_replacement(self):
+        """Test replacing all variants with a completely new set"""
+        print("\n🔄 Testing Complete Variant Replacement...")
+        
+        if not self.admin_token:
+            self.log_test("Complete Variant Replacement", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Get a product with multiple variants
+        try:
+            async with self.session.post(f"{API_BASE}/products/filter", json={"page": 1, "limit": 10}) as resp:
+                if resp.status != 200:
+                    self.log_test("Get Product for Replacement", False, f"Failed to get products: {resp.status}")
+                    return
+                
+                data = await resp.json()
+                products = data.get('products', [])
+                
+                # Find a product with multiple variants
+                target_product = None
+                for product in products:
+                    if len(product.get('variants', [])) >= 2:
+                        target_product = product
+                        break
+                
+                if not target_product:
+                    self.log_test("Get Product for Replacement", False, "No product with multiple variants found")
+                    return
+                
+                product_id = target_product['id']
+                original_variant_count = len(target_product.get('variants', []))
+                self.log_test("Get Product for Replacement", True, 
+                            f"Found product with {original_variant_count} variants")
+                
+        except Exception as e:
+            self.log_test("Get Product for Replacement", False, f"Exception: {str(e)}")
+            return
+        
+        # Create completely new set of variants
+        new_variants = [
+            {
+                "sku": f"REPLACE-{product_id}-001",
+                "attributes": {
+                    "width_cm": 20,
+                    "height_cm": 25,
+                    "size_code": "20x25",
+                    "type": "normal",
+                    "color": "white"
+                },
+                "price_tiers": [{"min_quantity": 1, "price": 0.80}],
+                "stock_qty": 50,
+                "on_hand": 50,
+                "allocated": 0,
+                "safety_stock": 5,
+                "low_stock_threshold": 10
+            },
+            {
+                "sku": f"REPLACE-{product_id}-002",
+                "attributes": {
+                    "width_cm": 25,
+                    "height_cm": 30,
+                    "size_code": "25x30",
+                    "type": "normal",
+                    "color": "milktea"
+                },
+                "price_tiers": [{"min_quantity": 1, "price": 0.90}],
+                "stock_qty": 75,
+                "on_hand": 75,
+                "allocated": 0,
+                "safety_stock": 10,
+                "low_stock_threshold": 15
+            }
+        ]
+        
+        update_payload = {
+            "variants": new_variants
+        }
+        
+        # Send replacement request
+        try:
+            async with self.session.put(f"{API_BASE}/admin/products/{product_id}", 
+                                      json=update_payload, headers=headers) as resp:
+                if resp.status == 200:
+                    updated_product = await resp.json()
+                    new_variant_count = len(updated_product.get('variants', []))
+                    
+                    if new_variant_count == 2:
+                        self.log_test("Variant Replacement Count", True, f"Now has {new_variant_count} variants")
+                    else:
+                        self.log_test("Variant Replacement Count", False, 
+                                    f"Expected 2 variants, got {new_variant_count}")
+                    
+                    # Check if new variants exist
+                    variant_skus = [v['sku'] for v in updated_product.get('variants', [])]
+                    expected_skus = [f"REPLACE-{product_id}-001", f"REPLACE-{product_id}-002"]
+                    
+                    all_new_variants_found = all(sku in variant_skus for sku in expected_skus)
+                    self.log_test("New Variants Created", all_new_variants_found, 
+                                f"New variants {'all found' if all_new_variants_found else 'missing'}")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Variant Replacement Request", False, f"Status {resp.status}: {error_text}")
+                    return
+                    
+        except Exception as e:
+            self.log_test("Variant Replacement Request", False, f"Exception: {str(e)}")
+            return
+        
+        # Verify persistence
+        try:
+            async with self.session.get(f"{API_BASE}/products/{product_id}") as resp:
+                if resp.status == 200:
+                    refetched_product = await resp.json()
+                    refetched_variants = refetched_product.get('variants', [])
+                    
+                    if len(refetched_variants) == 2:
+                        self.log_test("Replacement Persistence", True, "Variant replacement persisted")
+                    else:
+                        self.log_test("Replacement Persistence", False, 
+                                    f"Expected 2 variants, found {len(refetched_variants)}")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Replacement Persistence Check", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Replacement Persistence Check", False, f"Exception: {str(e)}")
+
+    async def test_dynamic_field_updates(self):
+        """Test updating product-level dynamic color and type fields"""
+        print("\n🎨 Testing Dynamic Color/Type Field Updates...")
+        
+        if not self.admin_token:
+            self.log_test("Dynamic Field Updates", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Get a product to test with
+        try:
+            async with self.session.post(f"{API_BASE}/products/filter", json={"page": 1, "limit": 1}) as resp:
+                if resp.status != 200:
+                    self.log_test("Get Product for Dynamic Fields", False, f"Failed to get products: {resp.status}")
+                    return
+                
+                data = await resp.json()
+                products = data.get('products', [])
+                if not products:
+                    self.log_test("Get Product for Dynamic Fields", False, "No products found")
+                    return
+                
+                product_id = products[0]['id']
+                
+        except Exception as e:
+            self.log_test("Get Product for Dynamic Fields", False, f"Exception: {str(e)}")
+            return
+        
+        # Test color field update
+        color_update = {"color": "champagne pink"}
+        try:
+            async with self.session.put(f"{API_BASE}/admin/products/{product_id}", 
+                                      json=color_update, headers=headers) as resp:
+                if resp.status == 200:
+                    updated_product = await resp.json()
+                    if updated_product.get('color') == 'champagne pink':
+                        self.log_test("Dynamic Color Field Update", True, "Color updated successfully")
+                    else:
+                        self.log_test("Dynamic Color Field Update", False, 
+                                    f"Color not updated: {updated_product.get('color')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Dynamic Color Field Update", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Dynamic Color Field Update", False, f"Exception: {str(e)}")
+        
+        # Test type field update
+        type_update = {"type": "bubble wrap"}
+        try:
+            async with self.session.put(f"{API_BASE}/admin/products/{product_id}", 
+                                      json=type_update, headers=headers) as resp:
+                if resp.status == 200:
+                    updated_product = await resp.json()
+                    if updated_product.get('type') == 'bubble wrap':
+                        self.log_test("Dynamic Type Field Update", True, "Type updated successfully")
+                    else:
+                        self.log_test("Dynamic Type Field Update", False, 
+                                    f"Type not updated: {updated_product.get('type')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Dynamic Type Field Update", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Dynamic Type Field Update", False, f"Exception: {str(e)}")
+        
+        # Verify both changes persisted
+        try:
+            async with self.session.get(f"{API_BASE}/products/{product_id}") as resp:
+                if resp.status == 200:
+                    final_product = await resp.json()
+                    
+                    color_persisted = final_product.get('color') == 'champagne pink'
+                    type_persisted = final_product.get('type') == 'bubble wrap'
+                    
+                    self.log_test("Dynamic Fields Persistence", color_persisted and type_persisted, 
+                                f"Color: {final_product.get('color')}, Type: {final_product.get('type')}")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Dynamic Fields Persistence Check", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Dynamic Fields Persistence Check", False, f"Exception: {str(e)}")
     
     def print_summary(self):
         """Print test summary"""
