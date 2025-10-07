@@ -1271,6 +1271,9 @@ async def main():
         # Run all tests
         await tester.authenticate()
         
+        # PRIORITY TEST: Variant pricing updates and persistence (as requested)
+        await tester.test_variant_pricing_updates_and_persistence()
+        
         # Priority test for pack_size schema changes
         await tester.test_pack_size_schema_structure()
         
