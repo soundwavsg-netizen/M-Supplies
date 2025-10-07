@@ -1058,7 +1058,7 @@ const ProductForm = () => {
                       </div>
                       <div>
                         <Label className="text-xs text-gray-600">
-                          Stock {product.type === 'bubble wrap' ? '(pieces)' : '(packs)'}
+                          On Hand Stock
                         </Label>
                         <div className="flex gap-1">
                           <Input
@@ -1066,11 +1066,11 @@ const ProductForm = () => {
                             value={variant.on_hand || ''}
                             onChange={(e) => updateVariant(index, 'on_hand', parseInt(e.target.value))}
                             className="text-sm"
-                            placeholder={product.type === 'bubble wrap' ? 'Pieces' : 'Packs'}
+                            placeholder="0"
                             title={
                               product.type === 'bubble wrap' 
                                 ? `Individual pieces in stock`
-                                : `Total pieces: ${(variant.on_hand || 0) * (variant.attributes?.pack_size || variant.pack_size || 50)}`
+                                : `Packs in stock (Total pieces: ${(variant.on_hand || 0) * (variant.attributes?.pack_size || variant.pack_size || 50)})`
                             }
                           />
                           <Button
@@ -1084,6 +1084,12 @@ const ProductForm = () => {
                             <X className="w-3 h-3" />
                           </Button>
                         </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {product.type === 'bubble wrap' 
+                            ? `Individual pieces available`
+                            : `Packs available (${variant.attributes?.pack_size || variant.pack_size || 50} pcs/pack)`
+                          }
+                        </p>
                       </div>
                       </div>
                     </div>
