@@ -8,6 +8,62 @@ class ProductService:
     def __init__(self, product_repo: ProductRepository):
         self.product_repo = product_repo
     
+    def _transform_variant_attributes(self, variant: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform old variant attributes format to new schema format"""
+        attributes = variant.get('attributes', {})
+        
+        # If already in new format, return as is
+        if 'width_cm' in attributes and 'height_cm' in attributes:
+            return variant
+        
+        # Transform old format to new format
+        new_attributes = {}
+        
+        # Extract dimensions from size string like "25cm x 35cm"
+        size_str = attributes.get('size', '')
+        size_match = re.match(r'(\d+)cm\s*x\s*(\d+)cm', size_str)
+        if size_match:
+            width = int(size_match.group(1))
+            height = int(size_match.group(2))
+            new_attributes['width_cm'] = width
+            new_attributes['height_cm'] = height
+            new_attributes['size_code'] = f"{width}x{height}"
+        else:
+            # Fallback values if parsing fails
+            new_attributes['width_cm'] = 25
+            new_attributes['height_cm'] = 35
+            new_attributes['size_code'] = "25x35"
+        
+        # Set type based on thickness or default to normal
+        thickness = attributes.get('thickness', '')
+        if 'bubble' in thickness.lower() or thickness == '100 micron':
+            new_attributes['type'] = 'bubble wrap'
+        else:
+            new_attributes['type'] = 'normal'
+        
+        # Normalize color
+        color = attributes.get('color', 'white').lower()
+        color_mapping = {
+            'white': 'white',
+            'pastel pink': 'pastel pink',
+            'champagne pink': 'champagne pink',
+            'milk tea': 'milktea',
+            'milktea': 'milktea',
+            'black': 'black',
+            'clear': 'clear',
+            'blue': 'blue'
+        }
+        new_attributes['color'] = color_mapping.get(color, 'white')
+        
+        # Keep optional fields
+        if 'thickness' in attributes:
+            new_attributes['thickness'] = attributes['thickness']
+        
+        # Update the variant with new attributes
+        variant_copy = variant.copy()
+        variant_copy['attributes'] = new_attributes
+        return variant_copy
+    
     async def create_product(self, product_data: ProductCreate) -> Dict[str, Any]:
         # Extract variants
         variants_data = product_data.model_dump().pop('variants', [])
