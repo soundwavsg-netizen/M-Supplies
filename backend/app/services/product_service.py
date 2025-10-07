@@ -103,11 +103,20 @@ class ProductService:
         """Get products with advanced filtering and sorting"""
         products_data = await self.product_repo.list_products_filtered(filters, sort, skip, limit)
         
+        # Transform variant attributes in the products
+        transformed_products = []
+        for product in products_data['products']:
+            product_copy = product.copy()
+            if 'variants' in product_copy:
+                transformed_variants = [self._transform_variant_attributes(variant) for variant in product_copy['variants']]
+                product_copy['variants'] = transformed_variants
+            transformed_products.append(product_copy)
+        
         # Get filter options for frontend
         filter_options = await self.get_filter_options()
         
         return {
-            'products': products_data['products'],
+            'products': transformed_products,
             'total': products_data['total'],
             'page': (skip // limit) + 1,
             'pages': (products_data['total'] + limit - 1) // limit,
