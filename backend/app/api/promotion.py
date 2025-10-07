@@ -183,7 +183,7 @@ async def delete_gift_tier(
 @router.post("/promotions/validate", response_model=PromotionResult, tags=["Promotions"])
 async def validate_promotion(
     validation_data: PromotionValidation,
-    user_id: Optional[str] = Depends(get_current_user_id),
+    user_id: Optional[str] = Depends(get_current_user_optional),
     service: PromotionService = Depends(get_promotion_service)
 ):
     """Validate coupon code and get available gift tiers"""
