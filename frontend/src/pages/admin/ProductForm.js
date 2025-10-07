@@ -606,11 +606,14 @@ const ProductForm = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableCategories.map(category => (
-                      <SelectItem key={category} value={category}>
-                        <span className="capitalize">{category.replace(/([a-z])([A-Z])/g, '$1 $2')}</span>
-                      </SelectItem>
-                    ))}
+                    {availableCategories.map(category => {
+                      const categoryStr = typeof category === 'string' ? category : String(category);
+                      return (
+                        <SelectItem key={categoryStr} value={categoryStr}>
+                          <span className="capitalize">{categoryStr.replace(/([a-z])([A-Z])/g, '$1 $2')}</span>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
                 
