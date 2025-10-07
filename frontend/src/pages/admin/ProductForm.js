@@ -333,7 +333,7 @@ const ProductForm = () => {
               );
             }
             return updatedVariant;
-          } else if (['type', 'color', 'width_cm', 'height_cm'].includes(field)) {
+          } else if (['type', 'color', 'width_cm', 'height_cm', 'pack_size'].includes(field)) {
             // Update attributes
             const updatedVariant = { ...variant };
             if (!updatedVariant.attributes) {
