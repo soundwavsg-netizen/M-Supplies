@@ -284,8 +284,8 @@ const PackingInterface = () => {
         <div className="grid grid-cols-6 gap-3">
           {filteredInventory.slice(0, 36).map((item) => {
             const productInfo = formatProductInfo(item);
-            const isLowStock = item.on_hand <= item.safety_stock;
-            const isWarningStock = item.on_hand <= item.safety_stock + 5 && !isLowStock;
+            const isLowStock = item.available <= 0;
+            const isWarningStock = item.available <= 5 && !isLowStock;
             
             return (
               <div
