@@ -359,12 +359,14 @@ const Promotions = () => {
                           <Badge variant={coupon.is_active ? 'default' : 'secondary'}>
                             {coupon.code}
                           </Badge>
-                          <span className="font-medium">{coupon.description}</span>
+                          <span className="font-medium">
+                            {coupon.type === 'percent' ? `${coupon.value}% off` : `$${coupon.value} off`}
+                          </span>
                         </div>
                         <div className="text-sm text-gray-600 mt-1">
-                          {coupon.discount_type === 'percentage' ? `${coupon.discount_value}% off` : `$${coupon.discount_value} off`}
-                          {coupon.minimum_order_amount > 0 && ` • Min order $${coupon.minimum_order_amount}`}
-                          {coupon.usage_type !== 'unlimited' && ` • ${coupon.usage_count || 0} uses`}
+                          {coupon.min_order_amount > 0 && `Min order $${coupon.min_order_amount} • `}
+                          Valid from {new Date(coupon.valid_from).toLocaleDateString()}
+                          {coupon.valid_to && ` to ${new Date(coupon.valid_to).toLocaleDateString()}`}
                         </div>
                       </div>
                       <div className="flex gap-2">
