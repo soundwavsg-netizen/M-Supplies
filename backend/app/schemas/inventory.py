@@ -71,8 +71,12 @@ class InventoryStatus(BaseModel):
 class StockAdjustment(BaseModel):
     variant_id: str
     adjustment_type: str  # "set" or "change"
+    # On Hand adjustments
     on_hand_value: Optional[int] = None
     on_hand_change: Optional[int] = None
+    # Allocated adjustments  
+    allocated_value: Optional[int] = None
+    allocated_change: Optional[int] = None
     reason: InventoryMovementReason
     notes: str
 
