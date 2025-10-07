@@ -200,7 +200,14 @@ const ProductForm = () => {
       const response = await adminUploadAPI.images(formData);
       console.log('Upload response:', response);
       
-      const newImageUrls = response.data.urls;
+      // Convert relative URLs to full URLs to bypass ingress MIME type issues
+      const newImageUrls = response.data.urls.map(url => {
+        if (url.startsWith('/uploads/')) {
+          return `${BACKEND_URL}${url}`;
+        }
+        return url;
+      });
+      
       setProduct(prev => ({
         ...prev,
         images: [...prev.images, ...newImageUrls]
