@@ -3133,19 +3133,16 @@ class BackendTester:
             self.log_test("Customer Product Access After Fix", False, f"Exception: {str(e)}")
 
 async def main():
-    """Run backend tests focused on duplicate categories issue"""
-    print("🚀 Starting M Supplies Backend API Tests - Duplicate Categories Investigation")
+    """Run backend tests focused on apricot product pricing fix"""
+    print("🚀 Starting M Supplies Backend API Tests - Apricot Product Pricing Fix")
     print(f"Testing against: {API_BASE}")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Duplicate categories issue investigation (as specifically requested)
-        await tester.test_duplicate_categories_issue()
-        
-        # Additional test: Filter options endpoint
-        await tester.test_filter_options_endpoint()
+        # PRIORITY TEST: Apricot product pricing fix (as specifically requested in review)
+        await tester.test_apricot_product_pricing_fix()
         
         # Print summary
         passed, failed = tester.print_summary()
