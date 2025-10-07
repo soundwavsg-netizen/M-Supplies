@@ -1001,11 +1001,13 @@ const ProductForm = () => {
                     ))}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    {product.category === 'accessories' 
-                      ? 'Accessories sold individually' 
-                      : product.name.toLowerCase().includes('premium')
-                        ? 'Premium polymailers: Minimum 50 pcs with volume discount at 100+ pcs'
-                        : 'Regular polymailers: Minimum 25 pcs with volume discounts'
+                    {product.type === 'bubble wrap'
+                      ? 'Bubble wrap: Individual pieces with volume discounts'
+                      : product.category === 'accessories' 
+                        ? 'Accessories sold individually' 
+                        : product.name.toLowerCase().includes('premium')
+                          ? 'Premium polymailers: Minimum 50 pcs with volume discount at 100+ pcs'
+                          : 'Regular polymailers: Minimum 25 pcs with volume discounts'
                     }
                   </p>
                 </div>
