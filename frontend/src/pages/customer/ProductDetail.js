@@ -69,6 +69,33 @@ const ProductDetail = () => {
     return tier.price * quantity;
   };
 
+  // Compute available dimensions and pack sizes for two-step selection
+  const availableDimensions = product?.variants ? [...new Set(product.variants.map(variant => {
+    const width = variant.attributes?.width_cm || variant.width_cm;
+    const height = variant.attributes?.height_cm || variant.height_cm;
+    return `${width}×${height} cm`;
+  }))].sort() : [];
+
+  const availablePackSizes = product?.variants && selectedDimension ? 
+    product.variants
+      .filter(variant => {
+        const width = variant.attributes?.width_cm || variant.width_cm;
+        const height = variant.attributes?.height_cm || variant.height_cm;
+        const size = `${width}×${height} cm`;
+        return size === selectedDimension;
+      })
+      .map(variant => {
+        const packSize = (variant.attributes?.pack_size || variant.pack_size || 50).toString();
+        const availableStock = variant.available || (variant.on_hand || variant.stock_qty || 0) - (variant.allocated || 0) - (variant.safety_stock || 0);
+        return {
+          packSize,
+          availableStock,
+          variant
+        };
+      })
+      .sort((a, b) => parseInt(a.packSize) - parseInt(b.packSize))
+    : [];
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
