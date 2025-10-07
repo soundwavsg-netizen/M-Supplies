@@ -7,6 +7,25 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const AdminDashboard = () => {
+  const [skuCount, setSkuCount] = useState('--');
+  
+  useEffect(() => {
+    fetchInventoryCount();
+  }, []);
+  
+  const fetchInventoryCount = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get(`${BACKEND_URL}/api/admin/inventory`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSkuCount(`${response.data.length} SKUs`);
+    } catch (error) {
+      console.error('Error fetching inventory count:', error);
+      setSkuCount('0 SKUs');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50" data-testid="admin-dashboard">
       <div className="container mx-auto px-4 py-8">
