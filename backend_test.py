@@ -1400,8 +1400,8 @@ class BackendTester:
         malformed_payloads = [
             ({}, "Empty payload"),
             ({"coupon_code": ""}, "Empty coupon code"),
-            ({"coupon_code": "TEST", "order_amount": -10}, "Negative order amount"),
-            ({"coupon_code": "TEST"}, "Missing order_amount"),
+            ({"coupon_code": "TEST", "order_subtotal": -10}, "Negative order subtotal"),
+            ({"coupon_code": "TEST"}, "Missing order_subtotal"),
         ]
         
         for payload, description in malformed_payloads:
