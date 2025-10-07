@@ -774,11 +774,12 @@ const ProductForm = () => {
                 )}
                 
                 {/* Type Management */}
-                {availableTypes.length > 0 && (
+                {Array.isArray(availableTypes) && availableTypes.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     <span className="text-xs text-gray-500">Manage types:</span>
                     {availableTypes.map(type => {
-                      const typeStr = typeof type === 'string' ? type : String(type);
+                      const typeStr = typeof type === 'string' ? type : String(type || '');
+                      if (!typeStr) return null;
                       return (
                         <div key={typeStr} className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs">
                           <span className="capitalize">{typeStr}</span>
