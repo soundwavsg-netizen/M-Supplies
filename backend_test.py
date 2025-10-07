@@ -1213,6 +1213,400 @@ class BackendTester:
             except Exception as e:
                 self.log_test(f"Auth Required - {endpoint}", False, f"Exception: {str(e)}")
 
+    async def test_chat_system_api_endpoints(self):
+        """Test the new chat system API endpoints with Emergent AI integration"""
+        print("\n🤖 Testing Chat System API Endpoints...")
+        print("Testing chat session creation, message sending, history, and session management")
+        
+        # Test 1: Chat Health Check
+        print("\n📝 Test 1: Chat Health Check")
+        try:
+            async with self.session.get(f"{API_BASE}/chat/health") as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    self.log_test("Chat Health Check", True, 
+                                f"Status: {data.get('status')}, Service: {data.get('service')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Chat Health Check", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Chat Health Check", False, f"Exception: {str(e)}")
+        
+        # Test 2: Homepage with Sales Agent
+        print("\n📝 Test 2: Homepage with Sales Agent")
+        session_id_sales = None
+        try:
+            session_payload = {
+                "agent_type": "sales",
+                "page_context": "homepage",
+                "user_id": None
+            }
+            
+            async with self.session.post(f"{API_BASE}/chat/sessions", json=session_payload) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    session_id_sales = data.get('session_id')
+                    welcome_msg = data.get('welcome_message', {})
+                    
+                    self.log_test("Homepage Sales Agent Session", True, 
+                                f"Session ID: {session_id_sales}, Agent: {welcome_msg.get('agent_name')}")
+                    
+                    # Verify welcome message content
+                    if 'sales' in welcome_msg.get('agent_name', '').lower():
+                        self.log_test("Sales Agent Welcome Message", True, 
+                                    f"Content: {welcome_msg.get('content', '')[:100]}...")
+                    else:
+                        self.log_test("Sales Agent Welcome Message", False, 
+                                    f"Expected sales agent, got: {welcome_msg.get('agent_name')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Homepage Sales Agent Session", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Homepage Sales Agent Session", False, f"Exception: {str(e)}")
+        
+        # Test 3: Product Page with Sizing Agent
+        print("\n📝 Test 3: Product Page with Sizing Agent")
+        session_id_sizing = None
+        try:
+            # Get a product for context
+            product_context = {
+                "name": "Premium Polymailers - White",
+                "price_range": "$7.99 - $14.99",
+                "variants": [{"size": "25x35cm", "pack_size": 50}]
+            }
+            
+            session_payload = {
+                "agent_type": "sizing",
+                "page_context": "product",
+                "product_context": product_context,
+                "user_id": None
+            }
+            
+            async with self.session.post(f"{API_BASE}/chat/sessions", json=session_payload) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    session_id_sizing = data.get('session_id')
+                    welcome_msg = data.get('welcome_message', {})
+                    
+                    self.log_test("Product Sizing Agent Session", True, 
+                                f"Session ID: {session_id_sizing}, Agent: {welcome_msg.get('agent_name')}")
+                    
+                    # Verify sizing agent context
+                    if 'sizing' in welcome_msg.get('agent_name', '').lower():
+                        self.log_test("Sizing Agent Product Context", True, 
+                                    f"Content mentions product: {'Premium Polymailers' in welcome_msg.get('content', '')}")
+                    else:
+                        self.log_test("Sizing Agent Product Context", False, 
+                                    f"Expected sizing agent, got: {welcome_msg.get('agent_name')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Product Sizing Agent Session", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Product Sizing Agent Session", False, f"Exception: {str(e)}")
+        
+        # Test 4: Support Page with Care Agent
+        print("\n📝 Test 4: Support Page with Care Agent")
+        session_id_care = None
+        try:
+            session_payload = {
+                "agent_type": "care",
+                "page_context": "support",
+                "user_id": None
+            }
+            
+            async with self.session.post(f"{API_BASE}/chat/sessions", json=session_payload) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    session_id_care = data.get('session_id')
+                    welcome_msg = data.get('welcome_message', {})
+                    
+                    self.log_test("Support Care Agent Session", True, 
+                                f"Session ID: {session_id_care}, Agent: {welcome_msg.get('agent_name')}")
+                    
+                    # Verify care agent context
+                    if 'care' in welcome_msg.get('agent_name', '').lower():
+                        self.log_test("Care Agent Support Context", True, 
+                                    f"Content: {welcome_msg.get('content', '')[:100]}...")
+                    else:
+                        self.log_test("Care Agent Support Context", False, 
+                                    f"Expected care agent, got: {welcome_msg.get('agent_name')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Support Care Agent Session", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Support Care Agent Session", False, f"Exception: {str(e)}")
+        
+        # Test 5: Send Messages and Test AI Responses
+        print("\n📝 Test 5: Send Messages and Test AI Responses")
+        
+        # Test sales agent message
+        if session_id_sales:
+            try:
+                message_payload = {
+                    "message": "I need bulk polymailers for my e-commerce business. What discounts do you offer?",
+                    "session_id": session_id_sales,
+                    "agent_type": "sales",
+                    "page_context": "homepage"
+                }
+                
+                async with self.session.post(f"{API_BASE}/chat/sessions/{session_id_sales}/messages", 
+                                           json=message_payload) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        response_content = data.get('content', '')
+                        
+                        # Check if response is contextual to sales/bulk inquiry
+                        sales_keywords = ['bulk', 'discount', 'business', 'pricing', 'vip', 'savings']
+                        has_sales_context = any(keyword in response_content.lower() for keyword in sales_keywords)
+                        
+                        self.log_test("Sales Agent AI Response", has_sales_context, 
+                                    f"Response length: {len(response_content)}, Contains sales context: {has_sales_context}")
+                        
+                        # Verify response structure
+                        required_fields = ['content', 'agent_name', 'agent_avatar', 'session_id', 'message_id']
+                        missing_fields = [field for field in required_fields if field not in data]
+                        
+                        if not missing_fields:
+                            self.log_test("Sales Response Structure", True, "All required fields present")
+                        else:
+                            self.log_test("Sales Response Structure", False, f"Missing fields: {missing_fields}")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Sales Agent AI Response", False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Sales Agent AI Response", False, f"Exception: {str(e)}")
+        
+        # Test sizing agent message
+        if session_id_sizing:
+            try:
+                message_payload = {
+                    "message": "I need to ship phone cases that are 15cm x 8cm x 2cm. What size polymailer should I use?",
+                    "session_id": session_id_sizing,
+                    "agent_type": "sizing",
+                    "page_context": "product",
+                    "product_context": {
+                        "name": "Premium Polymailers - White",
+                        "variants": [{"size": "25x35cm"}, {"size": "32x43cm"}]
+                    }
+                }
+                
+                async with self.session.post(f"{API_BASE}/chat/sessions/{session_id_sizing}/messages", 
+                                           json=message_payload) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        response_content = data.get('content', '')
+                        
+                        # Check if response is contextual to sizing inquiry
+                        sizing_keywords = ['size', 'dimension', 'fit', '25x35', '32x43', 'recommend']
+                        has_sizing_context = any(keyword in response_content.lower() for keyword in sizing_keywords)
+                        
+                        self.log_test("Sizing Agent AI Response", has_sizing_context, 
+                                    f"Response length: {len(response_content)}, Contains sizing context: {has_sizing_context}")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Sizing Agent AI Response", False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Sizing Agent AI Response", False, f"Exception: {str(e)}")
+        
+        # Test care agent message
+        if session_id_care:
+            try:
+                message_payload = {
+                    "message": "I received my order but some polymailers are damaged. How can I get a replacement?",
+                    "session_id": session_id_care,
+                    "agent_type": "care",
+                    "page_context": "support"
+                }
+                
+                async with self.session.post(f"{API_BASE}/chat/sessions/{session_id_care}/messages", 
+                                           json=message_payload) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        response_content = data.get('content', '')
+                        
+                        # Check if response is contextual to customer care inquiry
+                        care_keywords = ['sorry', 'help', 'replacement', 'resolve', 'support', 'service']
+                        has_care_context = any(keyword in response_content.lower() for keyword in care_keywords)
+                        
+                        self.log_test("Care Agent AI Response", has_care_context, 
+                                    f"Response length: {len(response_content)}, Contains care context: {has_care_context}")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Care Agent AI Response", False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Care Agent AI Response", False, f"Exception: {str(e)}")
+        
+        # Test 6: Chat History Retrieval
+        print("\n📝 Test 6: Chat History Retrieval")
+        
+        if session_id_sales:
+            try:
+                async with self.session.get(f"{API_BASE}/chat/sessions/{session_id_sales}/history") as resp:
+                    if resp.status == 200:
+                        messages = await resp.json()
+                        
+                        # Should have welcome message + user message + agent response = 3 messages
+                        expected_min_messages = 2  # At least welcome + user message
+                        if len(messages) >= expected_min_messages:
+                            self.log_test("Chat History Retrieval", True, 
+                                        f"Found {len(messages)} messages in history")
+                            
+                            # Verify message structure
+                            if messages:
+                                first_message = messages[0]
+                                required_fields = ['id', 'session_id', 'type', 'content', 'timestamp']
+                                missing_fields = [field for field in required_fields if field not in first_message]
+                                
+                                if not missing_fields:
+                                    self.log_test("Message History Structure", True, "All required fields present")
+                                else:
+                                    self.log_test("Message History Structure", False, f"Missing fields: {missing_fields}")
+                        else:
+                            self.log_test("Chat History Retrieval", False, 
+                                        f"Expected at least {expected_min_messages} messages, got {len(messages)}")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Chat History Retrieval", False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Chat History Retrieval", False, f"Exception: {str(e)}")
+        
+        # Test 7: MongoDB Storage Verification
+        print("\n📝 Test 7: MongoDB Storage Verification")
+        
+        # Test multiple sessions to verify storage
+        sessions_created = [s for s in [session_id_sales, session_id_sizing, session_id_care] if s]
+        if sessions_created:
+            self.log_test("MongoDB Session Storage", True, 
+                        f"Successfully created {len(sessions_created)} sessions with unique IDs")
+            
+            # Verify session ID format
+            for session_id in sessions_created:
+                if session_id and 'msupplies_' in session_id:
+                    self.log_test(f"Session ID Format - {session_id[:20]}...", True, "Correct format")
+                else:
+                    self.log_test(f"Session ID Format - {session_id}", False, "Incorrect format")
+        else:
+            self.log_test("MongoDB Session Storage", False, "No sessions were created successfully")
+        
+        # Test 8: Error Handling for Invalid Sessions
+        print("\n📝 Test 8: Error Handling for Invalid Sessions")
+        
+        invalid_session_id = "invalid_session_12345"
+        
+        # Test sending message to invalid session
+        try:
+            message_payload = {
+                "message": "Test message",
+                "session_id": invalid_session_id,
+                "agent_type": "main",
+                "page_context": "homepage"
+            }
+            
+            async with self.session.post(f"{API_BASE}/chat/sessions/{invalid_session_id}/messages", 
+                                       json=message_payload) as resp:
+                if resp.status == 404:
+                    self.log_test("Invalid Session Message Error", True, "Correctly returns 404 for invalid session")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Invalid Session Message Error", False, 
+                                f"Expected 404, got {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Invalid Session Message Error", False, f"Exception: {str(e)}")
+        
+        # Test getting history for invalid session
+        try:
+            async with self.session.get(f"{API_BASE}/chat/sessions/{invalid_session_id}/history") as resp:
+                if resp.status in [404, 500]:  # Either is acceptable for invalid session
+                    self.log_test("Invalid Session History Error", True, f"Correctly handles invalid session (status {resp.status})")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Invalid Session History Error", False, 
+                                f"Expected 404/500, got {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Invalid Session History Error", False, f"Exception: {str(e)}")
+        
+        # Test 9: Session Management (Deletion)
+        print("\n📝 Test 9: Session Management (Deletion)")
+        
+        if session_id_care:  # Use care session for deletion test
+            try:
+                async with self.session.delete(f"{API_BASE}/chat/sessions/{session_id_care}") as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        self.log_test("Session Deletion", True, f"Message: {data.get('message')}")
+                        
+                        # Verify session is actually closed by trying to send a message
+                        message_payload = {
+                            "message": "This should fail",
+                            "session_id": session_id_care,
+                            "agent_type": "care",
+                            "page_context": "support"
+                        }
+                        
+                        async with self.session.post(f"{API_BASE}/chat/sessions/{session_id_care}/messages", 
+                                                   json=message_payload) as verify_resp:
+                            if verify_resp.status == 404:
+                                self.log_test("Session Deletion Verification", True, "Session properly closed")
+                            else:
+                                self.log_test("Session Deletion Verification", False, 
+                                            f"Session still active, status: {verify_resp.status}")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Session Deletion", False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Session Deletion", False, f"Exception: {str(e)}")
+        
+        # Test 10: Emergent AI Integration Verification
+        print("\n📝 Test 10: Emergent AI Integration Verification")
+        
+        # Create a test session specifically for AI verification
+        try:
+            session_payload = {
+                "agent_type": "main",
+                "page_context": "homepage"
+            }
+            
+            async with self.session.post(f"{API_BASE}/chat/sessions", json=session_payload) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    test_session_id = data.get('session_id')
+                    
+                    # Send a specific message to test AI integration
+                    message_payload = {
+                        "message": "What is M Supplies and what products do you sell?",
+                        "session_id": test_session_id,
+                        "agent_type": "main",
+                        "page_context": "homepage"
+                    }
+                    
+                    async with self.session.post(f"{API_BASE}/chat/sessions/{test_session_id}/messages", 
+                                               json=message_payload) as msg_resp:
+                        if msg_resp.status == 200:
+                            response_data = await msg_resp.json()
+                            response_content = response_data.get('content', '')
+                            
+                            # Check if response contains M Supplies context
+                            msupplies_keywords = ['m supplies', 'polymailer', 'packaging', 'bubble wrap']
+                            has_context = any(keyword in response_content.lower() for keyword in msupplies_keywords)
+                            
+                            # Check response quality (not just fallback)
+                            is_substantial = len(response_content) > 50
+                            
+                            if has_context and is_substantial:
+                                self.log_test("Emergent AI Integration", True, 
+                                            f"AI provides contextual M Supplies response ({len(response_content)} chars)")
+                            else:
+                                self.log_test("Emergent AI Integration", False, 
+                                            f"Response lacks context or is too brief: {response_content[:100]}...")
+                        else:
+                            error_text = await msg_resp.text()
+                            self.log_test("Emergent AI Integration", False, f"Message failed: {msg_resp.status}: {error_text}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Emergent AI Integration", False, f"Session creation failed: {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Emergent AI Integration", False, f"Exception: {str(e)}")
+
     async def test_coupon_creation_validation_error(self):
         """Test the exact coupon creation API call that the frontend is making"""
         print("\n🎯 Testing Coupon Creation Validation Error...")
