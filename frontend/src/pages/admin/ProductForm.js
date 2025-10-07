@@ -76,6 +76,7 @@ const ProductForm = () => {
   };
 
   useEffect(() => {
+    fetchSettings();
     if (isEdit) {
       fetchProduct();
     }
