@@ -477,6 +477,21 @@ test_plan:
           agent: "testing"
           comment: "🎯 PRODUCT DELETION FUNCTIONALITY COMPREHENSIVE TESTING COMPLETED: Investigated the reported issue where Premium Polymailers still appears in products list and inventory after clicking Delete button. TESTING RESULTS: ✅ DELETE /api/admin/products/{id} API working correctly ✅ Soft delete implementation working (product marked as is_active: False) ✅ All variants properly deleted from database ✅ Product filtered out from GET /api/products (is_active=True filter working) ✅ Product count reduced correctly (2→1 products) ✅ Inventory API filtering working (Premium variants removed from inventory) ✅ Inventory count reduced correctly (38→6 items) ✅ Filtered products API working (Premium not in results) ✅ delete_variants_by_product() function working correctly. CONCLUSION: The product deletion functionality is working perfectly. The reported issue 'Premium Polymailers still appears in both products list and inventory after clicking Delete button' could NOT be reproduced. All deletion operations are functioning correctly with proper soft delete implementation and filtering. Success rate: 100% (13/13 deletion tests passed)."
 
+  - task: "Baby Blue Product Pricing Fix"
+    implemented: true
+    working: true
+    file: "server.py, product_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ BABY BLUE PRICING ISSUE IDENTIFIED: Found Baby Blue product with problematic price_tiers containing 0 values: [{'min_quantity': 25, 'price': 7.99}, {'min_quantity': 50, 'price': 0.0}, {'min_quantity': 100, 'price': 0.0}]. This caused product listing to show price range $0.0 - $7.99, creating customer confusion. Product had only 1 variant (50-pack) and was missing the 100-pack variant specified in requirements."
+        - working: true
+          agent: "testing"
+          comment: "🎯 BABY BLUE PRICING FIX COMPLETED SUCCESSFULLY: Fixed the Baby Blue product price_tiers issue as requested. ACTIONS TAKEN: ✅ Fixed 50-pack variant: Removed all 0 values from price_tiers, set consistent $7.99 pricing for all quantity tiers ✅ Added 100-pack variant: Created new variant with proper pricing structure ($7.99 base, $14.99 for 100+ quantities) ✅ Used PUT /api/admin/products/{product_id} to update Baby Blue product (ID: aefa575f-c766-4a3a-9fd9-5cfe545db3d9). VERIFICATION RESULTS: ✅ Product listing now shows correct price range: $7.99 - $14.99 (no more $0) ✅ Customer product access working with valid pricing ✅ Both variants have proper price_tiers without 0 values ✅ Filter options show system-wide price range without $0 values ✅ All pricing APIs working correctly. The Baby Blue product pricing issue has been completely resolved and verified through comprehensive testing. Success rate: 100% (15/15 tests passed)."
+
 agent_communication:
     - agent: "main" 
       message: "User reported issue with variant creation process: pricing tiers and initial stock during variant creation causing price display problems. Need to simplify variant creation by removing pricing and stock fields, then allow admin to set these after variant creation. Product listing should pull correct price from variant info."
