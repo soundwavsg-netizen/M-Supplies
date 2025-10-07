@@ -25,6 +25,7 @@ import AdminDashboard from '@/pages/admin/AdminDashboard';
 import Inventory from '@/pages/admin/Inventory';
 import AdminProducts from '@/pages/admin/Products';
 import ProductForm from '@/pages/admin/ProductForm';
+import PackingInterface from '@/pages/admin/PackingInterface';
 
 import '@/App.css';
 
