@@ -943,7 +943,26 @@ const ProductForm = () => {
                   />
                 </div>
 
-                <div className="md:col-span-3">
+                <div>
+                  <Label>Pack Size (pcs) *</Label>
+                  <Select 
+                    value={newVariant.pack_size?.toString()} 
+                    onValueChange={(value) => handleVariantChange('pack_size', parseInt(value))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availablePackSizes.map(size => (
+                        <SelectItem key={size} value={size.toString()}>
+                          {size} pieces per pack
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="md:col-span-2">
                   <Label>Pricing Tiers *</Label>
                   <div className={`grid gap-2 mt-2 ${newVariant.price_tiers.length === 1 ? 'grid-cols-1' : newVariant.price_tiers.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
                     {newVariant.price_tiers.map((tier, index) => (
