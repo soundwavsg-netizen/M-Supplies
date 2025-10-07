@@ -50,14 +50,7 @@ const ProductForm = () => {
     width_cm: '',
     height_cm: '',
     size_code: '',
-    selected_pack_sizes: [], // Array of selected pack sizes
-    price_tiers: [
-      { min_quantity: 25, price: '' },
-      { min_quantity: 50, price: '' },
-      { min_quantity: 100, price: '' }
-    ],
-    on_hand: '',
-    safety_stock: 0
+    selected_pack_sizes: [] // Array of selected pack sizes
   });
 
   // Get pricing tiers based on product name/category
