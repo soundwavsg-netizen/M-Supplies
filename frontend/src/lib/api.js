@@ -122,4 +122,10 @@ export const adminUploadAPI = {
   }),
 };
 
+// Admin - Settings
+export const adminSettingsAPI = {
+  get: () => api.get('/admin/settings'),
+  update: (data) => api.put('/admin/settings', data),
+};
+
 export default api;
