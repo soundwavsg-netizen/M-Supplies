@@ -1093,15 +1093,15 @@ class BackendTester:
         
         headers = {"Authorization": f"Bearer {self.admin_token}"}
         
-        # Test 1: Full payload as specified in review request
-        print("\n📝 Test 1: Full payload with all fields")
+        # Test 1: Full payload as specified in review request (with corrected valid_to)
+        print("\n📝 Test 1: Full payload with all fields (corrected)")
         full_payload = {
             "code": "VIP10",
             "type": "percent", 
             "value": 10,
             "min_order_amount": 0,
             "valid_from": "2025-01-07T12:00:00.000Z",
-            "valid_to": None,
+            "valid_to": "2025-12-31T23:59:59.000Z",  # Fixed: provide actual datetime instead of null
             "is_active": True
         }
         
