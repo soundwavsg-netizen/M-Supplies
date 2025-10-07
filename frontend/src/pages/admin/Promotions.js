@@ -200,23 +200,34 @@ const Promotions = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="expires_at">Expiry Date</Label>
+            <Label htmlFor="valid_from">Valid From Date *</Label>
             <Input
-              id="expires_at"
+              id="valid_from"
               type="date"
-              value={formData.expires_at}
-              onChange={(e) => setFormData(prev => ({ ...prev, expires_at: e.target.value }))}
+              value={formData.valid_from}
+              onChange={(e) => setFormData(prev => ({ ...prev, valid_from: e.target.value }))}
+              required
             />
           </div>
-          <div className="flex items-center space-x-2 pt-6">
-            <input
-              type="checkbox"
-              id="is_active"
-              checked={formData.is_active}
-              onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+          <div>
+            <Label htmlFor="valid_to">Valid To Date (Optional)</Label>
+            <Input
+              id="valid_to"
+              type="date"
+              value={formData.valid_to}
+              onChange={(e) => setFormData(prev => ({ ...prev, valid_to: e.target.value }))}
             />
-            <Label htmlFor="is_active">Active</Label>
           </div>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="is_active"
+            checked={formData.is_active}
+            onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+          />
+          <Label htmlFor="is_active">Active</Label>
         </div>
 
         <div className="flex gap-3">
