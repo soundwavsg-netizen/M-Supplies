@@ -306,7 +306,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Price Range $0 Issue Investigation"
+    - "Baby Blue Product Pricing Fix"
     - "Duplicate Categories Issue Investigation"
   stuck_tasks: []
   test_all: false
