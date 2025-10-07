@@ -7304,29 +7304,28 @@ class BackendTester:
                     "Identified schema mismatch between user data and backend expectations")
 
 async def main():
-    """Run backend tests focused on Chat System API Testing"""
-    print("🚀 Starting M Supplies Backend API Tests - Chat System Integration")
+    """Run backend tests focused on Discount Code Authentication Fix"""
+    print("🚀 Starting M Supplies Backend API Tests - Discount Code Authentication Fix")
     print(f"Testing against: {API_BASE}")
-    print("🎯 FOCUS: Test new chat system API endpoints with Emergent AI integration")
-    print("User Request: Test chat session creation, message sending, history, and session management")
+    print("🎯 FOCUS: Test discount code authentication fix for guest users")
+    print("User Request: Test the discount code authentication fix")
     print("Testing scenarios:")
-    print("1. Homepage with sales agent")
-    print("2. Product page with sizing agent")
-    print("3. Support page with care agent")
-    print("4. Actual AI responses (not mocked)")
-    print("5. MongoDB storage verification")
-    print("6. Error handling for invalid sessions")
+    print("1. Guest User Coupon Validation (WITHOUT authentication token)")
+    print("2. Authenticated User Coupon Validation (WITH valid JWT token)")
+    print("3. Coupon System Setup (check/create test coupons)")
+    print("4. Error Handling (invalid/expired coupon codes)")
+    print("5. Malformed request data handling")
+    print("Expected Results:")
+    print("- Guest users should validate discount codes without authentication errors")
+    print("- Both guest and authenticated users should receive appropriate responses")
+    print("- Invalid codes should return proper error messages, not authentication errors")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Test chat system API endpoints
-        await tester.test_chat_system_api_endpoints()
-        
-        # SECONDARY TESTS: Previous working tests for regression
-        await tester.test_promotion_data_loading_after_coupon_creation()
-        await tester.test_coupon_creation_validation_error()
+        # PRIORITY TEST: Test discount code authentication fix
+        await tester.test_discount_code_authentication_fix()
         
         # Print summary
         passed, failed = tester.print_summary()
