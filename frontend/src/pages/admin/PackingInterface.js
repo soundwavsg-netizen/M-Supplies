@@ -145,10 +145,10 @@ const PackingInterface = () => {
     if (recentChanges.has(item.variant_id)) {
       return 'ring-2 ring-green-400 bg-green-50';
     }
-    if (item.on_hand <= item.safety_stock) {
+    if (item.available <= 0) {
       return 'ring-2 ring-red-400 bg-red-50';
     }
-    if (item.on_hand <= item.safety_stock + 5) {
+    if (item.available <= 5) {
       return 'ring-2 ring-yellow-400 bg-yellow-50';
     }
     return 'ring-1 ring-gray-200 bg-white hover:ring-gray-300';
