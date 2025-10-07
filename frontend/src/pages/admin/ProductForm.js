@@ -1075,20 +1075,30 @@ const ProductForm = () => {
                         />
                       </div>
                       <div>
-                        <Label className="text-xs text-gray-600">Pack Size</Label>
+                        <Label className="text-xs text-gray-600">
+                          {product.type === 'bubble wrap' ? 'Quantity' : 'Pack Size'}
+                        </Label>
                         <Select 
-                          value={(variant.pack_size || 50).toString()} 
+                          value={(variant.pack_size || (product.type === 'bubble wrap' ? 1 : 50)).toString()} 
                           onValueChange={(value) => updateVariant(index, 'pack_size', parseInt(value))}
                         >
                           <SelectTrigger className="text-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {availablePackSizes.map(size => (
-                              <SelectItem key={size} value={size.toString()}>
-                                {size} pcs
-                              </SelectItem>
-                            ))}
+                            {product.type === 'bubble wrap' ? (
+                              availablePieceQuantities.map(qty => (
+                                <SelectItem key={qty} value={qty.toString()}>
+                                  {qty === 1 ? '1 pc' : `${qty} pcs`}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              availablePackSizes.map(size => (
+                                <SelectItem key={size} value={size.toString()}>
+                                  {size} pcs
+                                </SelectItem>
+                              ))
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
