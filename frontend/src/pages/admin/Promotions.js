@@ -411,7 +411,9 @@ const Promotions = () => {
                                 toast.success('Coupon deleted');
                                 fetchAllData();
                               } catch (error) {
-                                toast.error('Failed to delete coupon');
+                                console.error('Delete error:', error);
+                                const errorMessage = error.response?.data?.detail || error.response?.data?.message || 'Failed to delete coupon';
+                                toast.error(typeof errorMessage === 'string' ? errorMessage : 'Failed to delete coupon');
                               }
                             }
                           }}
