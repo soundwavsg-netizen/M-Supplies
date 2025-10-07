@@ -37,10 +37,19 @@ const StockAdjustmentModal = ({ variant, onClose, onSuccess }) => {
         notes: notes.trim()
       };
 
-      if (adjustmentType === 'set') {
-        payload.on_hand_value = parseInt(value);
-      } else {
-        payload.on_hand_change = parseInt(value);
+      // Handle both on_hand and allocated adjustments
+      if (stockType === 'on_hand') {
+        if (adjustmentType === 'set') {
+          payload.on_hand_value = parseInt(value);
+        } else {
+          payload.on_hand_change = parseInt(value);
+        }
+      } else { // allocated
+        if (adjustmentType === 'set') {
+          payload.allocated_value = parseInt(value);
+        } else {
+          payload.allocated_change = parseInt(value);
+        }
       }
 
       await axios.post(
