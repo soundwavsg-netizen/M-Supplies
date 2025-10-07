@@ -2,6 +2,7 @@ from app.repositories.product_repository import ProductRepository
 from app.schemas.product import ProductCreate, ProductUpdate, ProductFilters, ProductSortOptions
 from fastapi import HTTPException, status
 from typing import Dict, Any, List, Optional
+import re
 
 class ProductService:
     def __init__(self, product_repo: ProductRepository):
