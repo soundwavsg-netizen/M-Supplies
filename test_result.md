@@ -492,6 +492,18 @@ test_plan:
           agent: "testing"
           comment: "🎯 BABY BLUE PRICING FIX COMPLETED SUCCESSFULLY: Fixed the Baby Blue product price_tiers issue as requested. ACTIONS TAKEN: ✅ Fixed 50-pack variant: Removed all 0 values from price_tiers, set consistent $7.99 pricing for all quantity tiers ✅ Added 100-pack variant: Created new variant with proper pricing structure ($7.99 base, $14.99 for 100+ quantities) ✅ Used PUT /api/admin/products/{product_id} to update Baby Blue product (ID: aefa575f-c766-4a3a-9fd9-5cfe545db3d9). VERIFICATION RESULTS: ✅ Product listing now shows correct price range: $7.99 - $14.99 (no more $0) ✅ Customer product access working with valid pricing ✅ Both variants have proper price_tiers without 0 values ✅ Filter options show system-wide price range without $0 values ✅ All pricing APIs working correctly. The Baby Blue product pricing issue has been completely resolved and verified through comprehensive testing. Success rate: 100% (15/15 tests passed)."
 
+  - task: "Duplicate Categories Issue Investigation"
+    implemented: true
+    working: false
+    file: "product_repository.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ DUPLICATE CATEGORIES ISSUE CONFIRMED: Comprehensive investigation revealed case-sensitive duplicate categories in GET /api/products/filter-options: ['Polymailers', 'polymailers']. ROOT CAUSE IDENTIFIED: The MongoDB distinct('category') query in product_repository.py line 214 does not filter by is_active=True, causing it to return categories from soft-deleted products. EVIDENCE: Only 1 active product exists with category 'polymailers' (lowercase), but filter options API returns both 'Polymailers' and 'polymailers'. Filtering by 'Polymailers' returns 0 products while 'polymailers' returns 1 product. SOLUTION REQUIRED: Change line 214 from 'categories = await self.products.distinct('category')' to 'categories = await self.products.distinct('category', {'is_active': True})' to ensure only active products' categories are returned. This will eliminate duplicates from soft-deleted products and standardize the category list to show only ['polymailers']."
+
 agent_communication:
     - agent: "main" 
       message: "User reported issue with variant creation process: pricing tiers and initial stock during variant creation causing price display problems. Need to simplify variant creation by removing pricing and stock fields, then allow admin to set these after variant creation. Product listing should pull correct price from variant info."
