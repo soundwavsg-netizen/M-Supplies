@@ -80,8 +80,20 @@ const StockAdjustmentModal = ({ variant, onClose, onSuccess }) => {
 
         <div className="mb-4 p-3 bg-gray-50 rounded">
           <p className="text-sm text-gray-600">SKU: <span className="font-medium text-slate-900">{variant.sku}</span></p>
-          <p className="text-sm text-gray-600">Current Stock: <span className="font-medium text-teal-700">{variant.on_hand}</span></p>
-          <p className="text-sm text-gray-600">Available: <span className="font-medium text-teal-700">{variant.available}</span></p>
+          <div className="grid grid-cols-3 gap-4 mt-2">
+            <div>
+              <p className="text-xs text-gray-500">On Hand</p>
+              <p className="text-sm font-medium text-slate-900">{variant.on_hand}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Allocated</p>
+              <p className="text-sm font-medium text-orange-700">{variant.allocated || 0}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Available</p>
+              <p className="text-sm font-medium text-teal-700">{variant.available}</p>
+            </div>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
