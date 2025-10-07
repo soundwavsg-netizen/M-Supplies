@@ -249,9 +249,14 @@ class InventoryService:
         await self.ledger_repo.create_entry(ledger_entry)
         
         # Update variant
-        await self.product_repo.update_variant(adjustment.variant_id, {
-            'on_hand': new_on_hand
-        })
+        update_data = {}
+        if on_hand_change != 0:
+            update_data['on_hand'] = new_on_hand
+        if allocated_change != 0:
+            update_data['allocated'] = new_allocated
+            
+        if update_data:
+            await self.product_repo.update_variant(adjustment.variant_id, update_data)
         
         return await self.get_variant_inventory(adjustment.variant_id)
     
