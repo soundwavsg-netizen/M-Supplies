@@ -60,6 +60,7 @@ class InventoryStatus(BaseModel):
     variant_id: str
     sku: str
     product_name: str
+    product_image: Optional[str] = None  # Add product_image field for packing interface
     on_hand: int
     allocated: int
     available: int
