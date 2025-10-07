@@ -32,9 +32,7 @@ const ProductDetail = () => {
       const response = await productsAPI.get(id);
       const productData = response.data;
       setProduct(productData);
-      if (productData.variants?.length > 0) {
-        setSelectedVariant(productData.variants[0]);
-      }
+      // Don't auto-select variant anymore - let customer choose through two-step process
     } catch (error) {
       console.error('Error fetching product:', error);
     } finally {
