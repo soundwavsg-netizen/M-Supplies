@@ -1213,6 +1213,278 @@ class BackendTester:
             except Exception as e:
                 self.log_test(f"Auth Required - {endpoint}", False, f"Exception: {str(e)}")
 
+    async def test_discount_code_authentication_fix(self):
+        """Test the discount code authentication fix - guest users should be able to validate coupons"""
+        print("\n🎫 Testing Discount Code Authentication Fix...")
+        print("Testing guest and authenticated user coupon validation")
+        
+        # Step 1: Check if test coupons exist in the system
+        print("\n📝 Step 1: Check existing coupons in system")
+        existing_coupons = []
+        if self.admin_token:
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            try:
+                async with self.session.get(f"{API_BASE}/admin/coupons", headers=headers) as resp:
+                    if resp.status == 200:
+                        coupons_data = await resp.json()
+                        existing_coupons = coupons_data
+                        self.log_test("Check Existing Coupons", True, 
+                                    f"Found {len(existing_coupons)} existing coupons")
+                        
+                        # Log existing coupon codes for testing
+                        for coupon in existing_coupons[:3]:  # Show first 3
+                            code = coupon.get('code', 'N/A')
+                            is_active = coupon.get('is_active', False)
+                            self.log_test(f"Existing Coupon: {code}", True, 
+                                        f"Active: {is_active}, Type: {coupon.get('type', 'N/A')}")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Check Existing Coupons", False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Check Existing Coupons", False, f"Exception: {str(e)}")
+        
+        # Step 2: Create a test coupon if none exist or use existing one
+        print("\n📝 Step 2: Ensure test coupon exists")
+        test_coupon_code = "TESTGUEST10"
+        test_coupon_exists = any(c.get('code') == test_coupon_code for c in existing_coupons)
+        
+        if not test_coupon_exists and self.admin_token:
+            # Create test coupon
+            coupon_payload = {
+                "code": test_coupon_code,
+                "type": "percent",
+                "value": 10,
+                "valid_from": "2025-01-07T12:00:00.000Z",
+                "valid_to": "2025-12-31T23:59:59.000Z",
+                "is_active": True,
+                "min_order_amount": 50.0
+            }
+            
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            try:
+                async with self.session.post(f"{API_BASE}/admin/coupons", 
+                                           json=coupon_payload, headers=headers) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        self.log_test("Create Test Coupon", True, 
+                                    f"Created coupon: {data.get('code')}")
+                        test_coupon_exists = True
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Create Test Coupon", False, 
+                                    f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Create Test Coupon", False, f"Exception: {str(e)}")
+        elif test_coupon_exists:
+            self.log_test("Test Coupon Available", True, f"Using existing coupon: {test_coupon_code}")
+        elif existing_coupons:
+            # Use first existing active coupon
+            active_coupon = next((c for c in existing_coupons if c.get('is_active')), None)
+            if active_coupon:
+                test_coupon_code = active_coupon.get('code')
+                self.log_test("Use Existing Coupon", True, f"Using coupon: {test_coupon_code}")
+                test_coupon_exists = True
+        
+        # Step 3: Test Guest User Coupon Validation (NO authentication token)
+        print("\n📝 Step 3: Test Guest User Coupon Validation (Critical Test)")
+        if test_coupon_exists:
+            validation_payload = {
+                "coupon_code": test_coupon_code,
+                "order_amount": 100.0,
+                "items": [
+                    {
+                        "variant_id": "test-variant-id",
+                        "quantity": 2,
+                        "price": 50.0
+                    }
+                ]
+            }
+            
+            try:
+                # NO Authorization header - this is the critical test
+                async with self.session.post(f"{API_BASE}/promotions/validate", 
+                                           json=validation_payload) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        self.log_test("Guest User Coupon Validation", True, 
+                                    f"✅ SUCCESS: Guest can validate coupons! Discount: {data.get('discount_amount', 0)}")
+                        
+                        # Verify response structure
+                        expected_fields = ['valid', 'discount_amount', 'coupon_code']
+                        missing_fields = [field for field in expected_fields if field not in data]
+                        if not missing_fields:
+                            self.log_test("Guest Validation Response Structure", True, 
+                                        "All expected fields present")
+                        else:
+                            self.log_test("Guest Validation Response Structure", False, 
+                                        f"Missing fields: {missing_fields}")
+                    
+                    elif resp.status == 401:
+                        error_text = await resp.text()
+                        self.log_test("Guest User Coupon Validation", False, 
+                                    f"❌ CRITICAL ISSUE: Guest users getting 401 'not authenticated' error: {error_text}")
+                    
+                    elif resp.status == 400:
+                        error_text = await resp.text()
+                        self.log_test("Guest User Coupon Validation", True, 
+                                    f"Expected validation error (coupon may be invalid): {error_text}")
+                    
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Guest User Coupon Validation", False, 
+                                    f"Unexpected status {resp.status}: {error_text}")
+                        
+            except Exception as e:
+                self.log_test("Guest User Coupon Validation", False, f"Exception: {str(e)}")
+        else:
+            self.log_test("Guest User Coupon Validation", False, "No test coupon available")
+        
+        # Step 4: Test Authenticated User Coupon Validation (WITH JWT token)
+        print("\n📝 Step 4: Test Authenticated User Coupon Validation")
+        if test_coupon_exists and self.customer_token:
+            validation_payload = {
+                "coupon_code": test_coupon_code,
+                "order_amount": 100.0,
+                "items": [
+                    {
+                        "variant_id": "test-variant-id",
+                        "quantity": 2,
+                        "price": 50.0
+                    }
+                ]
+            }
+            
+            headers = {"Authorization": f"Bearer {self.customer_token}"}
+            try:
+                async with self.session.post(f"{API_BASE}/promotions/validate", 
+                                           json=validation_payload, headers=headers) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        self.log_test("Authenticated User Coupon Validation", True, 
+                                    f"Authenticated user can validate coupons. Discount: {data.get('discount_amount', 0)}")
+                    
+                    elif resp.status == 400:
+                        error_text = await resp.text()
+                        self.log_test("Authenticated User Coupon Validation", True, 
+                                    f"Expected validation error: {error_text}")
+                    
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Authenticated User Coupon Validation", False, 
+                                    f"Status {resp.status}: {error_text}")
+                        
+            except Exception as e:
+                self.log_test("Authenticated User Coupon Validation", False, f"Exception: {str(e)}")
+        elif not self.customer_token:
+            self.log_test("Authenticated User Coupon Validation", False, "No customer token available")
+        else:
+            self.log_test("Authenticated User Coupon Validation", False, "No test coupon available")
+        
+        # Step 5: Test with Invalid Coupon Code
+        print("\n📝 Step 5: Test Invalid Coupon Code Handling")
+        invalid_validation_payload = {
+            "coupon_code": "INVALID_COUPON_CODE_12345",
+            "order_amount": 100.0,
+            "items": [
+                {
+                    "variant_id": "test-variant-id",
+                    "quantity": 2,
+                    "price": 50.0
+                }
+            ]
+        }
+        
+        try:
+            # Test as guest user (no auth token)
+            async with self.session.post(f"{API_BASE}/promotions/validate", 
+                                       json=invalid_validation_payload) as resp:
+                if resp.status == 400:
+                    error_text = await resp.text()
+                    self.log_test("Invalid Coupon Code - Guest", True, 
+                                f"Proper error handling: {error_text}")
+                
+                elif resp.status == 401:
+                    error_text = await resp.text()
+                    self.log_test("Invalid Coupon Code - Guest", False, 
+                                f"❌ ISSUE: Getting auth error instead of validation error: {error_text}")
+                
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Invalid Coupon Code - Guest", False, 
+                                f"Unexpected status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Invalid Coupon Code - Guest", False, f"Exception: {str(e)}")
+        
+        # Step 6: Test Malformed Request Data
+        print("\n📝 Step 6: Test Malformed Request Data")
+        malformed_payloads = [
+            ({}, "Empty payload"),
+            ({"coupon_code": ""}, "Empty coupon code"),
+            ({"coupon_code": "TEST", "order_amount": -10}, "Negative order amount"),
+            ({"coupon_code": "TEST"}, "Missing order_amount"),
+        ]
+        
+        for payload, description in malformed_payloads:
+            try:
+                async with self.session.post(f"{API_BASE}/promotions/validate", 
+                                           json=payload) as resp:
+                    if resp.status in [400, 422]:  # Expected validation errors
+                        self.log_test(f"Malformed Request - {description}", True, 
+                                    f"Proper validation error: {resp.status}")
+                    elif resp.status == 401:
+                        self.log_test(f"Malformed Request - {description}", False, 
+                                    f"❌ ISSUE: Getting auth error instead of validation error")
+                    else:
+                        self.log_test(f"Malformed Request - {description}", False, 
+                                    f"Unexpected status: {resp.status}")
+                        
+            except Exception as e:
+                self.log_test(f"Malformed Request - {description}", False, f"Exception: {str(e)}")
+        
+        # Step 7: Test Expired Coupon (if we can create one)
+        print("\n📝 Step 7: Test Expired Coupon Handling")
+        if self.admin_token:
+            expired_coupon_code = "EXPIRED_TEST"
+            expired_coupon_payload = {
+                "code": expired_coupon_code,
+                "type": "percent",
+                "value": 15,
+                "valid_from": "2024-01-01T12:00:00.000Z",
+                "valid_to": "2024-12-31T23:59:59.000Z",  # Expired
+                "is_active": True
+            }
+            
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            try:
+                async with self.session.post(f"{API_BASE}/admin/coupons", 
+                                           json=expired_coupon_payload, headers=headers) as resp:
+                    if resp.status == 200:
+                        # Test expired coupon validation as guest
+                        expired_validation = {
+                            "coupon_code": expired_coupon_code,
+                            "order_amount": 100.0,
+                            "items": [{"variant_id": "test", "quantity": 1, "price": 100.0}]
+                        }
+                        
+                        async with self.session.post(f"{API_BASE}/promotions/validate", 
+                                                   json=expired_validation) as val_resp:
+                            if val_resp.status == 400:
+                                error_text = await val_resp.text()
+                                self.log_test("Expired Coupon - Guest", True, 
+                                            f"Proper expired coupon handling: {error_text}")
+                            elif val_resp.status == 401:
+                                self.log_test("Expired Coupon - Guest", False, 
+                                            "❌ ISSUE: Getting auth error for expired coupon")
+                            else:
+                                self.log_test("Expired Coupon - Guest", False, 
+                                            f"Unexpected status: {val_resp.status}")
+                    else:
+                        self.log_test("Create Expired Coupon", False, f"Failed to create expired coupon: {resp.status}")
+                        
+            except Exception as e:
+                self.log_test("Expired Coupon Test", False, f"Exception: {str(e)}")
+
     async def test_chat_system_api_endpoints(self):
         """Test the new chat system API endpoints with Emergent AI integration"""
         print("\n🤖 Testing Chat System API Endpoints...")
