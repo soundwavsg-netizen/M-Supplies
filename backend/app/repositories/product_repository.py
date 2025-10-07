@@ -72,7 +72,11 @@ class ProductRepository:
         return result.deleted_count > 0
     
     async def delete_product(self, product_id: str) -> bool:
-        # Soft delete - just mark as inactive
+        # Soft delete - mark product as inactive AND delete its variants
+        # First delete all variants for this product
+        await self.delete_variants_by_product(product_id)
+        
+        # Then mark product as inactive
         result = await self.products.update_one(
             {'id': product_id},
             {'$set': {'is_active': False, 'updated_at': datetime.now(timezone.utc)}}
