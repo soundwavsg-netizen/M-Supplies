@@ -4647,7 +4647,10 @@ async def main():
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Image Upload functionality debug (as specifically requested in review)
+        # PRIORITY TEST: Debug 422 validation error for image uploads (as specifically requested in review)
+        await tester.test_image_upload_422_debug()
+        
+        # Additional image upload tests
         await tester.test_image_upload_functionality()
         
         # Print summary
