@@ -953,7 +953,7 @@ const ProductForm = () => {
               
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
                 <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> After creating variants, you can set individual pricing and stock levels in the "Current Variants" section below.
+                  <strong>Note:</strong> After creating variants, set pricing in the "Current Variants" section below. For stock management, use the <strong>Inventory Management</strong> interface.
                 </p>
               </div>
               
