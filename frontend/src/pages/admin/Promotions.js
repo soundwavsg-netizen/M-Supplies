@@ -186,41 +186,16 @@ const Promotions = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="minimum_order_amount">Minimum Order ($)</Label>
-            <Input
-              id="minimum_order_amount"
-              type="number"
-              step="0.01"
-              value={formData.minimum_order_amount}
-              onChange={(e) => setFormData(prev => ({ ...prev, minimum_order_amount: e.target.value }))}
-              placeholder="0.00"
-            />
-          </div>
-          <div>
-            <Label htmlFor="maximum_discount_amount">Max Discount ($)</Label>
-            <Input
-              id="maximum_discount_amount"
-              type="number"
-              step="0.01"
-              value={formData.maximum_discount_amount}
-              onChange={(e) => setFormData(prev => ({ ...prev, maximum_discount_amount: e.target.value }))}
-              placeholder="Optional cap"
-            />
-          </div>
-          {formData.usage_type === 'limited_use' && (
-            <div>
-              <Label htmlFor="usage_limit">Usage Limit</Label>
-              <Input
-                id="usage_limit"
-                type="number"
-                value={formData.usage_limit}
-                onChange={(e) => setFormData(prev => ({ ...prev, usage_limit: e.target.value }))}
-                placeholder="100"
-              />
-            </div>
-          )}
+        <div>
+          <Label htmlFor="min_order_amount">Minimum Order Amount ($)</Label>
+          <Input
+            id="min_order_amount"
+            type="number"
+            step="0.01"
+            value={formData.min_order_amount}
+            onChange={(e) => setFormData(prev => ({ ...prev, min_order_amount: e.target.value }))}
+            placeholder="0.00"
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
