@@ -210,7 +210,7 @@ const ProductDetail = () => {
               >
                 {adding ? (
                   'Adding...'
-                ) : selectedVariant?.stock_qty === 0 ? (
+                ) : (selectedVariant?.on_hand || selectedVariant?.stock_qty || 0) === 0 ? (
                   'Out of Stock'
                 ) : (
                   <>
