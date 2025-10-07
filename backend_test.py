@@ -5570,19 +5570,19 @@ class BackendTester:
             self.log_test("Admin Inventory Cross-Check", False, "No admin token available")
 
 async def main():
-    """Run backend tests focused on Baby Blue Product Variant Configuration"""
-    print("🚀 Starting M Supplies Backend API Tests - Baby Blue Product Investigation")
+    """Run backend tests focused on Baby Blue Product Variant Creation"""
+    print("🚀 Starting M Supplies Backend API Tests - Baby Blue Product Variant Creation")
     print(f"Testing against: {API_BASE}")
-    print("🎯 FOCUS: Baby Blue product variant configuration and stock levels")
-    print("User Issue: Customer product page showing 'Out of Stock' with no variant selection dropdown")
-    print("Expected: Variants should have proper dimensions, stock, and pricing to display dropdown")
+    print("🎯 FOCUS: Creating variants for Baby Blue product to fix missing dropdown issue")
+    print("User Issue: Baby Blue product exists but has 0 variants, causing missing variant dropdown")
+    print("Solution: Create 2 variants (50pcs and 100pcs) with proper pricing and stock")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Baby Blue product variant configuration (as specifically requested in review)
-        await tester.test_baby_blue_variant_configuration()
+        # PRIORITY TEST: Create Baby Blue product variants (as specifically requested in review)
+        await tester.test_baby_blue_variant_creation()
         
         # Print summary
         passed, failed = tester.print_summary()
