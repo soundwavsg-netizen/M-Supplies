@@ -621,20 +621,23 @@ const ProductForm = () => {
                 {availableCategories.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     <span className="text-xs text-gray-500">Manage categories:</span>
-                    {availableCategories.map(category => (
-                      <div key={category} className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs">
-                        <span className="capitalize">{category.replace(/([a-z])([A-Z])/g, '$1 $2')}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteCategory(category)}
-                          className="h-4 w-4 p-0 text-red-500 hover:text-red-700"
-                        >
-                          <X className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    ))}
+                    {availableCategories.map(category => {
+                      const categoryStr = typeof category === 'string' ? category : String(category);
+                      return (
+                        <div key={categoryStr} className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs">
+                          <span className="capitalize">{categoryStr.replace(/([a-z])([A-Z])/g, '$1 $2')}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteCategory(categoryStr)}
+                            className="h-4 w-4 p-0 text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
