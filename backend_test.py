@@ -5096,20 +5096,241 @@ class BackendTester:
         except Exception as e:
             self.log_test("Product Data Image Test", False, f"Exception: {str(e)}")
 
+    async def test_baby_blue_variant_configuration(self):
+        """Test Baby Blue product variant configuration and stock levels as requested in review"""
+        print("\n🔍 TESTING BABY BLUE PRODUCT VARIANT CONFIGURATION...")
+        print("User Issue: Customer product page showing 'Out of Stock' with no variant selection dropdown")
+        print("Testing: Product details, variant configuration, stock calculation, variant display logic")
+        
+        baby_blue_product_id = "6084a6ff-1911-488b-9288-2bc95e50cafa"
+        
+        # TEST 1: Product Details API
+        print("\n📋 TEST 1: Product Details - GET /api/products/{product_id}")
+        
+        try:
+            async with self.session.get(f"{API_BASE}/products/{baby_blue_product_id}") as resp:
+                if resp.status == 200:
+                    product_data = await resp.json()
+                    self.log_test("Baby Blue Product Details API", True, f"Product found: {product_data.get('name', 'Unknown')}")
+                    
+                    # Check basic product structure
+                    required_fields = ['id', 'name', 'variants', 'category', 'type', 'color']
+                    missing_fields = [field for field in required_fields if field not in product_data]
+                    
+                    if missing_fields:
+                        self.log_test("Product Structure Validation", False, f"Missing fields: {missing_fields}")
+                    else:
+                        self.log_test("Product Structure Validation", True, "All required fields present")
+                    
+                    # Extract variants for detailed testing
+                    variants = product_data.get('variants', [])
+                    self.log_test("Variant Count", len(variants) > 0, f"Found {len(variants)} variants")
+                    
+                    if not variants:
+                        self.log_test("Baby Blue Variant Configuration", False, "CRITICAL: No variants found - explains missing dropdown")
+                        return
+                    
+                    # TEST 2: Variant Configuration Analysis
+                    print("\n🔧 TEST 2: Variant Configuration Analysis")
+                    
+                    for i, variant in enumerate(variants):
+                        variant_id = variant.get('id', 'Unknown')
+                        sku = variant.get('sku', 'Unknown')
+                        attributes = variant.get('attributes', {})
+                        
+                        self.log_test(f"Variant {i+1} Basic Info", True, f"ID: {variant_id}, SKU: {sku}")
+                        
+                        # Check required variant attributes
+                        required_attrs = ['width_cm', 'height_cm', 'size_code', 'type', 'color', 'pack_size']
+                        missing_attrs = [attr for attr in required_attrs if attr not in attributes]
+                        
+                        if missing_attrs:
+                            self.log_test(f"Variant {i+1} Attributes", False, f"Missing attributes: {missing_attrs}")
+                        else:
+                            width = attributes.get('width_cm')
+                            height = attributes.get('height_cm')
+                            size_code = attributes.get('size_code')
+                            pack_size = attributes.get('pack_size')
+                            color = attributes.get('color')
+                            variant_type = attributes.get('type')
+                            
+                            self.log_test(f"Variant {i+1} Dimensions", True, 
+                                        f"{width}cm x {height}cm ({size_code}), {pack_size}-pack, {color} {variant_type}")
+                        
+                        # TEST 3: Stock Calculation Verification
+                        print(f"\n📊 TEST 3: Stock Calculation for Variant {i+1}")
+                        
+                        on_hand = variant.get('on_hand', 0)
+                        allocated = variant.get('allocated', 0)
+                        safety_stock = variant.get('safety_stock', 0)
+                        stock_qty = variant.get('stock_qty', 0)  # Legacy field
+                        
+                        # Calculate available stock using the formula: available = on_hand - allocated - safety_stock
+                        calculated_available = max(0, on_hand - allocated - safety_stock)
+                        reported_available = variant.get('available', 0)
+                        
+                        self.log_test(f"Variant {i+1} Stock Fields", True, 
+                                    f"on_hand: {on_hand}, allocated: {allocated}, safety_stock: {safety_stock}, stock_qty: {stock_qty}")
+                        
+                        self.log_test(f"Variant {i+1} Available Stock Calculation", 
+                                    calculated_available == reported_available,
+                                    f"Calculated: {calculated_available}, Reported: {reported_available}")
+                        
+                        # Check if variant should be considered "in stock"
+                        is_in_stock = calculated_available > 0 or stock_qty > 0
+                        self.log_test(f"Variant {i+1} Stock Status", is_in_stock, 
+                                    f"{'IN STOCK' if is_in_stock else 'OUT OF STOCK'} (Available: {calculated_available})")
+                        
+                        # TEST 4: Pricing Structure Validation
+                        print(f"\n💰 TEST 4: Pricing Structure for Variant {i+1}")
+                        
+                        price_tiers = variant.get('price_tiers', [])
+                        if not price_tiers:
+                            self.log_test(f"Variant {i+1} Price Tiers", False, "No price tiers found")
+                        else:
+                            self.log_test(f"Variant {i+1} Price Tiers Count", True, f"{len(price_tiers)} price tiers")
+                            
+                            # Check for $0 prices that could cause display issues
+                            zero_prices = [tier for tier in price_tiers if tier.get('price', 0) == 0]
+                            if zero_prices:
+                                self.log_test(f"Variant {i+1} Zero Price Issue", False, 
+                                            f"Found {len(zero_prices)} price tiers with $0 - could cause display issues")
+                            else:
+                                self.log_test(f"Variant {i+1} Price Validation", True, "No zero prices found")
+                            
+                            # Log price range for this variant
+                            prices = [tier.get('price', 0) for tier in price_tiers if tier.get('price', 0) > 0]
+                            if prices:
+                                min_price = min(prices)
+                                max_price = max(prices)
+                                self.log_test(f"Variant {i+1} Price Range", True, f"${min_price} - ${max_price}")
+                    
+                    # TEST 5: Overall Product Display Logic
+                    print("\n🎯 TEST 5: Variant Display Logic Analysis")
+                    
+                    # Check if any variants meet display criteria
+                    displayable_variants = []
+                    for variant in variants:
+                        attributes = variant.get('attributes', {})
+                        on_hand = variant.get('on_hand', 0)
+                        stock_qty = variant.get('stock_qty', 0)
+                        allocated = variant.get('allocated', 0)
+                        safety_stock = variant.get('safety_stock', 0)
+                        available = max(0, on_hand - allocated - safety_stock)
+                        price_tiers = variant.get('price_tiers', [])
+                        
+                        # Criteria for variant to be displayable:
+                        # 1. Has proper dimensions
+                        # 2. Has stock available
+                        # 3. Has valid pricing
+                        has_dimensions = all(attr in attributes for attr in ['width_cm', 'height_cm'])
+                        has_stock = available > 0 or stock_qty > 0
+                        has_valid_pricing = any(tier.get('price', 0) > 0 for tier in price_tiers)
+                        
+                        if has_dimensions and has_stock and has_valid_pricing:
+                            displayable_variants.append({
+                                'id': variant.get('id'),
+                                'size': f"{attributes.get('width_cm')}x{attributes.get('height_cm')}cm",
+                                'pack_size': attributes.get('pack_size'),
+                                'available': available,
+                                'price': min(tier.get('price', 0) for tier in price_tiers if tier.get('price', 0) > 0)
+                            })
+                    
+                    if displayable_variants:
+                        self.log_test("Displayable Variants Found", True, 
+                                    f"{len(displayable_variants)} variants should be displayable")
+                        for i, dv in enumerate(displayable_variants):
+                            self.log_test(f"Displayable Variant {i+1}", True, 
+                                        f"{dv['size']}, {dv['pack_size']}-pack, ${dv['price']}, {dv['available']} available")
+                    else:
+                        self.log_test("Displayable Variants Found", False, 
+                                    "CRITICAL: No variants meet display criteria - explains missing dropdown")
+                    
+                    # TEST 6: Product-level stock status
+                    print("\n📈 TEST 6: Product-level Stock Status")
+                    
+                    # Check if product should show as "In Stock" or "Out of Stock"
+                    total_available = sum(max(0, v.get('on_hand', 0) - v.get('allocated', 0) - v.get('safety_stock', 0)) 
+                                        for v in variants)
+                    total_stock_qty = sum(v.get('stock_qty', 0) for v in variants)
+                    
+                    product_has_stock = total_available > 0 or total_stock_qty > 0
+                    self.log_test("Product Stock Status", product_has_stock, 
+                                f"Total available: {total_available}, Total stock_qty: {total_stock_qty}")
+                    
+                    if not product_has_stock:
+                        self.log_test("Out of Stock Root Cause", False, 
+                                    "IDENTIFIED: Product shows 'Out of Stock' because no variants have available stock")
+                    
+                elif resp.status == 404:
+                    self.log_test("Baby Blue Product Details API", False, 
+                                f"Product not found with ID: {baby_blue_product_id}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Baby Blue Product Details API", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Baby Blue Product Details API", False, f"Exception: {str(e)}")
+        
+        # TEST 7: Admin Inventory Cross-Check
+        print("\n🔧 TEST 7: Admin Inventory Cross-Check")
+        
+        if self.admin_token:
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            
+            try:
+                async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                    if resp.status == 200:
+                        inventory_data = await resp.json()
+                        
+                        # Find Baby Blue variants in inventory
+                        baby_blue_inventory = [item for item in inventory_data 
+                                             if 'baby blue' in item.get('product_name', '').lower()]
+                        
+                        if baby_blue_inventory:
+                            self.log_test("Baby Blue in Admin Inventory", True, 
+                                        f"Found {len(baby_blue_inventory)} Baby Blue inventory items")
+                            
+                            for i, item in enumerate(baby_blue_inventory):
+                                variant_id = item.get('variant_id')
+                                on_hand = item.get('on_hand', 0)
+                                allocated = item.get('allocated', 0)
+                                safety_stock = item.get('safety_stock', 0)
+                                available = item.get('available', 0)
+                                
+                                self.log_test(f"Admin Inventory Item {i+1}", True, 
+                                            f"Variant: {variant_id}, On Hand: {on_hand}, Available: {available}")
+                                
+                                # Compare with customer API data
+                                if available > 0:
+                                    self.log_test(f"Stock Discrepancy Check {i+1}", False, 
+                                                f"Admin shows {available} available but customer sees 'Out of Stock'")
+                        else:
+                            self.log_test("Baby Blue in Admin Inventory", False, 
+                                        "No Baby Blue variants found in admin inventory")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Admin Inventory API", False, f"Status {resp.status}: {error_text}")
+                        
+            except Exception as e:
+                self.log_test("Admin Inventory API", False, f"Exception: {str(e)}")
+        else:
+            self.log_test("Admin Inventory Cross-Check", False, "No admin token available")
+
 async def main():
-    """Run backend tests focused on Packing Interface Image Display Investigation"""
-    print("🚀 Starting M Supplies Backend API Tests - Packing Interface Image Investigation")
+    """Run backend tests focused on Baby Blue Product Variant Configuration"""
+    print("🚀 Starting M Supplies Backend API Tests - Baby Blue Product Investigation")
     print(f"Testing against: {API_BASE}")
-    print("🎯 FOCUS: Investigate why packing interface isn't showing product images")
-    print("User Issue: Image upload works in ProductForm but packing interface doesn't display images")
-    print("Expected: Packing interface expects 'item.product_image' field but this might not be populated")
+    print("🎯 FOCUS: Baby Blue product variant configuration and stock levels")
+    print("User Issue: Customer product page showing 'Out of Stock' with no variant selection dropdown")
+    print("Expected: Variants should have proper dimensions, stock, and pricing to display dropdown")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Packing interface image investigation (as specifically requested in review)
-        await tester.test_packing_interface_image_investigation()
+        # PRIORITY TEST: Baby Blue product variant configuration (as specifically requested in review)
+        await tester.test_baby_blue_variant_configuration()
         
         # Print summary
         passed, failed = tester.print_summary()
