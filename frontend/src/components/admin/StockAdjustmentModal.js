@@ -118,7 +118,9 @@ const StockAdjustmentModal = ({ variant, onClose, onSuccess }) => {
             <p className="text-xs text-gray-500 mt-1">
               {stockType === 'on_hand' 
                 ? 'Physical stock in your warehouse' 
-                : 'Stock reserved for pending orders (not yet shipped)'}
+                : stockType === 'allocated'
+                ? 'Stock reserved for pending orders (not yet shipped)'
+                : 'Minimum stock level to maintain (safety buffer)'}
             </p>
           </div>
 
