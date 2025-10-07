@@ -120,6 +120,9 @@ const ProductForm = () => {
       if (settings.available_pack_sizes && Array.isArray(settings.available_pack_sizes)) {
         setAvailablePackSizes(settings.available_pack_sizes.filter(size => typeof size === 'number'));
       }
+      if (settings.available_piece_quantities && Array.isArray(settings.available_piece_quantities)) {
+        setAvailablePieceQuantities(settings.available_piece_quantities.filter(qty => typeof qty === 'number'));
+      }
     } catch (err) {
       console.error('Failed to load settings:', err);
       // Don't show error toast for settings as it's not critical
