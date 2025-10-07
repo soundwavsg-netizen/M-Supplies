@@ -95,6 +95,27 @@ const ProductForm = () => {
     }
   };
 
+  const fetchSettings = async () => {
+    try {
+      const response = await adminSettingsAPI.get();
+      const settings = response.data;
+      
+      // Set available colors and types from settings
+      if (settings.available_colors) {
+        setAvailableColors(settings.available_colors);
+      }
+      if (settings.available_types) {
+        setAvailableTypes(settings.available_types);
+      }
+    } catch (err) {
+      console.error('Failed to load settings:', err);
+      // Don't show error toast for settings as it's not critical
+      // Set default values if settings fail to load
+      setAvailableColors(['white', 'black', 'clear']);
+      setAvailableTypes(['normal', 'premium', 'bubble wrap']);
+    }
+  };
+
   const handleInputChange = (field, value) => {
     setProduct(prev => ({ ...prev, [field]: value }));
   };
