@@ -114,10 +114,14 @@ class CartService:
             line_total = item['price'] * item['quantity']
             subtotal += line_total
             
+            # Safely get product image
+            images = product.get('images', [])
+            product_image = images[0] if images else None
+            
             detailed_items.append({
                 'variant_id': item['variant_id'],
                 'product_name': product['name'],
-                'product_image': product.get('images', [None])[0],
+                'product_image': product_image,
                 'sku': variant['sku'],
                 'attributes': variant['attributes'],
                 'quantity': item['quantity'],
