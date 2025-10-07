@@ -2480,19 +2480,16 @@ class BackendTester:
                 self.log_test("Test Product Cleanup", False, f"Exception during cleanup: {str(e)}")
 
 async def main():
-    """Run backend tests focused on simplified variant creation and pricing"""
-    print("🚀 Starting M Supplies Backend API Tests - Simplified Variant Creation and Pricing")
+    """Run backend tests focused on safety stock management"""
+    print("🚀 Starting M Supplies Backend API Tests - Safety Stock Management")
     print(f"Testing against: {API_BASE}")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Simplified variant creation and pricing system (as specifically requested)
-        await tester.test_simplified_variant_creation_and_pricing()
-        
-        # Additional test: Product listing for editing
-        await tester.test_product_listing_for_editing()
+        # PRIORITY TEST: Safety stock management functionality (as specifically requested)
+        await tester.test_safety_stock_management()
         
         # Print summary
         passed, failed = tester.print_summary()
