@@ -192,14 +192,7 @@ const ProductForm = () => {
     }
   };
 
-  const handlePriceTierChange = (tierIndex, price) => {
-    setNewVariant(prev => ({
-      ...prev,
-      price_tiers: prev.price_tiers.map((tier, index) => 
-        index === tierIndex ? { ...tier, price: price } : tier
-      )
-    }));
-  };
+  // Removed handlePriceTierChange - pricing will be set after variant creation
 
   // Image upload handlers
   const handleImageUpload = async (event) => {
