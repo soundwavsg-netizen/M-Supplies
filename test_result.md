@@ -361,6 +361,21 @@ test_plan:
           agent: "testing"
           comment: "🎉 DYNAMIC COLOR AND TYPE MANAGEMENT FULLY FUNCTIONAL: Conducted comprehensive testing of the dynamic color/type management system. BACKEND API TESTING: ✅ GET /api/admin/settings working correctly ✅ PUT /api/admin/settings working correctly ✅ Default colors loaded: white, pastel pink, champagne pink, milktea, black, clear ✅ Default types loaded: normal, bubble wrap, tool, consumable ✅ Add Color functionality: Successfully added 'blue' color via API ✅ Add Type functionality: Successfully added 'premium' type via API ✅ Delete Color functionality: Successfully deleted 'clear' color via API ✅ Delete Type functionality: Successfully deleted 'tool' type via API ✅ Settings persistence: All changes persist correctly after API calls ✅ USER ISSUE RESOLVED: The reported issue 'when I delete a color type (black and clear) then add in a color type (blue) and update product. When I go back in to the product again, the black and clear color still there and the blue has not been added' has been RESOLVED. Backend settings API correctly persists color/type additions and deletions. FRONTEND INTEGRATION: ✅ Product form loads with Add Color and Add Type buttons visible ✅ Frontend integrates with backend settings API. The dynamic color and type management system is working correctly with proper persistence."
 
+  - task: "Product Loading Error Fix"
+    implemented: true
+    working: true
+    file: "product_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "CRITICAL ISSUE IDENTIFIED: 'Failed to load product' error causing HTTP 500 when accessing GET /api/products/{product_id}. Root cause: Pydantic schema validation errors due to data format mismatch. Database variants have attributes like {'size': '25cm x 35cm', 'thickness': '100 micron', 'color': 'White'} but schema expects {'width_cm': 25, 'height_cm': 35, 'size_code': '25x35', 'type': 'normal', 'color': 'white'}."
+        - working: true
+          agent: "testing"
+          comment: "🎉 CRITICAL ISSUE RESOLVED: Fixed the 'Failed to load product' error by implementing data transformation logic in ProductService._transform_variant_attributes(). The method converts old database format to new Pydantic schema format. TESTING RESULTS: ✅ All products now load successfully (2/2 products working) ✅ HTTP 500 errors eliminated ✅ Admin product access working ✅ Edit form data complete for all products ✅ Product schema validation passing ✅ Individual product loading: 100% success rate ✅ Product edit simulation: All scenarios working. Users can now access the product edit form without any 'Failed to load product' errors. The transformation handles size parsing (25cm x 35cm → width_cm: 25, height_cm: 35), type inference (100 micron → bubble wrap), and color normalization."
+
 agent_communication:
     - agent: "main"
       message: "Phase 2 backend complete: Fixed compilation errors, added CI guardrails, confirmed M Supplies branding. Created advanced filtering API with product schemas, seed data, and working endpoints. Frontend filtering UI needs debugging - API returns data correctly but frontend displays blank page. Ready for Phase 3 testing to identify frontend issues."
