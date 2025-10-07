@@ -285,7 +285,7 @@ const ProductForm = () => {
             
             return updatedVariant;
           } else {
-            // Update direct properties (like on_hand, safety_stock)
+            // Update other direct properties (excluding stock-related fields)
             return { ...variant, [field]: value };
           }
         }
