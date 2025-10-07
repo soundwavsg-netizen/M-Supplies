@@ -15,7 +15,7 @@ router = APIRouter()
 
 # Dependency to get promotion service
 async def get_promotion_service():
-    database = await get_database()
+    database = get_database()
     promotion_repo = PromotionRepository(database)
     return PromotionService(promotion_repo)
 
