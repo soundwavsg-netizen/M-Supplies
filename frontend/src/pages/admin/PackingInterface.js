@@ -326,8 +326,8 @@ const PackingInterface = () => {
                 
                 {/* Content */}
                 <div className="relative z-10">
-                  {/* Stock Status Badges */}
-                  <div className="flex justify-between items-start mb-2">
+                  {/* Stock Status Badges - Fixed height to prevent grid size changes */}
+                  <div className="flex justify-between items-start mb-2 h-6">
                     <div className="flex gap-1">
                       {isLowStock && (
                         <Badge variant="destructive" className="text-xs px-2 py-1 shadow-md">
