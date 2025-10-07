@@ -366,7 +366,7 @@ const ProductForm = () => {
     toast.success(`Color "${colorToDelete}" deleted`);
   };
 
-  const addNewType = () => {
+  const addNewType = async () => {
     if (!newTypeName.trim()) {
       toast.error('Please enter a type name');
       return;
@@ -378,10 +378,14 @@ const ProductForm = () => {
       return;
     }
     
-    setAvailableTypes(prev => [...prev, typeName]);
+    const newTypes = [...availableTypes, typeName];
+    setAvailableTypes(newTypes);
     setProduct(prev => ({ ...prev, type: typeName }));
     setNewTypeName('');
     setShowAddType(false);
+    
+    // Save to backend
+    await updateSettings(availableColors, newTypes);
     toast.success(`Type "${typeName}" added successfully`);
   };
 
