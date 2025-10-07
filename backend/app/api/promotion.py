@@ -9,7 +9,7 @@ from app.schemas.promotion import (
 from app.services.promotion_service import PromotionService
 from app.repositories.promotion_repository import PromotionRepository
 from app.core.database import get_database
-from app.core.auth import get_current_user_id
+from app.core.security import get_current_user_id
 
 router = APIRouter()
 
