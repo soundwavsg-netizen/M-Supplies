@@ -178,19 +178,88 @@ const Cart = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg p-6 shadow-sm sticky top-20">
               <h2 className="text-xl font-bold text-slate-900 mb-4">Order Summary</h2>
+              
+              {/* Coupon Code Section */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <Tag className="w-4 h-4 text-teal-600" />
+                  <span className="font-medium text-gray-700">Promo Code</span>
+                </div>
+                
+                {!appliedCoupon ? (
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter coupon code"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      onKeyPress={(e) => e.key === 'Enter' && validateCoupon()}
+                      className="flex-1"
+                    />
+                    <Button 
+                      onClick={validateCoupon}
+                      disabled={couponLoading || !couponCode.trim()}
+                      size="sm"
+                      className="bg-teal-600 hover:bg-teal-700"
+                    >
+                      {couponLoading ? 'Checking...' : 'Apply'}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded p-3">
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-green-600" />
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        {appliedCoupon.code}
+                      </Badge>
+                      <span className="text-sm text-green-700">
+                        -{formatPrice(discountAmount)}
+                      </span>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={removeCoupon}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Gift Tier Notification */}
+                {availableGifts.length > 0 && (
+                  <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded text-sm text-purple-700">
+                    🎁 You qualify for free gifts! Select them at checkout.
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
                   <span data-testid="subtotal">{formatPrice(cart.subtotal)}</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount ({appliedCoupon?.code})</span>
+                    <span data-testid="discount">-{formatPrice(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-gray-600">
                   <span>GST (9%)</span>
                   <span data-testid="gst">{formatPrice(cart.gst)}</span>
                 </div>
                 <div className="border-t pt-3 flex justify-between text-lg font-bold text-slate-900">
                   <span>Total</span>
-                  <span data-testid="total">{formatPrice(cart.total)}</span>
+                  <span data-testid="total" className={discountAmount > 0 ? 'text-green-600' : ''}>
+                    {formatPrice(finalTotal)}
+                  </span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="text-sm text-gray-500 text-center">
+                    You saved {formatPrice(discountAmount)}!
+                  </div>
+                )}
               </div>
               <Button
                 className="w-full bg-teal-700 hover:bg-teal-800 mb-3"
