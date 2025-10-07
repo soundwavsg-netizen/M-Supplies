@@ -306,8 +306,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Baby Blue Product Pricing Fix"
-    - "Duplicate Categories Issue Investigation"
+    - "Apricot Product Pricing Fix"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
