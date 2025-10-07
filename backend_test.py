@@ -1370,14 +1370,7 @@ class BackendTester:
         print("\n📝 Step 5: Test Invalid Coupon Code Handling")
         invalid_validation_payload = {
             "coupon_code": "INVALID_COUPON_CODE_12345",
-            "order_amount": 100.0,
-            "items": [
-                {
-                    "variant_id": "test-variant-id",
-                    "quantity": 2,
-                    "price": 50.0
-                }
-            ]
+            "order_subtotal": 100.0
         }
         
         try:
