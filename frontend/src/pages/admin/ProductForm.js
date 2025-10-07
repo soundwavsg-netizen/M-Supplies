@@ -949,7 +949,9 @@ const ProductForm = () => {
                 </div>
 
                 <div>
-                  <Label>Pack Size (pcs) *</Label>
+                  <Label>
+                    {product.type === 'bubble wrap' ? 'Quantity Options' : 'Pack Size (pcs)'} *
+                  </Label>
                   <Select 
                     value={newVariant.pack_size?.toString()} 
                     onValueChange={(value) => handleVariantChange('pack_size', parseInt(value))}
@@ -958,13 +960,26 @@ const ProductForm = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {availablePackSizes.map(size => (
-                        <SelectItem key={size} value={size.toString()}>
-                          {size} pieces per pack
-                        </SelectItem>
-                      ))}
+                      {product.type === 'bubble wrap' ? (
+                        // For bubble wrap, show individual piece quantities
+                        availablePieceQuantities.map(qty => (
+                          <SelectItem key={qty} value={qty.toString()}>
+                            {qty === 1 ? '1 piece' : `${qty} pieces`}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        // For regular products, show pack sizes
+                        availablePackSizes.map(size => (
+                          <SelectItem key={size} value={size.toString()}>
+                            {size} pieces per pack
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
+                  {product.type === 'bubble wrap' && (
+                    <p className="text-xs text-blue-600 mt-1">💧 Bubble wrap sold by individual pieces</p>
+                  )}
                 </div>
 
                 <div className="md:col-span-2">
