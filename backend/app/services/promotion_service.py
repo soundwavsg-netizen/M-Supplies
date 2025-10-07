@@ -188,8 +188,17 @@ class PromotionService:
             return {"valid": False, "error": f"Coupon '{coupon_code}' is not active"}
 
         # Check expiry
-        if coupon.expires_at and coupon.expires_at < datetime.now(timezone.utc):
-            return {"valid": False, "error": f"Coupon '{coupon_code}' has expired"}
+        if coupon.expires_at:
+            # Handle both timezone-aware and naive datetimes
+            current_time = datetime.now(timezone.utc)
+            expires_at = coupon.expires_at
+            
+            # If expires_at is naive, assume it's UTC
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            
+            if expires_at < current_time:
+                return {"valid": False, "error": f"Coupon '{coupon_code}' has expired"}
 
         # Check minimum order amount
         if coupon.minimum_order_amount and order_total < coupon.minimum_order_amount:
