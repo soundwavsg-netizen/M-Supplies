@@ -120,6 +120,7 @@ const ProductForm = () => {
       // Set default values if settings fail to load
       setAvailableColors(['white', 'black', 'clear']);
       setAvailableTypes(['normal', 'premium', 'bubble wrap']);
+      setAvailableCategories(['polymailers', 'accessories']);
     }
   };
 
