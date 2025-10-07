@@ -116,6 +116,9 @@ const ProductForm = () => {
       if (settings.available_categories && Array.isArray(settings.available_categories)) {
         setAvailableCategories(settings.available_categories.filter(cat => typeof cat === 'string'));
       }
+      if (settings.available_pack_sizes && Array.isArray(settings.available_pack_sizes)) {
+        setAvailablePackSizes(settings.available_pack_sizes.filter(size => typeof size === 'number'));
+      }
     } catch (err) {
       console.error('Failed to load settings:', err);
       // Don't show error toast for settings as it's not critical
