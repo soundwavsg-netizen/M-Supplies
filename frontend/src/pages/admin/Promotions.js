@@ -92,6 +92,11 @@ const Promotions = () => {
         return;
       }
       
+      if (!formData.valid_to) {
+        toast.error('Valid to date is required');
+        return;
+      }
+      
       try {
         const token = localStorage.getItem('access_token');
         const payload = {
