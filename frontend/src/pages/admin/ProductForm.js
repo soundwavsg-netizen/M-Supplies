@@ -325,7 +325,7 @@ const ProductForm = () => {
   };
 
   // Color and Type management functions
-  const addNewColor = () => {
+  const addNewColor = async () => {
     if (!newColorName.trim()) {
       toast.error('Please enter a color name');
       return;
@@ -337,10 +337,14 @@ const ProductForm = () => {
       return;
     }
     
-    setAvailableColors(prev => [...prev, colorName]);
+    const newColors = [...availableColors, colorName];
+    setAvailableColors(newColors);
     setProduct(prev => ({ ...prev, color: colorName }));
     setNewColorName('');
     setShowAddColor(false);
+    
+    // Save to backend
+    await updateSettings(newColors, availableTypes);
     toast.success(`Color "${colorName}" added successfully`);
   };
 
