@@ -1337,14 +1337,7 @@ class BackendTester:
         if test_coupon_exists and self.customer_token:
             validation_payload = {
                 "coupon_code": test_coupon_code,
-                "order_amount": 100.0,
-                "items": [
-                    {
-                        "variant_id": "test-variant-id",
-                        "quantity": 2,
-                        "price": 50.0
-                    }
-                ]
+                "order_subtotal": 100.0
             }
             
             headers = {"Authorization": f"Bearer {self.customer_token}"}
