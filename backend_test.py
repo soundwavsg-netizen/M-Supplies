@@ -2032,17 +2032,20 @@ class BackendTester:
 
 async def main():
     """Run all backend tests"""
-    print("🚀 Starting M Supplies Backend API Tests - Cart API Debug")
+    print("🚀 Starting M Supplies Backend API Tests - Product Deletion Debug")
     print(f"Testing against: {API_BASE}")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Cart API endpoints (as specifically requested)
+        # PRIORITY TEST: Product deletion functionality (as specifically requested)
+        await tester.test_product_deletion_functionality()
+        
+        # SECONDARY TEST: Cart API endpoints
         await tester.test_cart_api_endpoints()
         
-        # SECONDARY TEST: Baby Blue product debugging
+        # TERTIARY TEST: Baby Blue product debugging
         await tester.test_baby_blue_product_debug()
         
         # Print summary
