@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: str = os.getenv('CORS_ORIGINS', '*')
     
+    # Emergent AI
+    emergent_llm_key: str = os.getenv('EMERGENT_LLM_KEY', '')
+    
     class Config:
         env_file = '.env'
 
