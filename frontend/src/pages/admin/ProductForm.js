@@ -677,28 +677,40 @@ const ProductForm = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableColors.map(color => (
-                      <div key={color} className="flex items-center justify-between group px-2 py-1.5 hover:bg-gray-50">
-                        <SelectItem value={color} className="flex-1 capitalize">
-                          {color}
+                    {availableColors.map(color => {
+                      const colorStr = typeof color === 'string' ? color : String(color);
+                      return (
+                        <SelectItem key={colorStr} value={colorStr} className="capitalize">
+                          {colorStr}
                         </SelectItem>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            deleteColor(color);
-                          }}
-                          className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 text-red-500 hover:text-red-700 ml-2"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </SelectContent>
                 </Select>
+                
+                {/* Color Management */}
+                {availableColors.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="text-xs text-gray-500">Manage colors:</span>
+                    {availableColors.map(color => {
+                      const colorStr = typeof color === 'string' ? color : String(color);
+                      return (
+                        <div key={colorStr} className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs">
+                          <span className="capitalize">{colorStr}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteColor(colorStr)}
+                            className="h-4 w-4 p-0 text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               <div>
                 <div className="flex items-center justify-between mb-2">
