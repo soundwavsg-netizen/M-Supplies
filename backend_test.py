@@ -4174,16 +4174,16 @@ class BackendTester:
             return
 
 async def main():
-    """Run backend tests focused on Baby Blue variant formatting debug"""
-    print("🚀 Starting M Supplies Backend API Tests - Baby Blue Variant Formatting Debug")
+    """Run backend tests focused on Image Upload functionality debug"""
+    print("🚀 Starting M Supplies Backend API Tests - Image Upload Functionality Debug")
     print(f"Testing against: {API_BASE}")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Baby Blue variant formatting debug (as specifically requested in review)
-        await tester.test_baby_blue_variant_formatting_debug()
+        # PRIORITY TEST: Image Upload functionality debug (as specifically requested in review)
+        await tester.test_image_upload_functionality()
         
         # Print summary
         passed, failed = tester.print_summary()
