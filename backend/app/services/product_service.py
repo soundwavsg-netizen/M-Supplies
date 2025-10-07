@@ -13,7 +13,7 @@ class ProductService:
         attributes = variant.get('attributes', {})
         
         # If already in new format, return as is
-        if 'width_cm' in attributes and 'height_cm' in attributes:
+        if 'width_cm' in attributes and 'height_cm' in attributes and 'pack_size' in attributes:
             return variant
         
         # Transform old format to new format
