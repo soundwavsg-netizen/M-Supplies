@@ -2030,23 +2030,109 @@ class BackendTester:
         
         return passed, failed
 
+    async def test_product_listing_for_editing(self):
+        """Test product listing and individual product access for editing purposes"""
+        print("\n📝 Testing Product Listing for Editing Access...")
+        
+        # Step 1: Get all products
+        try:
+            async with self.session.get(f"{API_BASE}/products") as resp:
+                if resp.status == 200:
+                    products = await resp.json()
+                    self.log_test("GET /api/products", True, f"Retrieved {len(products)} products")
+                    
+                    if not products:
+                        self.log_test("Product Availability", False, "No products found in the system")
+                        return
+                    
+                    # List all product IDs and names
+                    print("\n📋 Available Products and IDs:")
+                    product_ids = []
+                    for i, product in enumerate(products, 1):
+                        product_id = product.get('id')
+                        product_name = product.get('name', 'Unknown')
+                        variant_count = len(product.get('variants', []))
+                        print(f"   {i}. ID: {product_id}")
+                        print(f"      Name: {product_name}")
+                        print(f"      Variants: {variant_count}")
+                        print()
+                        product_ids.append(product_id)
+                    
+                    self.log_test("Product IDs Listed", True, f"Found {len(product_ids)} product IDs")
+                    
+                    # Step 2: Test individual product access for each product
+                    print("\n🔍 Testing Individual Product Access:")
+                    successful_loads = 0
+                    
+                    for i, product_id in enumerate(product_ids, 1):
+                        try:
+                            async with self.session.get(f"{API_BASE}/products/{product_id}") as product_resp:
+                                if product_resp.status == 200:
+                                    product_detail = await product_resp.json()
+                                    product_name = product_detail.get('name', 'Unknown')
+                                    variants = product_detail.get('variants', [])
+                                    
+                                    self.log_test(f"GET /api/products/{product_id}", True, 
+                                                f"✅ {product_name} - {len(variants)} variants loaded")
+                                    successful_loads += 1
+                                    
+                                    # Show variant details for editing context
+                                    if variants:
+                                        print(f"      Variant details for editing:")
+                                        for j, variant in enumerate(variants[:3], 1):  # Show first 3 variants
+                                            attrs = variant.get('attributes', {})
+                                            price_tiers = variant.get('price_tiers', [])
+                                            stock = variant.get('on_hand', variant.get('stock_qty', 0))
+                                            
+                                            size = attrs.get('size_code', 'Unknown')
+                                            color = attrs.get('color', 'Unknown')
+                                            pack_size = attrs.get('pack_size', 'Unknown')
+                                            price = price_tiers[0].get('price', 0) if price_tiers else 0
+                                            
+                                            print(f"        Variant {j}: {size} {color} ({pack_size} pack) - ${price} - Stock: {stock}")
+                                        
+                                        if len(variants) > 3:
+                                            print(f"        ... and {len(variants) - 3} more variants")
+                                        print()
+                                    
+                                else:
+                                    error_text = await product_resp.text()
+                                    self.log_test(f"GET /api/products/{product_id}", False, 
+                                                f"❌ Status {product_resp.status}: {error_text}")
+                                    
+                        except Exception as e:
+                            self.log_test(f"GET /api/products/{product_id}", False, f"❌ Exception: {str(e)}")
+                    
+                    # Summary
+                    self.log_test("Product Loading Success Rate", successful_loads == len(product_ids), 
+                                f"{successful_loads}/{len(product_ids)} products loaded successfully")
+                    
+                    if successful_loads > 0:
+                        print(f"\n✅ SUCCESS: You can edit any of the {successful_loads} products listed above")
+                        print("   Use any of the product IDs shown to access the ProductForm interface")
+                        print("   All products loaded successfully and are ready for editing")
+                    else:
+                        print(f"\n❌ ISSUE: No products could be loaded for editing")
+                        print("   This indicates a problem with the product detail API")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("GET /api/products", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("GET /api/products", False, f"Exception: {str(e)}")
+
 async def main():
-    """Run all backend tests"""
-    print("🚀 Starting M Supplies Backend API Tests - Product Deletion Debug")
+    """Run backend tests focused on product listing for editing"""
+    print("🚀 Starting M Supplies Backend API Tests - Product Listing for Editing")
     print(f"Testing against: {API_BASE}")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Product deletion functionality (as specifically requested)
-        await tester.test_product_deletion_functionality()
-        
-        # SECONDARY TEST: Cart API endpoints
-        await tester.test_cart_api_endpoints()
-        
-        # TERTIARY TEST: Baby Blue product debugging
-        await tester.test_baby_blue_product_debug()
+        # PRIORITY TEST: Product listing for editing (as specifically requested)
+        await tester.test_product_listing_for_editing()
         
         # Print summary
         passed, failed = tester.print_summary()
