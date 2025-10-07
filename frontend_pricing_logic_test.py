@@ -11,7 +11,7 @@ import os
 from typing import Dict, Any, List
 
 # Get backend URL from environment
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://msupplies-shop.preview.emergentagent.com')
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://chatbot-store-1.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class FrontendPricingLogicTester:

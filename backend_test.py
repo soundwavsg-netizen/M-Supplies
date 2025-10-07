@@ -19,7 +19,7 @@ except ImportError:
     from PIL import Image
 
 # Get backend URL from environment
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://msupplies-shop.preview.emergentagent.com')
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://chatbot-store-1.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 # Test credentials
@@ -2615,7 +2615,7 @@ class BackendTester:
         try:
             # Test preflight request (OPTIONS)
             cors_headers = {
-                "Origin": "https://msupplies-shop.preview.emergentagent.com",
+                "Origin": "https://chatbot-store-1.preview.emergentagent.com",
                 "Access-Control-Request-Method": "POST",
                 "Access-Control-Request-Headers": "authorization,content-type"
             }
@@ -5582,7 +5582,7 @@ class BackendTester:
             try:
                 # Test CORS preflight request
                 cors_headers = {
-                    'Origin': 'https://msupplies-shop.preview.emergentagent.com',
+                    'Origin': 'https://chatbot-store-1.preview.emergentagent.com',
                     'Access-Control-Request-Method': 'GET',
                     'Access-Control-Request-Headers': 'content-type'
                 }
@@ -5599,7 +5599,7 @@ class BackendTester:
                                     "No CORS headers found - this may prevent frontend access")
                         
                 # Test actual GET request with Origin header
-                get_headers = {'Origin': 'https://msupplies-shop.preview.emergentagent.com'}
+                get_headers = {'Origin': 'https://chatbot-store-1.preview.emergentagent.com'}
                 async with self.session.get(static_file_url, headers=get_headers) as resp:
                     cors_allow_origin = resp.headers.get('access-control-allow-origin', '')
                     if cors_allow_origin:
@@ -5670,7 +5670,7 @@ class BackendTester:
             # Test different URL construction methods
             url_variations = [
                 f"{BACKEND_URL}{uploaded_image_url}",  # Direct backend URL
-                f"https://msupplies-shop.preview.emergentagent.com{uploaded_image_url}",  # Frontend URL
+                f"https://chatbot-store-1.preview.emergentagent.com{uploaded_image_url}",  # Frontend URL
                 uploaded_image_url  # Relative URL
             ]
             
