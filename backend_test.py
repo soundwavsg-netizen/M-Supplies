@@ -1082,6 +1082,137 @@ class BackendTester:
         except Exception as e:
             self.log_test("Pricing Calculation Logic", False, f"Exception: {str(e)}")
 
+    async def test_promotion_data_loading_after_coupon_creation(self):
+        """Test the specific issue: 'failed to load promotions data' after coupon creation"""
+        print("\n🎯 Testing Promotion Data Loading After Coupon Creation...")
+        print("Testing all APIs called in fetchAllData() to identify which one is failing")
+        
+        if not self.admin_token:
+            self.log_test("Promotion Data Loading Test", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Step 1: Create a coupon first (this should work based on previous tests)
+        print("\n📝 Step 1: Create a coupon (should succeed)")
+        coupon_payload = {
+            "code": "TESTLOAD10",
+            "type": "percent",
+            "value": 10,
+            "valid_from": "2025-01-07T12:00:00.000Z",
+            "valid_to": "2025-12-31T23:59:59.000Z",
+            "is_active": True
+        }
+        
+        coupon_created = False
+        try:
+            async with self.session.post(f"{API_BASE}/admin/coupons", 
+                                       json=coupon_payload, headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    coupon_created = True
+                    self.log_test("Coupon Creation for Data Loading Test", True, 
+                                f"Coupon created: {data.get('code')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Coupon Creation for Data Loading Test", False, 
+                                f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Coupon Creation for Data Loading Test", False, f"Exception: {str(e)}")
+        
+        # Step 2: Test GET /api/admin/coupons (should return the newly created coupon)
+        print("\n📝 Step 2: Test GET /api/admin/coupons")
+        try:
+            async with self.session.get(f"{API_BASE}/admin/coupons", headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    coupon_count = len(data)
+                    
+                    # Check if our newly created coupon is in the list
+                    if coupon_created:
+                        coupon_found = any(c.get('code') == 'TESTLOAD10' for c in data)
+                        if coupon_found:
+                            self.log_test("GET /api/admin/coupons", True, 
+                                        f"Found {coupon_count} coupons including newly created one")
+                        else:
+                            self.log_test("GET /api/admin/coupons", False, 
+                                        f"Found {coupon_count} coupons but newly created coupon missing")
+                    else:
+                        self.log_test("GET /api/admin/coupons", True, 
+                                    f"Endpoint working, found {coupon_count} coupons")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("GET /api/admin/coupons", False, 
+                                f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("GET /api/admin/coupons", False, f"Exception: {str(e)}")
+        
+        # Step 3: Test GET /api/admin/gift-items
+        print("\n📝 Step 3: Test GET /api/admin/gift-items")
+        try:
+            async with self.session.get(f"{API_BASE}/admin/gift-items", headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    self.log_test("GET /api/admin/gift-items", True, 
+                                f"Endpoint working, found {len(data)} gift items")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("GET /api/admin/gift-items", False, 
+                                f"CRITICAL: Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("GET /api/admin/gift-items", False, f"CRITICAL: Exception: {str(e)}")
+        
+        # Step 4: Test GET /api/admin/gift-tiers
+        print("\n📝 Step 4: Test GET /api/admin/gift-tiers")
+        try:
+            async with self.session.get(f"{API_BASE}/admin/gift-tiers", headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    self.log_test("GET /api/admin/gift-tiers", True, 
+                                f"Endpoint working, found {len(data)} gift tiers")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("GET /api/admin/gift-tiers", False, 
+                                f"CRITICAL: Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("GET /api/admin/gift-tiers", False, f"CRITICAL: Exception: {str(e)}")
+        
+        # Step 5: Test GET /api/admin/promotions/stats
+        print("\n📝 Step 5: Test GET /api/admin/promotions/stats")
+        try:
+            async with self.session.get(f"{API_BASE}/admin/promotions/stats", headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    self.log_test("GET /api/admin/promotions/stats", True, 
+                                f"Endpoint working, returned stats data: {type(data)}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("GET /api/admin/promotions/stats", False, 
+                                f"CRITICAL: Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("GET /api/admin/promotions/stats", False, f"CRITICAL: Exception: {str(e)}")
+        
+        # Step 6: Test authentication requirements for all endpoints
+        print("\n📝 Step 6: Test authentication requirements")
+        endpoints_to_test = [
+            "/admin/coupons",
+            "/admin/gift-items", 
+            "/admin/gift-tiers",
+            "/admin/promotions/stats"
+        ]
+        
+        for endpoint in endpoints_to_test:
+            try:
+                async with self.session.get(f"{API_BASE}{endpoint}") as resp:
+                    if resp.status == 401:
+                        self.log_test(f"Auth Required - {endpoint}", True, 
+                                    "Correctly requires authentication")
+                    else:
+                        self.log_test(f"Auth Required - {endpoint}", False, 
+                                    f"Expected 401, got {resp.status}")
+            except Exception as e:
+                self.log_test(f"Auth Required - {endpoint}", False, f"Exception: {str(e)}")
+
     async def test_coupon_creation_validation_error(self):
         """Test the exact coupon creation API call that the frontend is making"""
         print("\n🎯 Testing Coupon Creation Validation Error...")
