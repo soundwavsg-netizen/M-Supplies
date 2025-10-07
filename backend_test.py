@@ -8,7 +8,15 @@ import asyncio
 import aiohttp
 import json
 import os
+import io
 from typing import Dict, Any, List
+try:
+    from PIL import Image
+except ImportError:
+    print("PIL (Pillow) not available. Installing...")
+    import subprocess
+    subprocess.check_call(["pip", "install", "Pillow"])
+    from PIL import Image
 
 # Get backend URL from environment
 BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://msupplies-shop.preview.emergentagent.com')
