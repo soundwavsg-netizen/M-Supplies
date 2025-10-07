@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Package, Truck, Shield, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { theme } from '@/theme.config';
-import ChatWidget from '@/components/chat/ChatWidget';
+import SmartChatWidget from '@/components/chat/SmartChatWidget';
 
 const Home = () => {
   return (
