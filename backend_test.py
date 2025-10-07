@@ -814,6 +814,172 @@ class BackendTester:
                     
         except Exception as e:
             self.log_test("Dynamic Fields Persistence Check", False, f"Exception: {str(e)}")
+
+    async def test_pack_size_schema_structure(self):
+        """Test product API and variant structure after pack_size schema changes"""
+        print("\n📦 Testing Pack Size Schema Structure...")
+        
+        # Test 1: Product Listing API
+        try:
+            async with self.session.get(f"{API_BASE}/products") as resp:
+                if resp.status == 200:
+                    products = await resp.json()
+                    self.log_test("Product Listing API", True, f"Retrieved {len(products)} products")
+                    
+                    # Check if products have variants with new structure
+                    if products:
+                        first_product = products[0]
+                        product_id = first_product.get('id')
+                        self.log_test("Product ID Structure", bool(product_id), f"Product ID: {product_id}")
+                    else:
+                        self.log_test("Product Listing Content", False, "No products returned")
+                        return
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Product Listing API", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Product Listing API", False, f"Exception: {str(e)}")
+            return
+        
+        # Test 2: Individual Product API with variant structure
+        try:
+            async with self.session.get(f"{API_BASE}/products/{product_id}") as resp:
+                if resp.status == 200:
+                    product = await resp.json()
+                    self.log_test("Individual Product API", True, f"Retrieved product: {product.get('name', 'Unknown')}")
+                    
+                    # Check variant structure
+                    variants = product.get('variants', [])
+                    if variants:
+                        first_variant = variants[0]
+                        attributes = first_variant.get('attributes', {})
+                        
+                        # Check for pack_size in attributes
+                        pack_size = attributes.get('pack_size')
+                        if pack_size is not None:
+                            self.log_test("Pack Size in Attributes", True, f"Pack size: {pack_size}")
+                        else:
+                            self.log_test("Pack Size in Attributes", False, "pack_size not found in variant attributes")
+                        
+                        # Check other required attributes
+                        required_attrs = ['width_cm', 'height_cm', 'size_code', 'type', 'color']
+                        missing_attrs = [attr for attr in required_attrs if attr not in attributes]
+                        
+                        if not missing_attrs:
+                            self.log_test("Variant Attributes Structure", True, "All required attributes present")
+                        else:
+                            self.log_test("Variant Attributes Structure", False, f"Missing attributes: {missing_attrs}")
+                        
+                        # Check price_tiers structure
+                        price_tiers = first_variant.get('price_tiers', [])
+                        if price_tiers and isinstance(price_tiers, list):
+                            first_tier = price_tiers[0]
+                            if 'min_quantity' in first_tier and 'price' in first_tier:
+                                self.log_test("Price Tiers Structure", True, f"Price tier: {first_tier}")
+                            else:
+                                self.log_test("Price Tiers Structure", False, "Invalid price tier structure")
+                        else:
+                            self.log_test("Price Tiers Structure", False, "No price tiers found")
+                        
+                        # Check stock quantities (on_hand vs stock_qty)
+                        on_hand = first_variant.get('on_hand')
+                        stock_qty = first_variant.get('stock_qty')
+                        
+                        if on_hand is not None:
+                            self.log_test("On Hand Stock Field", True, f"on_hand: {on_hand}")
+                        else:
+                            self.log_test("On Hand Stock Field", False, "on_hand field missing")
+                        
+                        if stock_qty is not None:
+                            self.log_test("Legacy Stock Field", True, f"stock_qty: {stock_qty}")
+                        else:
+                            self.log_test("Legacy Stock Field", False, "stock_qty field missing")
+                        
+                    else:
+                        self.log_test("Product Variants", False, "No variants found in product")
+                        
+                else:
+                    error_text = await resp.text()
+                    if resp.status == 404:
+                        self.log_test("Individual Product API", False, f"Product not found - this matches the reported issue")
+                    else:
+                        self.log_test("Individual Product API", False, f"Status {resp.status}: {error_text}")
+                    return
+                    
+        except Exception as e:
+            self.log_test("Individual Product API", False, f"Exception: {str(e)}")
+            return
+        
+        # Test 3: Customer Product Page Data (simulate frontend access)
+        try:
+            # Test without authentication (customer access)
+            async with self.session.get(f"{API_BASE}/products/{product_id}") as resp:
+                if resp.status == 200:
+                    customer_product = await resp.json()
+                    self.log_test("Customer Product Access", True, "Customer can access product details")
+                    
+                    # Verify variant structure matches frontend expectations
+                    variants = customer_product.get('variants', [])
+                    if variants:
+                        variant = variants[0]
+                        attributes = variant.get('attributes', {})
+                        
+                        # Check if pack_size is accessible for frontend
+                        pack_size = attributes.get('pack_size')
+                        if pack_size:
+                            self.log_test("Frontend Pack Size Access", True, f"Pack size accessible: {pack_size}")
+                        else:
+                            self.log_test("Frontend Pack Size Access", False, "Pack size not accessible to frontend")
+                        
+                        # Check if all necessary data is present for product display
+                        essential_fields = ['price_tiers', 'attributes']
+                        missing_fields = [field for field in essential_fields if field not in variant]
+                        
+                        if not missing_fields:
+                            self.log_test("Frontend Data Completeness", True, "All essential variant data present")
+                        else:
+                            self.log_test("Frontend Data Completeness", False, f"Missing fields: {missing_fields}")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Customer Product Access", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Customer Product Access", False, f"Exception: {str(e)}")
+        
+        # Test 4: Verify pack_size in filtered products
+        try:
+            filter_request = {"page": 1, "limit": 5}
+            async with self.session.post(f"{API_BASE}/products/filter", json=filter_request) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    products = data.get('products', [])
+                    
+                    if products:
+                        # Check first product's variants for pack_size
+                        first_product = products[0]
+                        variants = first_product.get('variants', [])
+                        
+                        if variants:
+                            attributes = variants[0].get('attributes', {})
+                            pack_size = attributes.get('pack_size')
+                            
+                            if pack_size is not None:
+                                self.log_test("Filtered Products Pack Size", True, f"Pack size in filtered results: {pack_size}")
+                            else:
+                                self.log_test("Filtered Products Pack Size", False, "Pack size missing in filtered results")
+                        else:
+                            self.log_test("Filtered Products Variants", False, "No variants in filtered products")
+                    else:
+                        self.log_test("Filtered Products Content", False, "No products in filter results")
+                        
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Filtered Products API", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Filtered Products API", False, f"Exception: {str(e)}")
     
     def print_summary(self):
         """Print test summary"""
