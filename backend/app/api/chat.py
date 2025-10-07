@@ -13,7 +13,7 @@ router = APIRouter()
 
 async def get_chat_service() -> ChatService:
     """Dependency to get chat service"""
-    db = await get_database()
+    db = get_database()
     chat_repository = ChatRepository(db)
     return ChatService(chat_repository)
 
