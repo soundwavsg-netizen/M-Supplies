@@ -107,9 +107,23 @@ class ProductService:
                 detail="Product not found"
             )
         
-        # Update product
+        # Extract variants from update data
         update_dict = update_data.model_dump(exclude_unset=True)
-        await self.product_repo.update_product(product_id, update_dict)
+        variants_data = update_dict.pop('variants', None)
+        
+        # Update product fields (excluding variants)
+        if update_dict:
+            await self.product_repo.update_product(product_id, update_dict)
+        
+        # Handle variants update if provided
+        if variants_data is not None:
+            # Delete existing variants for this product
+            await self.product_repo.delete_variants_by_product(product_id)
+            
+            # Create new variants
+            for variant_data in variants_data:
+                variant_data['product_id'] = product_id
+                await self.product_repo.create_variant(variant_data)
         
         # Return updated product
         return await self.get_product(product_id)
