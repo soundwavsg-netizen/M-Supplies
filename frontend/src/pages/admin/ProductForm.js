@@ -33,10 +33,10 @@ const ProductForm = () => {
     variants: []
   });
 
-  // Dynamic options management
-  const [availableColors, setAvailableColors] = useState([]);
-  const [availableTypes, setAvailableTypes] = useState([]);
-  const [availableCategories, setAvailableCategories] = useState([]);
+  // Dynamic options management - Initialize with safe defaults
+  const [availableColors, setAvailableColors] = useState(['white', 'black', 'clear']);
+  const [availableTypes, setAvailableTypes] = useState(['normal', 'bubble wrap']);
+  const [availableCategories, setAvailableCategories] = useState(['polymailers', 'accessories']);
   const [showAddColor, setShowAddColor] = useState(false);
   const [showAddType, setShowAddType] = useState(false);
   const [showAddCategory, setShowAddCategory] = useState(false);
