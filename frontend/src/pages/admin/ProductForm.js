@@ -1050,6 +1050,24 @@ const ProductForm = () => {
                         />
                       </div>
                       <div>
+                        <Label className="text-xs text-gray-600">Pack Size</Label>
+                        <Select 
+                          value={(variant.pack_size || 50).toString()} 
+                          onValueChange={(value) => updateVariant(index, 'pack_size', parseInt(value))}
+                        >
+                          <SelectTrigger className="text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availablePackSizes.map(size => (
+                              <SelectItem key={size} value={size.toString()}>
+                                {size} pcs
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
                         <Label className="text-xs text-gray-600">Price ($)</Label>
                         <Input
                           type="number"
@@ -1060,7 +1078,7 @@ const ProductForm = () => {
                         />
                       </div>
                       <div>
-                        <Label className="text-xs text-gray-600">Stock</Label>
+                        <Label className="text-xs text-gray-600">Stock (packs)</Label>
                         <div className="flex gap-1">
                           <Input
                             type="number"
