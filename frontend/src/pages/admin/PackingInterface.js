@@ -341,7 +341,7 @@ const PackingInterface = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => adjustStock(item.variant_id, -1, item.on_hand)}
-                      disabled={item.on_hand <= 0}
+                      disabled={item.available <= 0}
                       className="flex-1 h-8 p-0 hover:bg-red-50 hover:border-red-300"
                     >
                       <Minus className="w-4 h-4" />
