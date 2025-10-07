@@ -108,11 +108,7 @@ const PackingInterface = () => {
         notes: `Packing adjustment: ${change > 0 ? '+' : ''}${change} (Packing Interface)`
       };
 
-      const token = localStorage.getItem('access_token');
-      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-      await axios.post(`${BACKEND_URL}/api/admin/inventory/adjust`, adjustmentData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await adminInventoryAPI.adjust(adjustmentData);
       
       // Update local state
       setInventory(prev => 
