@@ -988,7 +988,7 @@ const ProductForm = () => {
                     </Select>
                   ) : (
                     <div className="space-y-2">
-                      <p className="text-xs text-gray-600">Select pack sizes (each creates a separate variant with its own stock):</p>
+                      <p className="text-xs text-gray-600">Select pack sizes (each creates a separate variant with its own stock & pricing):</p>
                       <div className="flex flex-wrap gap-2">
                         {availablePackSizes.map(size => (
                           <label key={size} className="flex items-center space-x-2 cursor-pointer">
