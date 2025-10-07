@@ -411,7 +411,7 @@ const ProductForm = () => {
     setAvailableTypes(newTypes);
     
     // Save to backend
-    await updateSettings(availableColors, newTypes);
+    await updateSettings(availableColors, newTypes, availableCategories);
     toast.success(`Type "${typeToDelete}" deleted`);
   };
 
