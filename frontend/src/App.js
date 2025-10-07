@@ -170,6 +170,14 @@ function AppContent() {
               </AdminRoute>
             }
           />
+          <Route
+            path="/admin/packing"
+            element={
+              <AdminRoute>
+                <PackingInterface />
+              </AdminRoute>
+            }
+          />
 
           {/* 404 */}
           <Route path="*" element={<Navigate to="/" replace />} />
