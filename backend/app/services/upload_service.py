@@ -49,10 +49,8 @@ class UploadService:
                 detail=f"Failed to save file: {str(e)}"
             )
         
-        # Return URL path
-        # In production, this would be your CDN URL
-        # For now, we'll serve from /uploads/
-        return f"/uploads/products/{unique_filename}"
+        # Return API endpoint URL with proper MIME type handling
+        return f"/api/images/{unique_filename}"
     
     @staticmethod
     async def upload_multiple_images(files: List[UploadFile]) -> List[str]:
