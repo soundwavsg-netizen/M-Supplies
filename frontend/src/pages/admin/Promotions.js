@@ -157,45 +157,32 @@ const Promotions = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="discount_type">Discount Type</Label>
-            <Select value={formData.discount_type} onValueChange={(value) => setFormData(prev => ({ ...prev, discount_type: value }))}>
+            <Label htmlFor="type">Discount Type *</Label>
+            <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="percentage">Percentage (%)</SelectItem>
+                <SelectItem value="percent">Percentage (%)</SelectItem>
                 <SelectItem value="fixed">Fixed Amount ($)</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label htmlFor="discount_value">
-              {formData.discount_type === 'percentage' ? 'Percentage (%)' : 'Amount ($)'} *
+            <Label htmlFor="value">
+              {formData.type === 'percent' ? 'Percentage (%)' : 'Amount ($)'} *
             </Label>
             <Input
-              id="discount_value"
+              id="value"
               type="number"
               step="0.01"
-              value={formData.discount_value}
-              onChange={(e) => setFormData(prev => ({ ...prev, discount_value: e.target.value }))}
-              placeholder={formData.discount_type === 'percentage' ? '10' : '5.00'}
+              value={formData.value}
+              onChange={(e) => setFormData(prev => ({ ...prev, value: e.target.value }))}
+              placeholder={formData.type === 'percent' ? '10' : '5.00'}
               required
             />
-          </div>
-          <div>
-            <Label htmlFor="usage_type">Usage Type</Label>
-            <Select value={formData.usage_type} onValueChange={(value) => setFormData(prev => ({ ...prev, usage_type: value }))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="unlimited">Unlimited Use</SelectItem>
-                <SelectItem value="single_use">Single Use</SelectItem>
-                <SelectItem value="limited_use">Limited Use</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
 
