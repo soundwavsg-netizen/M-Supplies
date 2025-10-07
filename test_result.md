@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: Fix frontend compilation errors and implement advanced product filtering system for M Supplies e-commerce application
+user_problem_statement: Fix variant creation process - remove pricing tiers and stock from variant creation, allow adding price/stock after creation, ensure product listing shows correct prices from variants
 
 backend:
   - task: "Backend API Routes"
