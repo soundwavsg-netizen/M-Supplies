@@ -1085,7 +1085,8 @@ const ProductForm = () => {
                             value={variant.on_hand || ''}
                             onChange={(e) => updateVariant(index, 'on_hand', parseInt(e.target.value))}
                             className="text-sm"
-                            placeholder="Stock"
+                            placeholder="Packs"
+                            title={`Total pieces: ${(variant.on_hand || 0) * (variant.pack_size || 50)}`}
                           />
                           <Button
                             type="button"
