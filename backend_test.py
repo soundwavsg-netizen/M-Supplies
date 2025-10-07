@@ -1207,6 +1207,269 @@ class BackendTester:
             except Exception as e:
                 self.log_test(f"Filter by '{test_cat}' Category", False, f"Exception: {str(e)}")
 
+    async def test_image_upload_422_debug(self):
+        """Debug the specific 422 validation error for image uploads"""
+        print("\n🚨 DEBUGGING 422 IMAGE UPLOAD VALIDATION ERROR...")
+        print("User reported: '422 Unprocessable Content' when uploading 'm-supplies-logo-white.png image/png 28007' (28KB PNG)")
+        print("Error response: {detail: Array(1)} - need to extract specific validation error")
+        print("Frontend uses FormData field name 'files' for multiple files")
+        print("\nTesting:")
+        print("1. Reproduce 422 error with exact frontend format")
+        print("2. Extract detailed error message from detail array")
+        print("3. Test field name variations (files vs file)")
+        print("4. Test with small PNG file for validation")
+        print("5. Verify admin authentication for uploads")
+        
+        if not self.admin_token:
+            self.log_test("422 Debug - Admin Token", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # TEST 1: Reproduce the exact 422 error - simulate 28KB PNG file
+        print("\n🔍 TEST 1: Reproduce 422 Error with 28KB PNG File")
+        
+        # Create a 28KB PNG file similar to the user's file
+        test_image = Image.new('RGB', (200, 200), color='white')
+        # Add some content to make it closer to 28KB
+        for x in range(0, 200, 10):
+            for y in range(0, 200, 10):
+                test_image.putpixel((x, y), (255, 0, 0))  # Add red pixels
+        
+        image_buffer = io.BytesIO()
+        test_image.save(image_buffer, format='PNG', optimize=False)
+        image_size = len(image_buffer.getvalue())
+        image_buffer.seek(0)
+        
+        self.log_test("Test Image Creation", True, f"Created PNG file: {image_size} bytes (target: ~28KB)")
+        
+        # TEST 1A: Try with frontend field name "files" (multiple upload endpoint)
+        try:
+            form_data = aiohttp.FormData()
+            form_data.add_field('files', image_buffer, filename='m-supplies-logo-white.png', content_type='image/png')
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/images", 
+                                       data=form_data, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 422:
+                    self.log_test("422 Error Reproduced - Field 'files'", True, f"Got 422 as expected")
+                    
+                    # Try to parse the detailed error message
+                    try:
+                        error_data = json.loads(response_text)
+                        detail = error_data.get('detail', [])
+                        if isinstance(detail, list) and detail:
+                            detailed_error = detail[0] if detail else "No detail provided"
+                            self.log_test("422 Error Detail Extraction", True, f"Detail: {detailed_error}")
+                        else:
+                            self.log_test("422 Error Detail Extraction", False, f"Unexpected detail format: {detail}")
+                    except json.JSONDecodeError:
+                        self.log_test("422 Error Detail Extraction", False, f"Could not parse JSON: {response_text}")
+                        
+                elif resp.status == 200:
+                    data = json.loads(response_text)
+                    self.log_test("Upload Success - Field 'files'", True, f"Unexpected success: {data}")
+                else:
+                    self.log_test("422 Error Reproduction - Field 'files'", False, f"Got {resp.status} instead of 422: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("422 Error Test - Field 'files'", False, f"Exception: {str(e)}")
+        
+        # Reset buffer for next test
+        image_buffer.seek(0)
+        
+        # TEST 1B: Try with single upload field name "file"
+        try:
+            form_data = aiohttp.FormData()
+            form_data.add_field('file', image_buffer, filename='m-supplies-logo-white.png', content_type='image/png')
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/image", 
+                                       data=form_data, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 422:
+                    self.log_test("422 Error Reproduced - Field 'file'", True, f"Got 422 as expected")
+                    
+                    # Try to parse the detailed error message
+                    try:
+                        error_data = json.loads(response_text)
+                        detail = error_data.get('detail', [])
+                        if isinstance(detail, list) and detail:
+                            detailed_error = detail[0] if detail else "No detail provided"
+                            self.log_test("422 Error Detail - Single Upload", True, f"Detail: {detailed_error}")
+                        else:
+                            self.log_test("422 Error Detail - Single Upload", False, f"Unexpected detail format: {detail}")
+                    except json.JSONDecodeError:
+                        self.log_test("422 Error Detail - Single Upload", False, f"Could not parse JSON: {response_text}")
+                        
+                elif resp.status == 200:
+                    data = json.loads(response_text)
+                    self.log_test("Upload Success - Field 'file'", True, f"Upload worked: {data}")
+                else:
+                    self.log_test("422 Error Test - Field 'file'", False, f"Got {resp.status} instead of 422: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("422 Error Test - Field 'file'", False, f"Exception: {str(e)}")
+        
+        # TEST 2: Test with small PNG file to see if size is the issue
+        print("\n🔍 TEST 2: Test with Small PNG File")
+        
+        small_image = Image.new('RGB', (50, 50), color='blue')
+        small_buffer = io.BytesIO()
+        small_image.save(small_buffer, format='PNG')
+        small_size = len(small_buffer.getvalue())
+        small_buffer.seek(0)
+        
+        self.log_test("Small Image Creation", True, f"Created small PNG: {small_size} bytes")
+        
+        try:
+            form_data = aiohttp.FormData()
+            form_data.add_field('files', small_buffer, filename='small-test.png', content_type='image/png')
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/images", 
+                                       data=form_data, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 200:
+                    data = json.loads(response_text)
+                    self.log_test("Small PNG Upload Success", True, f"Small file uploaded: {data}")
+                elif resp.status == 422:
+                    try:
+                        error_data = json.loads(response_text)
+                        detail = error_data.get('detail', [])
+                        self.log_test("Small PNG Still Gets 422", False, f"Even small file gets 422: {detail}")
+                    except json.JSONDecodeError:
+                        self.log_test("Small PNG 422 Error", False, f"422 with small file: {response_text}")
+                else:
+                    self.log_test("Small PNG Upload", False, f"Status {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("Small PNG Upload Test", False, f"Exception: {str(e)}")
+        
+        # TEST 3: Test field name variations
+        print("\n🔍 TEST 3: Test Different Field Names")
+        
+        field_name_tests = [
+            ('files', '/admin/upload/images', 'Multiple upload endpoint'),
+            ('file', '/admin/upload/image', 'Single upload endpoint'),
+            ('image', '/admin/upload/images', 'Wrong field name test'),
+            ('upload', '/admin/upload/images', 'Another wrong field name test')
+        ]
+        
+        for field_name, endpoint, description in field_name_tests:
+            small_buffer.seek(0)  # Reset buffer
+            
+            try:
+                form_data = aiohttp.FormData()
+                form_data.add_field(field_name, small_buffer, filename='field-test.png', content_type='image/png')
+                
+                async with self.session.post(f"{API_BASE}{endpoint}", 
+                                           data=form_data, headers=headers) as resp:
+                    response_text = await resp.text()
+                    
+                    if resp.status == 200:
+                        data = json.loads(response_text)
+                        self.log_test(f"Field Name '{field_name}' - {description}", True, f"Success: {data.get('url', 'No URL')}")
+                    elif resp.status == 422:
+                        try:
+                            error_data = json.loads(response_text)
+                            detail = error_data.get('detail', [])
+                            self.log_test(f"Field Name '{field_name}' - {description}", False, f"422 Error: {detail}")
+                        except json.JSONDecodeError:
+                            self.log_test(f"Field Name '{field_name}' - {description}", False, f"422: {response_text}")
+                    else:
+                        self.log_test(f"Field Name '{field_name}' - {description}", False, f"Status {resp.status}: {response_text}")
+                        
+            except Exception as e:
+                self.log_test(f"Field Name '{field_name}' Test", False, f"Exception: {str(e)}")
+        
+        # TEST 4: Test authentication variations
+        print("\n🔍 TEST 4: Test Authentication Scenarios")
+        
+        auth_tests = [
+            ({"Authorization": f"Bearer {self.admin_token}"}, "Valid admin token"),
+            ({"Authorization": "Bearer invalid_token"}, "Invalid token"),
+            ({}, "No authentication header"),
+            ({"Authorization": "Bearer "}, "Empty token"),
+        ]
+        
+        for auth_header, description in auth_tests:
+            small_buffer.seek(0)  # Reset buffer
+            
+            try:
+                form_data = aiohttp.FormData()
+                form_data.add_field('files', small_buffer, filename='auth-test.png', content_type='image/png')
+                
+                async with self.session.post(f"{API_BASE}/admin/upload/images", 
+                                           data=form_data, headers=auth_header) as resp:
+                    response_text = await resp.text()
+                    
+                    if resp.status == 200:
+                        self.log_test(f"Auth Test - {description}", True, "Upload successful")
+                    elif resp.status == 401:
+                        self.log_test(f"Auth Test - {description}", True, "401 Unauthorized as expected")
+                    elif resp.status == 422:
+                        try:
+                            error_data = json.loads(response_text)
+                            detail = error_data.get('detail', [])
+                            self.log_test(f"Auth Test - {description}", False, f"422 instead of 401: {detail}")
+                        except json.JSONDecodeError:
+                            self.log_test(f"Auth Test - {description}", False, f"422: {response_text}")
+                    else:
+                        self.log_test(f"Auth Test - {description}", False, f"Unexpected status {resp.status}: {response_text}")
+                        
+            except Exception as e:
+                self.log_test(f"Auth Test - {description}", False, f"Exception: {str(e)}")
+        
+        # TEST 5: Test empty file and edge cases
+        print("\n🔍 TEST 5: Test Edge Cases")
+        
+        # Empty file test
+        try:
+            empty_buffer = io.BytesIO(b'')
+            form_data = aiohttp.FormData()
+            form_data.add_field('files', empty_buffer, filename='empty.png', content_type='image/png')
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/images", 
+                                       data=form_data, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 422:
+                    try:
+                        error_data = json.loads(response_text)
+                        detail = error_data.get('detail', [])
+                        self.log_test("Empty File Test", True, f"422 for empty file: {detail}")
+                    except json.JSONDecodeError:
+                        self.log_test("Empty File Test", True, f"422 for empty file: {response_text}")
+                else:
+                    self.log_test("Empty File Test", False, f"Expected 422, got {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("Empty File Test", False, f"Exception: {str(e)}")
+        
+        # No file test
+        try:
+            form_data = aiohttp.FormData()
+            # Don't add any file field
+            
+            async with self.session.post(f"{API_BASE}/admin/upload/images", 
+                                       data=form_data, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 422:
+                    try:
+                        error_data = json.loads(response_text)
+                        detail = error_data.get('detail', [])
+                        self.log_test("No File Test", True, f"422 for missing file: {detail}")
+                    except json.JSONDecodeError:
+                        self.log_test("No File Test", True, f"422 for missing file: {response_text}")
+                else:
+                    self.log_test("No File Test", False, f"Expected 422, got {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("No File Test", False, f"Exception: {str(e)}")
+
     async def test_image_upload_functionality(self):
         """Test image upload functionality for product creation form"""
         print("\n📸 TESTING IMAGE UPLOAD FUNCTIONALITY...")
