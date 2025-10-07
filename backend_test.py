@@ -2007,6 +2007,304 @@ class BackendTester:
                         
         except Exception as e:
             self.log_test("Stock Calculation Logic", False, f"Exception: {str(e)}")
+
+    async def test_safety_stock_management(self):
+        """Test safety stock adjustment functionality"""
+        print("\n🛡️ Testing Safety Stock Management...")
+        
+        if not self.admin_token:
+            self.log_test("Safety Stock Test", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Test with Baby Blue product ID as specified in the request
+        baby_blue_product_id = "6084a6ff-1911-488b-9288-2bc95e50cafa"
+        
+        # Step 1: Test GET /api/admin/inventory to ensure safety_stock is included
+        print("\n📋 Step 1: Testing inventory listing includes safety_stock...")
+        baby_blue_variants = []
+        
+        try:
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                if resp.status == 200:
+                    inventory_data = await resp.json()
+                    self.log_test("Admin Inventory Listing", True, f"Retrieved {len(inventory_data)} inventory items")
+                    
+                    # Find Baby Blue variants
+                    for item in inventory_data:
+                        if "Baby Blue" in item.get('product_name', ''):
+                            baby_blue_variants.append(item)
+                    
+                    if baby_blue_variants:
+                        self.log_test("Find Baby Blue Variants", True, f"Found {len(baby_blue_variants)} Baby Blue variants")
+                        
+                        # Check if safety_stock field is included
+                        for variant in baby_blue_variants:
+                            if 'safety_stock' in variant:
+                                current_safety_stock = variant.get('safety_stock', 0)
+                                self.log_test("Safety Stock Field Present", True, 
+                                            f"Variant {variant['sku']}: safety_stock = {current_safety_stock}")
+                            else:
+                                self.log_test("Safety Stock Field Present", False, 
+                                            f"safety_stock field missing for variant {variant['sku']}")
+                    else:
+                        self.log_test("Find Baby Blue Variants", False, "No Baby Blue variants found in inventory")
+                        return
+                        
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Admin Inventory Listing", False, f"Status {resp.status}: {error_text}")
+                    return
+                    
+        except Exception as e:
+            self.log_test("Admin Inventory Listing", False, f"Exception: {str(e)}")
+            return
+        
+        if not baby_blue_variants:
+            self.log_test("Safety Stock Test Setup", False, "No Baby Blue variants available for testing")
+            return
+        
+        # Use first Baby Blue variant for testing
+        test_variant = baby_blue_variants[0]
+        variant_id = test_variant['variant_id']
+        original_safety_stock = test_variant.get('safety_stock', 0)
+        original_on_hand = test_variant.get('on_hand', 0)
+        original_allocated = test_variant.get('allocated', 0)
+        original_available = test_variant.get('available', 0)
+        
+        self.log_test("Test Variant Selected", True, 
+                    f"Variant: {test_variant['sku']}, Original safety_stock: {original_safety_stock}")
+        
+        # Step 2: Test setting safety stock to a specific value (adjustment_type: "set")
+        print("\n🎯 Step 2: Testing safety stock 'set' adjustment...")
+        
+        set_adjustment = {
+            "variant_id": variant_id,
+            "adjustment_type": "set",
+            "safety_stock_value": 15,
+            "reason": "manual_adjustment",
+            "notes": "Testing safety stock set to 15 units"
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/admin/inventory/adjust", 
+                                       json=set_adjustment, headers=headers) as resp:
+                if resp.status == 200:
+                    adjustment_result = await resp.json()
+                    new_safety_stock = adjustment_result.get('safety_stock', 0)
+                    new_available = adjustment_result.get('available', 0)
+                    
+                    if new_safety_stock == 15:
+                        self.log_test("Safety Stock Set Adjustment", True, f"Safety stock set to {new_safety_stock}")
+                    else:
+                        self.log_test("Safety Stock Set Adjustment", False, 
+                                    f"Expected 15, got {new_safety_stock}")
+                    
+                    # Verify available stock calculation: available = on_hand - allocated - safety_stock
+                    expected_available = max(0, original_on_hand - original_allocated - 15)
+                    if new_available == expected_available:
+                        self.log_test("Available Stock Calculation (Set)", True, 
+                                    f"Available: {new_available} = {original_on_hand} - {original_allocated} - 15")
+                    else:
+                        self.log_test("Available Stock Calculation (Set)", False, 
+                                    f"Expected {expected_available}, got {new_available}")
+                        
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Safety Stock Set Adjustment", False, f"Status {resp.status}: {error_text}")
+                    return
+                    
+        except Exception as e:
+            self.log_test("Safety Stock Set Adjustment", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 3: Test changing safety stock by a relative amount (adjustment_type: "change")
+        print("\n📈 Step 3: Testing safety stock 'change' adjustment...")
+        
+        change_adjustment = {
+            "variant_id": variant_id,
+            "adjustment_type": "change",
+            "safety_stock_change": 5,
+            "reason": "manual_adjustment",
+            "notes": "Testing safety stock increase by 5 units"
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/admin/inventory/adjust", 
+                                       json=change_adjustment, headers=headers) as resp:
+                if resp.status == 200:
+                    adjustment_result = await resp.json()
+                    new_safety_stock = adjustment_result.get('safety_stock', 0)
+                    new_available = adjustment_result.get('available', 0)
+                    
+                    expected_safety_stock = 15 + 5  # Previous value + change
+                    if new_safety_stock == expected_safety_stock:
+                        self.log_test("Safety Stock Change Adjustment", True, 
+                                    f"Safety stock changed to {new_safety_stock} (15 + 5)")
+                    else:
+                        self.log_test("Safety Stock Change Adjustment", False, 
+                                    f"Expected {expected_safety_stock}, got {new_safety_stock}")
+                    
+                    # Verify available stock calculation with new safety stock
+                    expected_available = max(0, original_on_hand - original_allocated - expected_safety_stock)
+                    if new_available == expected_available:
+                        self.log_test("Available Stock Calculation (Change)", True, 
+                                    f"Available: {new_available} = {original_on_hand} - {original_allocated} - {expected_safety_stock}")
+                    else:
+                        self.log_test("Available Stock Calculation (Change)", False, 
+                                    f"Expected {expected_available}, got {new_available}")
+                        
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Safety Stock Change Adjustment", False, f"Status {resp.status}: {error_text}")
+                    return
+                    
+        except Exception as e:
+            self.log_test("Safety Stock Change Adjustment", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 4: Verify the variant document is updated by fetching inventory again
+        print("\n🔍 Step 4: Verifying variant document persistence...")
+        
+        try:
+            async with self.session.get(f"{API_BASE}/admin/inventory/{variant_id}", headers=headers) as resp:
+                if resp.status == 200:
+                    variant_inventory = await resp.json()
+                    persisted_safety_stock = variant_inventory.get('safety_stock', 0)
+                    persisted_available = variant_inventory.get('available', 0)
+                    
+                    if persisted_safety_stock == 20:  # 15 + 5 from previous adjustments
+                        self.log_test("Safety Stock Persistence", True, 
+                                    f"Safety stock persisted correctly: {persisted_safety_stock}")
+                    else:
+                        self.log_test("Safety Stock Persistence", False, 
+                                    f"Expected 20, persisted value: {persisted_safety_stock}")
+                    
+                    # Verify available stock is still calculated correctly
+                    expected_available = max(0, original_on_hand - original_allocated - 20)
+                    if persisted_available == expected_available:
+                        self.log_test("Available Stock Persistence", True, 
+                                    f"Available stock calculation persisted: {persisted_available}")
+                    else:
+                        self.log_test("Available Stock Persistence", False, 
+                                    f"Expected {expected_available}, persisted: {persisted_available}")
+                        
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Variant Inventory Fetch", False, f"Status {resp.status}: {error_text}")
+                    return
+                    
+        except Exception as e:
+            self.log_test("Variant Inventory Fetch", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 5: Test both variants of Baby Blue product
+        print("\n🔄 Step 5: Testing second Baby Blue variant...")
+        
+        if len(baby_blue_variants) > 1:
+            second_variant = baby_blue_variants[1]
+            second_variant_id = second_variant['variant_id']
+            
+            # Test with second variant
+            second_adjustment = {
+                "variant_id": second_variant_id,
+                "adjustment_type": "set",
+                "safety_stock_value": 10,
+                "reason": "manual_adjustment",
+                "notes": "Testing safety stock on second Baby Blue variant"
+            }
+            
+            try:
+                async with self.session.post(f"{API_BASE}/admin/inventory/adjust", 
+                                           json=second_adjustment, headers=headers) as resp:
+                    if resp.status == 200:
+                        result = await resp.json()
+                        if result.get('safety_stock') == 10:
+                            self.log_test("Second Variant Safety Stock", True, 
+                                        f"Second variant safety stock set to {result.get('safety_stock')}")
+                        else:
+                            self.log_test("Second Variant Safety Stock", False, 
+                                        f"Expected 10, got {result.get('safety_stock')}")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Second Variant Safety Stock", False, f"Status {resp.status}: {error_text}")
+                        
+            except Exception as e:
+                self.log_test("Second Variant Safety Stock", False, f"Exception: {str(e)}")
+        else:
+            self.log_test("Second Variant Test", False, "Only one Baby Blue variant available")
+        
+        # Step 6: Verify safety stock affects available stock in inventory listing
+        print("\n📊 Step 6: Verifying safety stock in inventory listing...")
+        
+        try:
+            async with self.session.get(f"{API_BASE}/admin/inventory", headers=headers) as resp:
+                if resp.status == 200:
+                    final_inventory = await resp.json()
+                    
+                    # Find our test variants in the final listing
+                    for item in final_inventory:
+                        if item['variant_id'] == variant_id:
+                            final_safety_stock = item.get('safety_stock', 0)
+                            final_available = item.get('available', 0)
+                            final_on_hand = item.get('on_hand', 0)
+                            final_allocated = item.get('allocated', 0)
+                            
+                            # Verify the calculation: available = on_hand - allocated - safety_stock
+                            calculated_available = max(0, final_on_hand - final_allocated - final_safety_stock)
+                            
+                            if final_available == calculated_available:
+                                self.log_test("Final Available Stock Calculation", True, 
+                                            f"Available ({final_available}) = On Hand ({final_on_hand}) - Allocated ({final_allocated}) - Safety Stock ({final_safety_stock})")
+                            else:
+                                self.log_test("Final Available Stock Calculation", False, 
+                                            f"Expected {calculated_available}, got {final_available}")
+                            break
+                    else:
+                        self.log_test("Find Test Variant in Final Listing", False, "Test variant not found in final inventory listing")
+                        
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Final Inventory Listing", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Final Inventory Listing", False, f"Exception: {str(e)}")
+        
+        # Step 7: Test edge cases
+        print("\n⚠️ Step 7: Testing edge cases...")
+        
+        # Test negative safety stock change
+        negative_change = {
+            "variant_id": variant_id,
+            "adjustment_type": "change",
+            "safety_stock_change": -10,
+            "reason": "manual_adjustment",
+            "notes": "Testing negative safety stock change"
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/admin/inventory/adjust", 
+                                       json=negative_change, headers=headers) as resp:
+                if resp.status == 200:
+                    result = await resp.json()
+                    new_safety_stock = result.get('safety_stock', 0)
+                    expected_safety_stock = max(0, 20 - 10)  # Should be 10
+                    
+                    if new_safety_stock == expected_safety_stock:
+                        self.log_test("Negative Safety Stock Change", True, 
+                                    f"Safety stock reduced to {new_safety_stock}")
+                    else:
+                        self.log_test("Negative Safety Stock Change", False, 
+                                    f"Expected {expected_safety_stock}, got {new_safety_stock}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Negative Safety Stock Change", False, f"Status {resp.status}: {error_text}")
+                    
+        except Exception as e:
+            self.log_test("Negative Safety Stock Change", False, f"Exception: {str(e)}")
+        
+        print("\n✅ Safety Stock Management Testing Complete")
     
     def print_summary(self):
         """Print test summary"""
