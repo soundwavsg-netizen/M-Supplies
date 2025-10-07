@@ -152,7 +152,7 @@ class ProductService:
                     'max': max(all_prices) if all_prices else 0
                 }
                 
-                in_stock = any(v.get('stock_qty', 0) > 0 for v in variants)
+                in_stock = any(v.get('stock_qty', 0) > 0 or v.get('on_hand', 0) > 0 for v in variants)
             else:
                 price_range = {'min': 0, 'max': 0}
                 in_stock = False
