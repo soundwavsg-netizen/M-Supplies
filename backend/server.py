@@ -566,8 +566,8 @@ async def admin_list_inventory(
     mapping_repo = ChannelMappingRepository(db)
     inventory_service = InventoryService(ledger_repo, product_repo, mapping_repo)
     
-    # Get all products
-    products = await product_repo.list_products(skip=0, limit=1000, is_active=None)
+    # Get only active products (exclude deleted products)
+    products = await product_repo.list_products(skip=0, limit=1000, is_active=True)
     inventory_list = []
     
     for product in products:
