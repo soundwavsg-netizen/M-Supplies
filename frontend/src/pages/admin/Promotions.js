@@ -73,6 +73,28 @@ const Promotions = () => {
 
     const handleSubmit = async (e) => {
       e.preventDefault();
+      
+      // Frontend validation
+      if (!formData.code.trim()) {
+        toast.error('Coupon code is required');
+        return;
+      }
+      
+      if (!formData.description.trim()) {
+        toast.error('Description is required');
+        return;
+      }
+      
+      if (!formData.discount_value || parseFloat(formData.discount_value) <= 0) {
+        toast.error('Discount value must be greater than 0');
+        return;
+      }
+      
+      if (formData.discount_type === 'percentage' && parseFloat(formData.discount_value) > 100) {
+        toast.error('Percentage discount cannot exceed 100%');
+        return;
+      }
+      
       try {
         const token = localStorage.getItem('access_token');
         const payload = {
