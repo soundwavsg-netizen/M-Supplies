@@ -117,7 +117,15 @@ export const adminUsersAPI = {
 
 // Admin - Upload
 export const adminUploadAPI = {
-  images: (formData) => api.post('/admin/upload/images', formData),
+  images: (formData) => {
+    // Create a separate request for file uploads to avoid Content-Type conflicts
+    return axios.post(`${API_BASE}/admin/upload/images`, formData, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        // Don't set Content-Type - let browser set multipart/form-data with boundary
+      }
+    });
+  },
 };
 
 // Admin - Settings
