@@ -131,6 +131,7 @@ const ProductForm = () => {
       setAvailableTypes(['normal', 'premium', 'bubble wrap']);
       setAvailableCategories(['polymailers', 'accessories']);
       setAvailablePackSizes([25, 50, 100, 500, 1000]);
+      setAvailablePieceQuantities([1, 5, 10, 25, 50, 100]);
     }
   };
 
