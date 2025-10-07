@@ -12,6 +12,15 @@ import axios from 'axios';
 const Cart = () => {
   const { cart, loading, updateCartItem, clearCart } = useCart();
   const navigate = useNavigate();
+  
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [availableGifts, setAvailableGifts] = useState([]);
+  
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
   if (loading) {
     return (
