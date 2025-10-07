@@ -156,14 +156,23 @@ const PackingInterface = () => {
 
   const formatProductInfo = (item) => {
     const skuParts = item.sku.split('_');
-    const color = (skuParts[2] || '').replace(/([A-Z])/g, ' $1').trim();
+    const rawColor = skuParts[2] || '';
     const size = skuParts[3] || '';
     const packSize = skuParts[4] || '';
     
+    // Consistent color formatting: handle camelCase and convert to proper case
+    const color = rawColor
+      .replace(/([A-Z])/g, ' $1')  // Add space before capital letters
+      .trim()                       // Remove extra spaces
+      .toLowerCase()                // Convert to lowercase
+      .split(' ')                   // Split into words
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))  // Capitalize each word
+      .join(' ');                   // Join back together
+    
     return {
-      color: color.charAt(0).toUpperCase() + color.slice(1).toLowerCase(),
+      color: color,
       size: size.replace('x', ' × '),
-      packSize: packSize
+      packSize: packSize || '0'  // Ensure pack size is always shown
     };
   };
 
