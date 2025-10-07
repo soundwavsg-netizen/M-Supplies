@@ -112,6 +112,7 @@ const StockAdjustmentModal = ({ variant, onClose, onSuccess }) => {
               <SelectContent>
                 <SelectItem value="on_hand">📦 On Hand (Physical Stock)</SelectItem>
                 <SelectItem value="allocated">🔒 Allocated (Reserved for Orders)</SelectItem>
+                <SelectItem value="safety_stock">🛡️ Safety Stock (Minimum Reserve)</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-gray-500 mt-1">
