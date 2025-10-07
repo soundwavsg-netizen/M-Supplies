@@ -156,9 +156,32 @@ const PackingInterface = () => {
 
   const formatProductInfo = (item) => {
     const skuParts = item.sku.split('_');
-    const rawColor = skuParts[2] || '';
-    const size = skuParts[3] || '';
-    const packSize = skuParts[4] || '';
+    
+    // Handle inconsistent SKU structures - find pack size (number at end) and color
+    let packSize = '';
+    let rawColor = '';
+    let size = '';
+    
+    // Find pack size by looking for the last numeric part
+    for (let i = skuParts.length - 1; i >= 0; i--) {
+      if (/^\d+$/.test(skuParts[i])) {
+        packSize = skuParts[i];
+        break;
+      }
+    }
+    
+    // Extract color and size based on SKU structure
+    if (skuParts.length >= 5) {
+      // Handle cases like: POLYMAILERS_PREMIUM_BABY_BLUE_25x35_100
+      if (skuParts.length === 6 && skuParts[2] === 'BABY' && skuParts[3] === 'BLUE') {
+        rawColor = 'BABY BLUE';  // Reconstruct the color
+        size = skuParts[4] || '';
+      } else {
+        // Normal case: POLYMAILERS_PREMIUM_COLOR_SIZE_PACK
+        rawColor = skuParts[2] || '';
+        size = skuParts[3] || '';
+      }
+    }
     
     // Consistent color formatting: handle camelCase and convert to proper case
     const color = rawColor
