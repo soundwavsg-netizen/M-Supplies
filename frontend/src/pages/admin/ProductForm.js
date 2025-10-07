@@ -679,8 +679,9 @@ const ProductForm = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableColors.map(color => {
-                      const colorStr = typeof color === 'string' ? color : String(color);
+                    {Array.isArray(availableColors) && availableColors.map(color => {
+                      const colorStr = typeof color === 'string' ? color : String(color || '');
+                      if (!colorStr) return null;
                       return (
                         <SelectItem key={colorStr} value={colorStr} className="capitalize">
                           {colorStr}
