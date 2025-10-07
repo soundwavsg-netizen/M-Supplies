@@ -767,6 +767,30 @@ const ProductForm = () => {
                 {product.type === 'bubble wrap' && (
                   <p className="text-xs text-amber-600 mt-1">⚠️ Bubble wrap only available in white</p>
                 )}
+                
+                {/* Type Management */}
+                {availableTypes.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="text-xs text-gray-500">Manage types:</span>
+                    {availableTypes.map(type => {
+                      const typeStr = typeof type === 'string' ? type : String(type);
+                      return (
+                        <div key={typeStr} className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs">
+                          <span className="capitalize">{typeStr}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteType(typeStr)}
+                            className="h-4 w-4 p-0 text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
             <div className="mt-4">
