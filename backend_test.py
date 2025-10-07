@@ -1254,6 +1254,76 @@ class BackendTester:
                     
         except Exception as e:
             self.log_test("Wrong Field Names Test", False, f"Exception: {str(e)}")
+        
+        # Test 6: Reproduce the exact user issue (null valid_to)
+        print("\n📝 Test 6: Reproduce exact user issue (null valid_to)")
+        user_issue_payload = {
+            "code": "VIP10",
+            "type": "percent", 
+            "value": 10,
+            "min_order_amount": 0,
+            "valid_from": "2025-01-07T12:00:00.000Z",
+            "valid_to": None,  # This is what causes the user's issue
+            "is_active": True
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/admin/coupons", 
+                                       json=user_issue_payload, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 422:
+                    try:
+                        error_data = await resp.json() if response_text else {}
+                        self.log_test("User Issue Reproduction", True, 
+                                    f"Successfully reproduced user's 422 error: {error_data}")
+                        
+                        # Count the "field required" errors
+                        field_required_count = 0
+                        if 'detail' in error_data:
+                            for error in error_data['detail']:
+                                if 'Field required' in error.get('msg', '') or 'datetime_type' in error.get('type', ''):
+                                    field_required_count += 1
+                        
+                        self.log_test("Field Required Error Count", True, 
+                                    f"Found {field_required_count} field validation errors (user sees 'field required, field required, field required')")
+                    except:
+                        self.log_test("User Issue Reproduction", True, 
+                                    f"Successfully reproduced (raw): {response_text}")
+                else:
+                    self.log_test("User Issue Reproduction", False, 
+                                f"Expected 422, got {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("User Issue Reproduction", False, f"Exception: {str(e)}")
+        
+        # Test 7: Show the solution
+        print("\n📝 Test 7: Demonstrate the solution")
+        solution_payload = {
+            "code": "SOLUTION10",
+            "type": "percent", 
+            "value": 10,
+            "min_order_amount": 0,
+            "valid_from": "2025-01-07T12:00:00.000Z",
+            "valid_to": "2025-12-31T23:59:59.000Z",  # SOLUTION: Provide actual datetime
+            "is_active": True
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/admin/coupons", 
+                                       json=solution_payload, headers=headers) as resp:
+                response_text = await resp.text()
+                
+                if resp.status == 200:
+                    data = await resp.json()
+                    self.log_test("Solution Demonstration", True, 
+                                f"✅ SOLUTION WORKS: Coupon created successfully: {data.get('code')}")
+                else:
+                    self.log_test("Solution Demonstration", False, 
+                                f"Solution failed with status {resp.status}: {response_text}")
+                    
+        except Exception as e:
+            self.log_test("Solution Demonstration", False, f"Exception: {str(e)}")
 
     async def test_duplicate_categories_issue(self):
         """Test and investigate the duplicate categories issue"""
