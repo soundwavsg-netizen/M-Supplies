@@ -199,7 +199,7 @@ async def get_available_gift_tiers(
     service: PromotionService = Depends(get_promotion_service)
 ):
     """Get available gift tiers for given order amount"""
-    promotion_repo = PromotionRepository(await get_database())
+    promotion_repo = PromotionRepository(get_database())
     return await promotion_repo.get_available_gift_tiers_for_amount(order_amount)
 
 # ==================== ADMIN STATISTICS ====================
