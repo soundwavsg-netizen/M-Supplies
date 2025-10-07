@@ -213,12 +213,14 @@ class ProductRepository:
         # Get all categories (only from active products)
         categories = await self.products.distinct('category', {'is_active': True})
         
-        # Get price range
+        # Get price range (exclude 0 values)
         price_pipeline = [
+            {'$unwind': '$price_tiers'},
+            {'$match': {'price_tiers.price': {'$gt': 0}}},  # Exclude 0 values
             {'$group': {
                 '_id': None,
-                'min_price': {'$min': {'$arrayElemAt': ['$price_tiers.price', 0]}},
-                'max_price': {'$max': {'$arrayElemAt': ['$price_tiers.price', 0]}}
+                'min_price': {'$min': '$price_tiers.price'},
+                'max_price': {'$max': '$price_tiers.price'}
             }}
         ]
         price_result = await self.variants.aggregate(price_pipeline).to_list(length=1)
