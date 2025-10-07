@@ -276,6 +276,8 @@ class InventoryService:
             update_data['on_hand'] = new_on_hand
         if allocated_change != 0:
             update_data['allocated'] = new_allocated
+        if safety_stock_change != 0:
+            update_data['safety_stock'] = new_safety_stock
             
         if update_data:
             await self.product_repo.update_variant(adjustment.variant_id, update_data)
