@@ -66,6 +66,11 @@ class ProductRepository:
         )
         return result.modified_count > 0
     
+    async def delete_variants_by_product(self, product_id: str) -> bool:
+        """Delete all variants for a specific product"""
+        result = await self.variants.delete_many({'product_id': product_id})
+        return result.deleted_count > 0
+    
     async def delete_product(self, product_id: str) -> bool:
         # Soft delete - just mark as inactive
         result = await self.products.update_one(
