@@ -131,8 +131,26 @@ class CartService:
                 'line_total': line_total
             })
         
-        # Calculate total (no GST)
-        total = subtotal
+        # Calculate shipping cost
+        shipping_items = []
+        for item in detailed_items:
+            # Get weight from variant or use default
+            weight = item.get('attributes', {}).get('weight_grams', 0)
+            if weight <= 0:
+                weight = self.shipping_service._get_default_weight(item.get('sku', ''))
+            
+            shipping_items.append(ShippingItem(
+                variant_id=item['variant_id'],
+                quantity=item['quantity'],
+                weight_grams=weight,
+                value=item['line_total'],
+                name=item['product_name']
+            ))
+        
+        shipping_result = self.shipping_service.calculate_shipping(shipping_items, subtotal)
+        
+        # Calculate final total (subtotal + shipping, no GST)
+        total = subtotal + shipping_result.shipping_fee
         
         return {
             'id': cart['id'],
@@ -140,6 +158,10 @@ class CartService:
             'session_id': cart.get('session_id'),
             'items': detailed_items,
             'subtotal': round(subtotal, 2),
+            'shipping_fee': round(shipping_result.shipping_fee, 2),
+            'shipping_method': shipping_result.method,
+            'total_weight_grams': shipping_result.total_weight_grams,
+            'delivery_estimate': shipping_result.delivery_estimate,
             'gst': 0.0,  # No GST for now
             'total': round(total, 2),
             'updated_at': cart['updated_at']
