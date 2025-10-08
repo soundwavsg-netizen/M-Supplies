@@ -181,6 +181,16 @@ const Checkout = () => {
                 </div>
               </div>
 
+              {/* Gift Selection Section */}
+              {availableGifts && availableGifts.length > 0 && (
+                <div className="bg-white rounded-lg p-6 shadow-sm">
+                  <GiftSelection 
+                    availableGifts={availableGifts} 
+                    onGiftSelect={setSelectedGifts}
+                  />
+                </div>
+              )}
+
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <h2 className="text-xl font-semibold text-slate-900 mb-4">Payment Method</h2>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
