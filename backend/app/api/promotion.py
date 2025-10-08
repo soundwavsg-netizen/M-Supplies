@@ -211,7 +211,7 @@ async def get_nearby_gift_tiers(
     promotion_repo = PromotionRepository(get_database())
     
     # Get all active gift tiers
-    all_tiers = await promotion_repo.get_all_gift_tiers()
+    all_tiers = await promotion_repo.list_gift_tiers()
     active_tiers = [tier for tier in all_tiers if tier.is_active]
     
     # Find tiers that are close but not yet achieved
