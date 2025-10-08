@@ -336,7 +336,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "AI Chat Widget Integration Testing Complete"
+    - "Coupon Persistence Between Cart and Checkout"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
