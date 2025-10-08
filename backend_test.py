@@ -7517,27 +7517,31 @@ class BackendTester:
                     "Identified schema mismatch between user data and backend expectations")
 
 async def main():
-    """Run backend tests focused on Discount Code Authentication Fix"""
-    print("🚀 Starting M Supplies Backend API Tests - Discount Code Authentication Fix")
+    """Run backend tests focused on Coupon Persistence Between Cart and Checkout"""
+    print("🚀 Starting M Supplies Backend API Tests - Coupon Persistence System")
     print(f"Testing against: {API_BASE}")
-    print("🎯 FOCUS: Test discount code authentication fix for guest users")
-    print("User Request: Test the discount code authentication fix")
+    print("🎯 FOCUS: Test coupon persistence system between cart and checkout")
+    print("User Request: Test the updated coupon persistence system between cart and checkout")
     print("Testing scenarios:")
-    print("1. Guest User Coupon Validation (WITHOUT authentication token)")
-    print("2. Authenticated User Coupon Validation (WITH valid JWT token)")
-    print("3. Coupon System Setup (check/create test coupons)")
-    print("4. Error Handling (invalid/expired coupon codes)")
-    print("5. Malformed request data handling")
+    print("1. Coupon Persistence Test - Apply coupon in cart, navigate to checkout, verify persistence")
+    print("2. Checkout Coupon Management - Add/remove coupons directly on checkout page")
+    print("3. Order Creation with Coupon - Place order with applied coupon, verify coupon info included")
+    print("4. Cross-Page Functionality - Apply coupon in cart, go to checkout, remove coupon, go back to cart")
+    print("5. Backend API Integration - Test /api/promotions/validate for both guest and authenticated users")
     print("Expected Results:")
-    print("- Guest users should validate discount codes without authentication errors")
-    print("- Both guest and authenticated users should receive appropriate responses")
-    print("- Invalid codes should return proper error messages, not authentication errors")
+    print("- Coupons applied in cart should persist when navigating to checkout")
+    print("- Discount calculations should update correctly on both pages")
+    print("- Order creation should include coupon_code and discount_amount")
+    print("- Coupon state should be consistent across pages")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Test discount code authentication fix
+        # PRIORITY TEST: Test coupon persistence between cart and checkout
+        await tester.test_coupon_persistence_between_cart_and_checkout()
+        
+        # Additional test: Discount code authentication (already working)
         await tester.test_discount_code_authentication_fix()
         
         # Print summary
