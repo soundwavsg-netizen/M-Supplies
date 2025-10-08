@@ -210,10 +210,6 @@ const Checkout = () => {
                       <span>-{formatPrice(discountAmount)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-gray-600">
-                    <span>GST (9%)</span>
-                    <span>{formatPrice(cart.gst)}</span>
-                  </div>
                   <div className="flex justify-between text-lg font-bold text-slate-900">
                     <span>Total</span>
                     <span data-testid="order-total">{formatPrice(finalTotal)}</span>
