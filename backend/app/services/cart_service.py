@@ -9,6 +9,7 @@ class CartService:
     def __init__(self, cart_repo: CartRepository, product_repo: ProductRepository):
         self.cart_repo = cart_repo
         self.product_repo = product_repo
+        self.shipping_service = BasicShippingService()
     
     async def get_or_create_cart(self, user_id: Optional[str] = None, session_id: Optional[str] = None) -> Dict[str, Any]:
         cart = await self.cart_repo.get_cart(user_id, session_id)
