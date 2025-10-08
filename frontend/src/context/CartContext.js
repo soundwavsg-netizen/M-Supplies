@@ -105,6 +105,13 @@ export const CartProvider = ({ children }) => {
         addToCart,
         updateCartItem,
         clearCart,
+        // Coupon functionality
+        appliedCoupon,
+        discountAmount,
+        availableGifts,
+        finalTotal,
+        applyCoupon,
+        removeCoupon,
       }}
     >
       {children}
