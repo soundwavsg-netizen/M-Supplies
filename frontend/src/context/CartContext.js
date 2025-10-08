@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { cartAPI } from '@/lib/api';
 import { toast } from 'sonner';
 import axios from 'axios';
