@@ -188,6 +188,14 @@ function AppContent() {
               </AdminRoute>
             }
           />
+          <Route
+            path="/admin/gifts"
+            element={
+              <AdminRoute>
+                <GiftManagement />
+              </AdminRoute>
+            }
+          />
 
           {/* 404 */}
           <Route path="*" element={<Navigate to="/" replace />} />
