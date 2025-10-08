@@ -15,6 +15,9 @@ class VariantAttributes(BaseModel):
     color: str  # e.g., "white", "pastel pink", "champagne pink", "milktea"
     pack_size: int  # Number of pieces per pack - part of variant identity
     
+    # Weight for shipping calculations
+    weight_grams: Optional[float] = Field(None, description="Weight in grams for shipping calculation")
+    
     # Optional legacy fields
     thickness: Optional[str] = None  # e.g., "60 micron"
 
