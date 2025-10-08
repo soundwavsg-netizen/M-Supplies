@@ -354,9 +354,9 @@ metadata:
 
 metadata:
   created_by: "main_agent"
-  version: "1.0"
-  test_sequence: 3
-  run_ui: true
+  version: "1.1"
+  test_sequence: 4
+  run_ui: false
 
   - task: "Image Upload 422 Validation Error Debug"
     implemented: true
