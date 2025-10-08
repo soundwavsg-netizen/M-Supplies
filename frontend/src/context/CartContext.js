@@ -187,6 +187,7 @@ export const CartProvider = ({ children }) => {
         finalTotal,
         applyCoupon,
         removeCoupon,
+        revalidateCoupon,
       }}
     >
       {children}
