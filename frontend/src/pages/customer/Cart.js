@@ -10,15 +10,12 @@ import { toast } from 'sonner';
 import axios from 'axios';
 
 const Cart = () => {
-  const { cart, loading, updateCartItem, clearCart } = useCart();
+  const { cart, loading, updateCartItem, clearCart, appliedCoupon, discountAmount, availableGifts, finalTotal, applyCoupon, removeCoupon } = useCart();
   const navigate = useNavigate();
   
-  // Coupon state
+  // Coupon state (now managed in context, but we still need local state for input)
   const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponLoading, setCouponLoading] = useState(false);
-  const [discountAmount, setDiscountAmount] = useState(0);
-  const [availableGifts, setAvailableGifts] = useState([]);
   
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
