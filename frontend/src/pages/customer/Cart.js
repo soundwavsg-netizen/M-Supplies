@@ -70,15 +70,13 @@ const Cart = () => {
     }
   };
 
-  const removeCoupon = () => {
-    setAppliedCoupon(null);
-    setDiscountAmount(0);
-    setAvailableGifts([]);
+  const removeCouponLocal = () => {
+    removeCoupon(); // Call the context function
     setCouponCode('');
   };
 
-  // Calculate final total with discount
-  const finalTotal = cart.total - discountAmount;
+  // Calculate final total with discount (now comes from context)
+  // Remove local calculation since it's now in context
 
   if (loading) {
     return (
