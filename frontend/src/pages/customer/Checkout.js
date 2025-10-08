@@ -57,6 +57,11 @@ const Checkout = () => {
         orderData.discount_amount = discountAmount;
       }
       
+      // Add selected gifts if any
+      if (selectedGifts.length > 0) {
+        orderData.selected_gifts = selectedGifts;
+      }
+      
       const response = await ordersAPI.create(orderData);
       
       const order = response.data;
