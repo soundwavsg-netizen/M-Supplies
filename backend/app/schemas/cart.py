@@ -20,7 +20,7 @@ class CartResponse(BaseModel):
     session_id: Optional[str] = None
     items: List[CartItemResponse]
     subtotal: float
-    gst: float
+    gst: float = Field(default=0.0, description="GST amount (currently 0.0)")
     total: float
     updated_at: datetime
 
