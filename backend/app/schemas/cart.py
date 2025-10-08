@@ -20,6 +20,10 @@ class CartResponse(BaseModel):
     session_id: Optional[str] = None
     items: List[CartItemResponse]
     subtotal: float
+    shipping_fee: float = Field(default=0.0, description="Shipping cost based on weight")
+    shipping_method: Optional[str] = Field(None, description="Shipping method name")
+    total_weight_grams: Optional[float] = Field(None, description="Total cart weight in grams")
+    delivery_estimate: Optional[str] = Field(None, description="Estimated delivery time")
     gst: float = Field(default=0.0, description="GST amount (currently 0.0)")
     total: float
     updated_at: datetime
