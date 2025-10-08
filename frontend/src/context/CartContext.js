@@ -25,7 +25,7 @@ export const CartProvider = ({ children }) => {
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
   // Automatic coupon revalidation when cart changes
-  const revalidateCoupon = async (updatedCart) => {
+  const revalidateCoupon = useCallback(async (updatedCart) => {
     if (!appliedCoupon || !updatedCart) {
       return;
     }
@@ -74,7 +74,7 @@ export const CartProvider = ({ children }) => {
       removeCoupon();
       toast.warning('Coupon removed due to validation error');
     }
-  };
+  }, [appliedCoupon, discountAmount, BACKEND_URL]);
 
   const fetchCart = async () => {
     try {
