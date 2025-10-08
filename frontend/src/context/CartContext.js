@@ -67,11 +67,31 @@ export const CartProvider = ({ children }) => {
     try {
       await cartAPI.clear();
       setCart({ ...cart, items: [], subtotal: 0, gst: 0, total: 0 });
+      // Clear coupon state when cart is cleared
+      setAppliedCoupon(null);
+      setDiscountAmount(0);
+      setAvailableGifts([]);
       toast.success('Cart cleared');
     } catch (error) {
       toast.error('Failed to clear cart');
     }
   };
+
+  // Coupon management functions
+  const applyCoupon = (coupon, discount, gifts = []) => {
+    setAppliedCoupon(coupon);
+    setDiscountAmount(discount);
+    setAvailableGifts(gifts);
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
+    setAvailableGifts([]);
+  };
+
+  // Calculate final total with discount
+  const finalTotal = cart ? cart.total - discountAmount : 0;
 
   const cartItemCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
