@@ -9,7 +9,7 @@ import GiftSelection from '@/components/ui/GiftSelection';
 import GiftPromotion from '@/components/ui/GiftPromotion';
 
 const Cart = () => {
-  const { cart, loading, updateCartItem, clearCart, appliedCoupon, discountAmount, availableGifts, finalTotal } = useCart();
+  const { cart, loading, updateCartItem, clearCart, appliedCoupon, discountAmount, availableGifts, finalTotal, selectedGifts, nearbyGiftTiers, selectGifts } = useCart();
   const navigate = useNavigate();
   
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
