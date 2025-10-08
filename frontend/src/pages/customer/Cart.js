@@ -187,6 +187,16 @@ const Cart = () => {
                   </div>
                 )}
                 <div className="flex justify-between text-gray-600">
+                  <span>Shipping</span>
+                  <span data-testid="shipping">
+                    {cart.shipping_fee > 0 ? formatPrice(cart.shipping_fee) : 'Free'}
+                  </span>
+                </div>
+                {cart.total_weight_grams && (
+                  <div className="text-xs text-gray-500">
+                    Total weight: {Math.round(cart.total_weight_grams)}g • {cart.delivery_estimate}
+                  </div>
+                )}
                 <div className="border-t pt-3 flex justify-between text-lg font-bold text-slate-900">
                   <span>Total</span>
                   <span data-testid="total" className={discountAmount > 0 ? 'text-green-600' : ''}>
