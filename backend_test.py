@@ -7905,32 +7905,33 @@ class BackendTester:
             self.log_test("SECURITY LOOPHOLE TEST - Complete Scenario", False, f"Exception: {str(e)}")
 
 async def main():
-    """Run backend tests focused on Coupon Persistence Between Cart and Checkout"""
-    print("🚀 Starting M Supplies Backend API Tests - Coupon Persistence System")
+    """Run backend tests focused on Automatic Coupon Revalidation System"""
+    print("🚀 Starting M Supplies Backend API Tests - Coupon Revalidation Security System")
     print(f"Testing against: {API_BASE}")
-    print("🎯 FOCUS: Test coupon persistence system between cart and checkout")
-    print("User Request: Test the updated coupon persistence system between cart and checkout")
+    print("🔒 FOCUS: Test automatic coupon revalidation system to prevent discount loopholes")
+    print("User Request: Test the automatic coupon revalidation system to prevent the discount loophole")
     print("Testing scenarios:")
-    print("1. Coupon Persistence Test - Apply coupon in cart, navigate to checkout, verify persistence")
-    print("2. Checkout Coupon Management - Add/remove coupons directly on checkout page")
-    print("3. Order Creation with Coupon - Place order with applied coupon, verify coupon info included")
-    print("4. Cross-Page Functionality - Apply coupon in cart, go to checkout, remove coupon, go back to cart")
-    print("5. Backend API Integration - Test /api/promotions/validate for both guest and authenticated users")
+    print("1. Percentage Coupon Recalculation Test - Apply 10% coupon on different order amounts")
+    print("2. Minimum Order Amount Security Test - Test coupon removal when cart drops below minimum")
+    print("3. Edge Cases & Security Validation - Test 50% discount recalculation scenarios")
+    print("4. API Integration Validation - Test /api/promotions/validate endpoint")
+    print("5. Comprehensive Security Scenario - Simulate exact loophole described in review")
     print("Expected Results:")
-    print("- Coupons applied in cart should persist when navigating to checkout")
-    print("- Discount calculations should update correctly on both pages")
-    print("- Order creation should include coupon_code and discount_amount")
-    print("- Coupon state should be consistent across pages")
+    print("- Percentage discounts must recalculate when cart total changes")
+    print("- Coupons must be removed if cart doesn't meet minimum requirements")
+    print("- Fixed discounts should stay the same (unless below minimum)")
+    print("- No way for users to exploit the discount system")
+    print("CRITICAL: Security loophole where users can remove items but keep large discounts should be closed")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Test coupon persistence between cart and checkout
-        await tester.test_coupon_persistence_between_cart_and_checkout()
+        # PRIORITY TEST: Test automatic coupon revalidation system (security critical)
+        await tester.test_automatic_coupon_revalidation_system()
         
-        # Additional test: Discount code authentication (already working)
-        await tester.test_discount_code_authentication_fix()
+        # Additional test: Test coupon persistence between cart and checkout
+        await tester.test_coupon_persistence_between_cart_and_checkout()
         
         # Print summary
         passed, failed = tester.print_summary()
