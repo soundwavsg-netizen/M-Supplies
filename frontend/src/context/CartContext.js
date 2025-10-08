@@ -101,9 +101,16 @@ export const CartProvider = ({ children }) => {
   const addToCart = async (variantId, quantity = 1) => {
     try {
       const response = await cartAPI.add({ variant_id: variantId, quantity });
-      setCart(response.data);
+      const newCart = response.data;
+      setCart(newCart);
+      
+      // Revalidate coupon after adding item
+      if (appliedCoupon && newCart) {
+        await revalidateCoupon(newCart);
+      }
+      
       toast.success('Added to cart');
-      return response.data;
+      return newCart;
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to add to cart');
       throw error;
@@ -113,11 +120,18 @@ export const CartProvider = ({ children }) => {
   const updateCartItem = async (variantId, quantity) => {
     try {
       const response = await cartAPI.update(variantId, { quantity });
-      setCart(response.data);
+      const newCart = response.data;
+      setCart(newCart);
+      
+      // Revalidate coupon after updating cart
+      if (appliedCoupon && newCart) {
+        await revalidateCoupon(newCart);
+      }
+      
       if (quantity === 0) {
         toast.success('Item removed from cart');
       }
-      return response.data;
+      return newCart;
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to update cart');
       throw error;
