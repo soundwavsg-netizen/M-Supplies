@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import axios from 'axios';
+import CouponSection from '@/components/ui/CouponSection';
 
 const Cart = () => {
   const { cart, loading, updateCartItem, clearCart, appliedCoupon, discountAmount, availableGifts, finalTotal, applyCoupon, removeCoupon } = useCart();
