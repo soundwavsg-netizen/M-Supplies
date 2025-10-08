@@ -187,18 +187,28 @@ const Checkout = () => {
                     </div>
                   ))}
                 </div>
+                
+                {/* Coupon Section */}
+                <CouponSection showTitle={true} />
+                
                 <div className="border-t pt-3 space-y-2 mb-4">
                   <div className="flex justify-between text-gray-600">
                     <span>Subtotal</span>
                     <span>{formatPrice(cart.subtotal)}</span>
                   </div>
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount ({appliedCoupon.code})</span>
+                      <span>-{formatPrice(discountAmount)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-gray-600">
                     <span>GST (9%)</span>
                     <span>{formatPrice(cart.gst)}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold text-slate-900">
                     <span>Total</span>
-                    <span data-testid="order-total">{formatPrice(cart.total)}</span>
+                    <span data-testid="order-total">{formatPrice(finalTotal)}</span>
                   </div>
                 </div>
                 <Button
