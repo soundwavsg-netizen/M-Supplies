@@ -8457,33 +8457,35 @@ class BackendTester:
             self.log_test("Cart Structure Test Cleanup", False, f"Exception: {str(e)}")
 
 async def main():
-    """Run backend tests focused on Automatic Coupon Revalidation System"""
-    print("🚀 Starting M Supplies Backend API Tests - Coupon Revalidation Security System")
+    """Run backend tests focused on GST removal and shipping implementation"""
+    print("🚀 Starting M Supplies Backend API Tests - GST Removal & Shipping Implementation")
     print(f"Testing against: {API_BASE}")
-    print("🔒 FOCUS: Test automatic coupon revalidation system to prevent discount loopholes")
-    print("User Request: Test the automatic coupon revalidation system to prevent the discount loophole")
+    print("🎯 FOCUS: Test GST removal and basic shipping implementation")
+    print("User Request: Test the GST removal and basic shipping implementation")
     print("Testing scenarios:")
-    print("1. Percentage Coupon Recalculation Test - Apply 10% coupon on different order amounts")
-    print("2. Minimum Order Amount Security Test - Test coupon removal when cart drops below minimum")
-    print("3. Edge Cases & Security Validation - Test 50% discount recalculation scenarios")
-    print("4. API Integration Validation - Test /api/promotions/validate endpoint")
-    print("5. Comprehensive Security Scenario - Simulate exact loophole described in review")
+    print("1. GST Removal Verification - Ensure GST is 0.0 in cart and order calculations")
+    print("2. Basic Shipping Calculation - Test weight-based shipping with tiered rates")
+    print("3. Gift System APIs - Test gift item and gift tier management")
+    print("4. Updated Cart Structure - Verify cart includes shipping fields")
     print("Expected Results:")
-    print("- Percentage discounts must recalculate when cart total changes")
-    print("- Coupons must be removed if cart doesn't meet minimum requirements")
-    print("- Fixed discounts should stay the same (unless below minimum)")
-    print("- No way for users to exploit the discount system")
-    print("CRITICAL: Security loophole where users can remove items but keep large discounts should be closed")
+    print("- No GST in any calculations")
+    print("- Shipping fees calculated based on weight tiers")
+    print("- Free shipping for orders over $50")
+    print("- Gift system APIs functional for admin management")
+    print("- Cart totals include shipping but no GST")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Test automatic coupon revalidation system (security critical)
-        await tester.test_automatic_coupon_revalidation_system()
+        # PRIORITY TESTS: GST removal and shipping implementation
+        await tester.test_gst_removal_verification()
+        await tester.test_basic_shipping_calculation()
+        await tester.test_gift_system_apis()
+        await tester.test_updated_cart_structure()
         
-        # Additional test: Test coupon persistence between cart and checkout
-        await tester.test_coupon_persistence_between_cart_and_checkout()
+        # Additional test: Test automatic coupon revalidation system (existing)
+        await tester.test_automatic_coupon_revalidation_system()
         
         # Print summary
         passed, failed = tester.print_summary()
