@@ -15,6 +15,11 @@ export const useCart = () => {
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(false);
+  
+  // Coupon state management
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [availableGifts, setAvailableGifts] = useState([]);
 
   const fetchCart = async () => {
     try {
