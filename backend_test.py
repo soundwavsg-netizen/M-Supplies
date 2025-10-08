@@ -1082,136 +1082,431 @@ class BackendTester:
         except Exception as e:
             self.log_test("Pricing Calculation Logic", False, f"Exception: {str(e)}")
 
-    async def test_promotion_data_loading_after_coupon_creation(self):
-        """Test the specific issue: 'failed to load promotions data' after coupon creation"""
-        print("\n🎯 Testing Promotion Data Loading After Coupon Creation...")
-        print("Testing all APIs called in fetchAllData() to identify which one is failing")
+    async def test_gift_tier_system_comprehensive(self):
+        """Test the complete gift tier system with post-discount threshold checking"""
+        print("\n🎁 Testing Complete Gift Tier System with Post-Discount Threshold Checking...")
+        print("Testing gift tier eligibility based on amount AFTER discount is applied")
         
         if not self.admin_token:
-            self.log_test("Promotion Data Loading Test", False, "No admin token available")
+            self.log_test("Gift Tier System Test", False, "No admin token available")
             return
         
         headers = {"Authorization": f"Bearer {self.admin_token}"}
         
-        # Step 1: Create a coupon first (this should work based on previous tests)
-        print("\n📝 Step 1: Create a coupon (should succeed)")
+        # Step 1: Create test gift items
+        print("\n📝 Step 1: Create test gift items")
+        gift_items = []
+        test_gifts = [
+            {"name": "Free Sticker Pack", "description": "Colorful stickers for packaging", "stock_quantity": 100},
+            {"name": "Mini Bubble Wrap", "description": "Small bubble wrap sample", "stock_quantity": 50},
+            {"name": "Premium Tape Roll", "description": "High-quality packaging tape", "stock_quantity": 25}
+        ]
+        
+        for gift_data in test_gifts:
+            try:
+                async with self.session.post(f"{API_BASE}/admin/gift-items", 
+                                           json=gift_data, headers=headers) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        gift_items.append(data)
+                        self.log_test(f"Create Gift Item - {gift_data['name']}", True, 
+                                    f"Created with ID: {data.get('id')}")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test(f"Create Gift Item - {gift_data['name']}", False, 
+                                    f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test(f"Create Gift Item - {gift_data['name']}", False, f"Exception: {str(e)}")
+        
+        if len(gift_items) < 2:
+            self.log_test("Gift Items Creation", False, "Need at least 2 gift items for testing")
+            return
+        
+        # Step 2: Create test gift tiers
+        print("\n📝 Step 2: Create test gift tiers")
+        gift_tiers = []
+        tier_configs = [
+            {
+                "name": "$20 Tier",
+                "spending_threshold": 20.0,
+                "gift_limit": 1,
+                "gift_item_ids": [gift_items[0]['id']]
+            },
+            {
+                "name": "$30 Tier", 
+                "spending_threshold": 30.0,
+                "gift_limit": 1,
+                "gift_item_ids": [gift_items[1]['id']]
+            },
+            {
+                "name": "$50 Tier",
+                "spending_threshold": 50.0,
+                "gift_limit": 2,
+                "gift_item_ids": [gift_items[0]['id'], gift_items[1]['id']]
+            },
+            {
+                "name": "$75 Tier",
+                "spending_threshold": 75.0,
+                "gift_limit": 2,
+                "gift_item_ids": [gift_items[1]['id'], gift_items[2]['id']] if len(gift_items) > 2 else [gift_items[0]['id'], gift_items[1]['id']]
+            }
+        ]
+        
+        for tier_data in tier_configs:
+            try:
+                async with self.session.post(f"{API_BASE}/admin/gift-tiers", 
+                                           json=tier_data, headers=headers) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        gift_tiers.append(data)
+                        self.log_test(f"Create Gift Tier - {tier_data['name']}", True, 
+                                    f"Created with threshold ${tier_data['spending_threshold']}")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test(f"Create Gift Tier - {tier_data['name']}", False, 
+                                    f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test(f"Create Gift Tier - {tier_data['name']}", False, f"Exception: {str(e)}")
+        
+        if len(gift_tiers) < 2:
+            self.log_test("Gift Tiers Creation", False, "Need at least 2 gift tiers for testing")
+            return
+        
+        # Step 3: Create test coupon for discount testing
+        print("\n📝 Step 3: Create test coupon for discount testing")
         coupon_payload = {
-            "code": "TESTLOAD10",
-            "type": "percent",
-            "value": 10,
-            "valid_from": "2025-01-07T12:00:00.000Z",
-            "valid_to": "2025-12-31T23:59:59.000Z",
+            "code": "GIFT20OFF",
+            "description": "20% off for gift tier testing",
+            "discount_type": "percentage",
+            "discount_value": 20,
+            "usage_type": "unlimited",
+            "minimum_order_amount": 0,
             "is_active": True
         }
         
-        coupon_created = False
+        test_coupon = None
         try:
             async with self.session.post(f"{API_BASE}/admin/coupons", 
                                        json=coupon_payload, headers=headers) as resp:
                 if resp.status == 200:
-                    data = await resp.json()
-                    coupon_created = True
-                    self.log_test("Coupon Creation for Data Loading Test", True, 
-                                f"Coupon created: {data.get('code')}")
+                    test_coupon = await resp.json()
+                    self.log_test("Create Test Coupon", True, 
+                                f"Created coupon: {test_coupon.get('code')}")
                 else:
                     error_text = await resp.text()
-                    self.log_test("Coupon Creation for Data Loading Test", False, 
+                    self.log_test("Create Test Coupon", False, 
                                 f"Status {resp.status}: {error_text}")
         except Exception as e:
-            self.log_test("Coupon Creation for Data Loading Test", False, f"Exception: {str(e)}")
+            self.log_test("Create Test Coupon", False, f"Exception: {str(e)}")
         
-        # Step 2: Test GET /api/admin/coupons (should return the newly created coupon)
-        print("\n📝 Step 2: Test GET /api/admin/coupons")
-        try:
-            async with self.session.get(f"{API_BASE}/admin/coupons", headers=headers) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    coupon_count = len(data)
-                    
-                    # Check if our newly created coupon is in the list
-                    if coupon_created:
-                        coupon_found = any(c.get('code') == 'TESTLOAD10' for c in data)
-                        if coupon_found:
-                            self.log_test("GET /api/admin/coupons", True, 
-                                        f"Found {coupon_count} coupons including newly created one")
+        # Step 4: Test gift tier qualification after discount
+        print("\n📝 Step 4: Test gift tier qualification after discount")
+        
+        # Test scenario: $30 subtotal, apply 20% discount = $24 after discount
+        # Should qualify for $20 tier but NOT $30 tier
+        test_scenarios = [
+            {
+                "name": "Post-Discount $20 Tier Qualification",
+                "subtotal": 30.0,
+                "coupon_code": "GIFT20OFF",
+                "expected_after_discount": 24.0,
+                "should_qualify_for": ["$20 Tier"],
+                "should_not_qualify_for": ["$30 Tier", "$50 Tier", "$75 Tier"]
+            },
+            {
+                "name": "Post-Discount $30 Tier Qualification", 
+                "subtotal": 40.0,
+                "coupon_code": "GIFT20OFF",
+                "expected_after_discount": 32.0,
+                "should_qualify_for": ["$20 Tier", "$30 Tier"],
+                "should_not_qualify_for": ["$50 Tier", "$75 Tier"]
+            },
+            {
+                "name": "No Discount Qualification",
+                "subtotal": 25.0,
+                "coupon_code": None,
+                "expected_after_discount": 25.0,
+                "should_qualify_for": ["$20 Tier"],
+                "should_not_qualify_for": ["$30 Tier", "$50 Tier", "$75 Tier"]
+            }
+        ]
+        
+        for scenario in test_scenarios:
+            print(f"\n  Testing: {scenario['name']}")
+            
+            validation_data = {
+                "order_subtotal": scenario["subtotal"],
+                "user_id": None
+            }
+            
+            if scenario["coupon_code"]:
+                validation_data["coupon_code"] = scenario["coupon_code"]
+            
+            try:
+                async with self.session.post(f"{API_BASE}/promotions/validate", 
+                                           json=validation_data) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        
+                        if data.get('valid'):
+                            discount_amount = data.get('discount_amount', 0)
+                            final_amount = scenario["subtotal"] - discount_amount
+                            available_tiers = data.get('available_gift_tiers', [])
+                            tier_names = [tier.get('name') for tier in available_tiers]
+                            
+                            # Check discount calculation
+                            if abs(final_amount - scenario["expected_after_discount"]) < 0.01:
+                                self.log_test(f"{scenario['name']} - Discount Calculation", True, 
+                                            f"Final amount: ${final_amount}")
+                            else:
+                                self.log_test(f"{scenario['name']} - Discount Calculation", False, 
+                                            f"Expected ${scenario['expected_after_discount']}, got ${final_amount}")
+                            
+                            # Check tier qualification
+                            for expected_tier in scenario["should_qualify_for"]:
+                                if expected_tier in tier_names:
+                                    self.log_test(f"{scenario['name']} - Qualifies for {expected_tier}", True, 
+                                                "Correctly qualified")
+                                else:
+                                    self.log_test(f"{scenario['name']} - Qualifies for {expected_tier}", False, 
+                                                f"Should qualify but didn't. Available: {tier_names}")
+                            
+                            for not_expected_tier in scenario["should_not_qualify_for"]:
+                                if not_expected_tier not in tier_names:
+                                    self.log_test(f"{scenario['name']} - Does NOT qualify for {not_expected_tier}", True, 
+                                                "Correctly excluded")
+                                else:
+                                    self.log_test(f"{scenario['name']} - Does NOT qualify for {not_expected_tier}", False, 
+                                                f"Should not qualify but did. Available: {tier_names}")
                         else:
-                            self.log_test("GET /api/admin/coupons", False, 
-                                        f"Found {coupon_count} coupons but newly created coupon missing")
+                            self.log_test(f"{scenario['name']} - Validation", False, 
+                                        f"Validation failed: {data.get('error_message')}")
                     else:
-                        self.log_test("GET /api/admin/coupons", True, 
-                                    f"Endpoint working, found {coupon_count} coupons")
-                else:
-                    error_text = await resp.text()
-                    self.log_test("GET /api/admin/coupons", False, 
-                                f"Status {resp.status}: {error_text}")
-        except Exception as e:
-            self.log_test("GET /api/admin/coupons", False, f"Exception: {str(e)}")
+                        error_text = await resp.text()
+                        self.log_test(f"{scenario['name']} - API Call", False, 
+                                    f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test(f"{scenario['name']} - API Call", False, f"Exception: {str(e)}")
         
-        # Step 3: Test GET /api/admin/gift-items
-        print("\n📝 Step 3: Test GET /api/admin/gift-items")
+        # Step 5: Test nearby gift tiers API
+        print("\n📝 Step 5: Test nearby gift tiers API")
+        
+        nearby_test_scenarios = [
+            {
+                "order_amount": 45.0,
+                "expected_nearby": ["$50 Tier", "$75 Tier"],
+                "description": "Order amount $45 should show nearby $50 and $75 tiers"
+            },
+            {
+                "order_amount": 80.0,
+                "expected_nearby": [],
+                "description": "Order amount $80 should show no nearby tiers (above all thresholds)"
+            },
+            {
+                "order_amount": 15.0,
+                "expected_nearby": ["$20 Tier"],
+                "description": "Order amount $15 should show nearby $20 tier"
+            }
+        ]
+        
+        for scenario in nearby_test_scenarios:
+            try:
+                async with self.session.get(f"{API_BASE}/gift-tiers/nearby?order_amount={scenario['order_amount']}") as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        nearby_tiers = data.get('nearby_tiers', [])
+                        
+                        # Check response structure
+                        if nearby_tiers:
+                            first_tier = nearby_tiers[0]
+                            required_fields = ['tier_name', 'spending_threshold', 'amount_needed', 'gift_count']
+                            missing_fields = [field for field in required_fields if field not in first_tier]
+                            
+                            if not missing_fields:
+                                self.log_test(f"Nearby Tiers API Structure - ${scenario['order_amount']}", True, 
+                                            "All required fields present")
+                            else:
+                                self.log_test(f"Nearby Tiers API Structure - ${scenario['order_amount']}", False, 
+                                            f"Missing fields: {missing_fields}")
+                        
+                        # Check tier names
+                        tier_names = [tier.get('tier_name') for tier in nearby_tiers]
+                        self.log_test(f"Nearby Tiers Content - ${scenario['order_amount']}", True, 
+                                    f"Found nearby tiers: {tier_names}. {scenario['description']}")
+                        
+                        # Verify amount_needed calculation
+                        for tier in nearby_tiers:
+                            expected_needed = tier.get('spending_threshold', 0) - scenario['order_amount']
+                            actual_needed = tier.get('amount_needed', 0)
+                            if abs(expected_needed - actual_needed) < 0.01:
+                                self.log_test(f"Amount Needed Calculation - {tier.get('tier_name')}", True, 
+                                            f"Correctly calculated ${actual_needed}")
+                            else:
+                                self.log_test(f"Amount Needed Calculation - {tier.get('tier_name')}", False, 
+                                            f"Expected ${expected_needed}, got ${actual_needed}")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test(f"Nearby Tiers API - ${scenario['order_amount']}", False, 
+                                    f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test(f"Nearby Tiers API - ${scenario['order_amount']}", False, f"Exception: {str(e)}")
+        
+        # Step 6: Test gift tier progression
+        print("\n📝 Step 6: Test gift tier progression")
+        
+        progression_amounts = [15.0, 25.0, 18.0, 35.0, 55.0]
+        for amount in progression_amounts:
+            try:
+                async with self.session.get(f"{API_BASE}/gift-tiers/available?order_amount={amount}") as resp:
+                    if resp.status == 200:
+                        available_tiers = await resp.json()
+                        tier_names = [tier.get('name') for tier in available_tiers]
+                        
+                        self.log_test(f"Gift Tier Progression - ${amount}", True, 
+                                    f"Available tiers: {tier_names}")
+                        
+                        # Verify tiers are correctly filtered by amount
+                        for tier in available_tiers:
+                            threshold = tier.get('spending_threshold', 0)
+                            if amount >= threshold:
+                                self.log_test(f"Tier Threshold Check - {tier.get('name')}", True, 
+                                            f"${amount} >= ${threshold}")
+                            else:
+                                self.log_test(f"Tier Threshold Check - {tier.get('name')}", False, 
+                                            f"${amount} < ${threshold} - should not be available")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test(f"Gift Tier Progression - ${amount}", False, 
+                                    f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test(f"Gift Tier Progression - ${amount}", False, f"Exception: {str(e)}")
+        
+        # Step 7: Test gift management APIs
+        print("\n📝 Step 7: Test gift management APIs")
+        
+        # Test gift item listing
         try:
             async with self.session.get(f"{API_BASE}/admin/gift-items", headers=headers) as resp:
                 if resp.status == 200:
-                    data = await resp.json()
-                    self.log_test("GET /api/admin/gift-items", True, 
-                                f"Endpoint working, found {len(data)} gift items")
+                    items = await resp.json()
+                    self.log_test("Gift Items Listing", True, f"Found {len(items)} gift items")
+                    
+                    # Test stock tracking
+                    for item in items:
+                        if 'stock_quantity' in item:
+                            self.log_test(f"Stock Tracking - {item.get('name')}", True, 
+                                        f"Stock: {item.get('stock_quantity')}")
+                        else:
+                            self.log_test(f"Stock Tracking - {item.get('name')}", False, 
+                                        "Missing stock_quantity field")
                 else:
                     error_text = await resp.text()
-                    self.log_test("GET /api/admin/gift-items", False, 
-                                f"CRITICAL: Status {resp.status}: {error_text}")
+                    self.log_test("Gift Items Listing", False, f"Status {resp.status}: {error_text}")
         except Exception as e:
-            self.log_test("GET /api/admin/gift-items", False, f"CRITICAL: Exception: {str(e)}")
+            self.log_test("Gift Items Listing", False, f"Exception: {str(e)}")
         
-        # Step 4: Test GET /api/admin/gift-tiers
-        print("\n📝 Step 4: Test GET /api/admin/gift-tiers")
+        # Test gift tier listing with active/inactive filtering
         try:
             async with self.session.get(f"{API_BASE}/admin/gift-tiers", headers=headers) as resp:
                 if resp.status == 200:
-                    data = await resp.json()
-                    self.log_test("GET /api/admin/gift-tiers", True, 
-                                f"Endpoint working, found {len(data)} gift tiers")
+                    tiers = await resp.json()
+                    active_tiers = [t for t in tiers if t.get('is_active', True)]
+                    inactive_tiers = [t for t in tiers if not t.get('is_active', True)]
+                    
+                    self.log_test("Gift Tiers Active/Inactive Filtering", True, 
+                                f"Active: {len(active_tiers)}, Inactive: {len(inactive_tiers)}")
+                    
+                    # Test gift assignments
+                    for tier in tiers:
+                        gift_items_count = len(tier.get('gift_items', []))
+                        gift_limit = tier.get('gift_limit', 1)
+                        self.log_test(f"Gift Assignment - {tier.get('name')}", True, 
+                                    f"Has {gift_items_count} gifts, limit: {gift_limit}")
                 else:
                     error_text = await resp.text()
-                    self.log_test("GET /api/admin/gift-tiers", False, 
-                                f"CRITICAL: Status {resp.status}: {error_text}")
+                    self.log_test("Gift Tiers Listing", False, f"Status {resp.status}: {error_text}")
         except Exception as e:
-            self.log_test("GET /api/admin/gift-tiers", False, f"CRITICAL: Exception: {str(e)}")
+            self.log_test("Gift Tiers Listing", False, f"Exception: {str(e)}")
         
-        # Step 5: Test GET /api/admin/promotions/stats
-        print("\n📝 Step 5: Test GET /api/admin/promotions/stats")
+        # Step 8: Test integration with existing systems
+        print("\n📝 Step 8: Test integration with existing systems")
+        
+        # Test coupon + gift tier integration
+        integration_test = {
+            "coupon_code": "GIFT20OFF",
+            "order_subtotal": 62.5,  # After 20% discount = $50, should qualify for $50 tier
+            "user_id": None
+        }
+        
         try:
-            async with self.session.get(f"{API_BASE}/admin/promotions/stats", headers=headers) as resp:
+            async with self.session.post(f"{API_BASE}/promotions/validate", 
+                                       json=integration_test) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    self.log_test("GET /api/admin/promotions/stats", True, 
-                                f"Endpoint working, returned stats data: {type(data)}")
+                    
+                    if data.get('valid'):
+                        discount = data.get('discount_amount', 0)
+                        final_amount = integration_test["order_subtotal"] - discount
+                        available_tiers = data.get('available_gift_tiers', [])
+                        
+                        # Should qualify for $50 tier after discount
+                        tier_names = [tier.get('name') for tier in available_tiers]
+                        if "$50 Tier" in tier_names:
+                            self.log_test("Coupon + Gift Tier Integration", True, 
+                                        f"Correctly qualified for $50 tier after discount (${final_amount})")
+                        else:
+                            self.log_test("Coupon + Gift Tier Integration", False, 
+                                        f"Should qualify for $50 tier with ${final_amount}. Available: {tier_names}")
+                    else:
+                        self.log_test("Coupon + Gift Tier Integration", False, 
+                                    f"Validation failed: {data.get('error_message')}")
                 else:
                     error_text = await resp.text()
-                    self.log_test("GET /api/admin/promotions/stats", False, 
-                                f"CRITICAL: Status {resp.status}: {error_text}")
+                    self.log_test("Coupon + Gift Tier Integration", False, 
+                                f"Status {resp.status}: {error_text}")
         except Exception as e:
-            self.log_test("GET /api/admin/promotions/stats", False, f"CRITICAL: Exception: {str(e)}")
+            self.log_test("Coupon + Gift Tier Integration", False, f"Exception: {str(e)}")
         
-        # Step 6: Test authentication requirements for all endpoints
-        print("\n📝 Step 6: Test authentication requirements")
-        endpoints_to_test = [
-            "/admin/coupons",
-            "/admin/gift-items", 
-            "/admin/gift-tiers",
-            "/admin/promotions/stats"
-        ]
+        print(f"\n🎁 Gift Tier System Testing Complete")
         
-        for endpoint in endpoints_to_test:
+        # Clean up test data
+        print("\n🧹 Cleaning up test data...")
+        
+        # Delete test gift tiers
+        for tier in gift_tiers:
             try:
-                async with self.session.get(f"{API_BASE}{endpoint}") as resp:
-                    if resp.status == 401:
-                        self.log_test(f"Auth Required - {endpoint}", True, 
-                                    "Correctly requires authentication")
+                async with self.session.delete(f"{API_BASE}/admin/gift-tiers/{tier['id']}", 
+                                             headers=headers) as resp:
+                    if resp.status == 200:
+                        self.log_test(f"Cleanup - Delete Tier {tier['name']}", True, "Deleted")
                     else:
-                        self.log_test(f"Auth Required - {endpoint}", False, 
-                                    f"Expected 401, got {resp.status}")
+                        self.log_test(f"Cleanup - Delete Tier {tier['name']}", False, f"Status {resp.status}")
             except Exception as e:
-                self.log_test(f"Auth Required - {endpoint}", False, f"Exception: {str(e)}")
+                self.log_test(f"Cleanup - Delete Tier {tier['name']}", False, f"Exception: {str(e)}")
+        
+        # Delete test gift items
+        for item in gift_items:
+            try:
+                async with self.session.delete(f"{API_BASE}/admin/gift-items/{item['id']}", 
+                                             headers=headers) as resp:
+                    if resp.status == 200:
+                        self.log_test(f"Cleanup - Delete Item {item['name']}", True, "Deleted")
+                    else:
+                        self.log_test(f"Cleanup - Delete Item {item['name']}", False, f"Status {resp.status}")
+            except Exception as e:
+                self.log_test(f"Cleanup - Delete Item {item['name']}", False, f"Exception: {str(e)}")
+        
+        # Delete test coupon
+        if test_coupon:
+            try:
+                async with self.session.delete(f"{API_BASE}/admin/coupons/{test_coupon['id']}", 
+                                             headers=headers) as resp:
+                    if resp.status == 200:
+                        self.log_test("Cleanup - Delete Test Coupon", True, "Deleted")
+                    else:
+                        self.log_test("Cleanup - Delete Test Coupon", False, f"Status {resp.status}")
+            except Exception as e:
+                self.log_test("Cleanup - Delete Test Coupon", False, f"Exception: {str(e)}")
 
     async def test_coupon_persistence_between_cart_and_checkout(self):
         """Test coupon persistence system between cart and checkout pages"""
