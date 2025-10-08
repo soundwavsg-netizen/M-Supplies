@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { cartAPI } from '@/lib/api';
 import { toast } from 'sonner';
+import axios from 'axios';
 
 const CartContext = createContext(null);
 
