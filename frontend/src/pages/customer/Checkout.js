@@ -183,7 +183,17 @@ const Checkout = () => {
                 <div className="bg-white rounded-lg p-6 shadow-sm">
                   <GiftSelection 
                     availableGifts={availableGifts} 
-                    onGiftSelect={setSelectedGifts}
+                    onGiftSelect={selectGifts}
+                  />
+                </div>
+              )}
+
+              {/* Gift Promotion Section */}
+              {(!availableGifts || availableGifts.length === 0) && nearbyGiftTiers && nearbyGiftTiers.length > 0 && (
+                <div className="bg-white rounded-lg p-6 shadow-sm">
+                  <GiftPromotion 
+                    nearbyTiers={nearbyGiftTiers} 
+                    currentTotal={cart.subtotal - discountAmount}
                   />
                 </div>
               )}
