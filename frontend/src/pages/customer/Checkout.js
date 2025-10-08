@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import CouponSection from '@/components/ui/CouponSection';
 import GiftSelection from '@/components/ui/GiftSelection';
+import GiftPromotion from '@/components/ui/GiftPromotion';
 
 const Checkout = () => {
   const { cart, appliedCoupon, discountAmount, availableGifts, nearbyGiftTiers, selectedGifts, selectGifts, finalTotal } = useCart();
