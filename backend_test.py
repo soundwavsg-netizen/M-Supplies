@@ -8752,35 +8752,30 @@ class BackendTester:
             self.log_test("Cart Structure Test Cleanup", False, f"Exception: {str(e)}")
 
 async def main():
-    """Run backend tests focused on GST removal and shipping implementation"""
-    print("🚀 Starting M Supplies Backend API Tests - GST Removal & Shipping Implementation")
+    """Run backend tests focused on gift tier system with post-discount threshold checking"""
+    print("🚀 Starting M Supplies Backend API Tests - Gift Tier System Testing")
     print(f"Testing against: {API_BASE}")
-    print("🎯 FOCUS: Test GST removal and basic shipping implementation")
-    print("User Request: Test the GST removal and basic shipping implementation")
+    print("🎯 FOCUS: Test the complete gift tier system with post-discount threshold checking")
+    print("User Request: Test the complete gift tier system with post-discount threshold checking")
     print("Testing scenarios:")
-    print("1. GST Removal Verification - Ensure GST is 0.0 in cart and order calculations")
-    print("2. Basic Shipping Calculation - Test weight-based shipping with tiered rates")
-    print("3. Gift System APIs - Test gift item and gift tier management")
-    print("4. Updated Cart Structure - Verify cart includes shipping fields")
+    print("1. Gift Tier Qualification After Discount - Check eligibility based on post-discount amount")
+    print("2. Nearby Gift Tiers API - Test promotional messages for nearby tiers")
+    print("3. Gift Tier Progression Testing - Test tier changes as order amount changes")
+    print("4. Gift Items and Tiers Management - Test CRUD operations")
+    print("5. Integration with Existing Systems - Test coupon + gift tier integration")
     print("Expected Results:")
-    print("- No GST in any calculations")
-    print("- Shipping fees calculated based on weight tiers")
-    print("- Free shipping for orders over $50")
-    print("- Gift system APIs functional for admin management")
-    print("- Cart totals include shipping but no GST")
+    print("- Gift tier eligibility calculated on post-discount amount")
+    print("- Promotional messages show 'spend $X more' correctly")
+    print("- Gift selection UI triggers when qualifying")
+    print("- Nearby tiers API returns relevant suggestions")
+    print("- Gift management APIs fully functional")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TESTS: GST removal and shipping implementation
-        await tester.test_gst_removal_verification()
-        await tester.test_basic_shipping_calculation()
-        await tester.test_gift_system_apis()
-        await tester.test_updated_cart_structure()
-        
-        # Additional test: Test automatic coupon revalidation system (existing)
-        await tester.test_automatic_coupon_revalidation_system()
+        # PRIORITY TEST: Complete gift tier system testing
+        await tester.test_gift_tier_system_comprehensive()
         
         # Print summary
         passed, failed = tester.print_summary()
