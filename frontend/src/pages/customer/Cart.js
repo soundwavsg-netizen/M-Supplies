@@ -5,6 +5,8 @@ import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import CouponSection from '@/components/ui/CouponSection';
+import GiftSelection from '@/components/ui/GiftSelection';
+import GiftPromotion from '@/components/ui/GiftPromotion';
 
 const Cart = () => {
   const { cart, loading, updateCartItem, clearCart, appliedCoupon, discountAmount, availableGifts, finalTotal } = useCart();
