@@ -202,6 +202,37 @@ async def get_available_gift_tiers(
     promotion_repo = PromotionRepository(get_database())
     return await promotion_repo.get_available_gift_tiers_for_amount(order_amount)
 
+@router.get("/gift-tiers/nearby", tags=["Promotions"])
+async def get_nearby_gift_tiers(
+    order_amount: float = Query(..., gt=0, description="Current order total amount"),
+    service: PromotionService = Depends(get_promotion_service)
+):
+    """Get nearby gift tiers for promotional messages"""
+    promotion_repo = PromotionRepository(get_database())
+    
+    # Get all active gift tiers
+    all_tiers = await promotion_repo.get_all_gift_tiers()
+    active_tiers = [tier for tier in all_tiers if tier.is_active]
+    
+    # Find tiers that are close but not yet achieved
+    nearby_tiers = []
+    for tier in active_tiers:
+        if tier.spending_threshold > order_amount:
+            gap = tier.spending_threshold - order_amount
+            # Only show tiers within $50 gap
+            if gap <= 50.0:
+                nearby_tiers.append({
+                    "tier_name": tier.name,
+                    "spending_threshold": tier.spending_threshold,
+                    "amount_needed": gap,
+                    "gift_count": len(tier.gift_items or [])
+                })
+    
+    # Sort by smallest gap first
+    nearby_tiers.sort(key=lambda x: x["amount_needed"])
+    
+    return {"nearby_tiers": nearby_tiers[:2]}  # Return top 2 closest tiers
+
 # ==================== ADMIN STATISTICS ====================
 
 @router.get("/admin/promotions/stats", tags=["Admin - Promotions"])
