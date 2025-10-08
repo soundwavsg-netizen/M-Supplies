@@ -174,55 +174,11 @@ const Cart = () => {
               <h2 className="text-xl font-bold text-slate-900 mb-4">Order Summary</h2>
               
               {/* Coupon Code Section */}
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-3">
-                  <Tag className="w-4 h-4 text-teal-600" />
-                  <span className="font-medium text-gray-700">Promo Code</span>
-                </div>
+              <CouponSection />
                 
-                {!appliedCoupon ? (
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Enter coupon code"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                      onKeyPress={(e) => e.key === 'Enter' && validateCoupon()}
-                      className="flex-1"
-                    />
-                    <Button 
-                      onClick={validateCoupon}
-                      disabled={couponLoading || !couponCode.trim()}
-                      size="sm"
-                      className="bg-teal-600 hover:bg-teal-700"
-                    >
-                      {couponLoading ? 'Checking...' : 'Apply'}
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded p-3">
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-green-600" />
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">
-                        {appliedCoupon.code}
-                      </Badge>
-                      <span className="text-sm text-green-700">
-                        -{formatPrice(discountAmount)}
-                      </span>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={removeCouponLocal}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
-                
-                {/* Gift Tier Notification */}
-                {availableGifts.length > 0 && (
-                  <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded text-sm text-purple-700">
+              {/* Gift Tier Notification */}
+              {availableGifts.length > 0 && (
+                <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded text-sm text-purple-700">
                     🎁 You qualify for free gifts! Select them at checkout.
                   </div>
                 )}
