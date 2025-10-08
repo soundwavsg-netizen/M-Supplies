@@ -1213,6 +1213,241 @@ class BackendTester:
             except Exception as e:
                 self.log_test(f"Auth Required - {endpoint}", False, f"Exception: {str(e)}")
 
+    async def test_coupon_persistence_between_cart_and_checkout(self):
+        """Test coupon persistence system between cart and checkout pages"""
+        print("\n🎫 Testing Coupon Persistence Between Cart and Checkout...")
+        print("Testing centralized coupon state management and cross-page functionality")
+        
+        # Step 1: Create a test coupon for persistence testing
+        if not self.admin_token:
+            self.log_test("Coupon Persistence Test", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        test_coupon_code = "PERSIST10"
+        
+        # Create test coupon
+        coupon_payload = {
+            "code": test_coupon_code,
+            "type": "percent",
+            "value": 10,
+            "valid_from": "2025-01-07T12:00:00.000Z",
+            "valid_to": "2025-12-31T23:59:59.000Z",
+            "is_active": True,
+            "min_order_amount": 20.0
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/admin/coupons", 
+                                       json=coupon_payload, headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    self.log_test("Create Test Coupon for Persistence", True, 
+                                f"Created coupon: {data.get('code')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Create Test Coupon for Persistence", False, 
+                                f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Create Test Coupon for Persistence", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 2: Test coupon validation API (simulating cart page coupon application)
+        print("\n📝 Step 2: Test coupon validation API (cart page simulation)")
+        validation_data = {
+            "coupon_code": test_coupon_code,
+            "order_subtotal": 50.0,
+            "user_id": None  # Guest user
+        }
+        
+        coupon_validation_result = None
+        try:
+            async with self.session.post(f"{API_BASE}/promotions/validate", json=validation_data) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get('valid'):
+                        coupon_validation_result = data
+                        self.log_test("Cart Page Coupon Validation", True, 
+                                    f"Coupon valid, discount: {data.get('discount_amount')}")
+                    else:
+                        self.log_test("Cart Page Coupon Validation", False, 
+                                    f"Coupon invalid: {data.get('error_message')}")
+                        return
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Cart Page Coupon Validation", False, 
+                                f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Cart Page Coupon Validation", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 3: Test coupon validation with authenticated user
+        print("\n📝 Step 3: Test coupon validation with authenticated user")
+        if self.customer_token:
+            auth_headers = {"Authorization": f"Bearer {self.customer_token}"}
+            try:
+                async with self.session.post(f"{API_BASE}/promotions/validate", 
+                                           json=validation_data, headers=auth_headers) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        if data.get('valid'):
+                            self.log_test("Authenticated User Coupon Validation", True, 
+                                        f"Coupon valid for auth user, discount: {data.get('discount_amount')}")
+                        else:
+                            self.log_test("Authenticated User Coupon Validation", False, 
+                                        f"Coupon invalid for auth user: {data.get('error_message')}")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Authenticated User Coupon Validation", False, 
+                                    f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Authenticated User Coupon Validation", False, f"Exception: {str(e)}")
+        
+        # Step 4: Test order creation with coupon information
+        print("\n📝 Step 4: Test order creation with coupon information")
+        if coupon_validation_result:
+            # First, add an item to cart
+            try:
+                # Get a product to add to cart
+                async with self.session.post(f"{API_BASE}/products/filter", json={"page": 1, "limit": 1}) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        products = data.get('products', [])
+                        if products and products[0].get('variants'):
+                            variant_id = products[0]['variants'][0]['id']
+                            
+                            # Add to cart
+                            cart_data = {"variant_id": variant_id, "quantity": 2}
+                            async with self.session.post(f"{API_BASE}/cart/add", json=cart_data) as cart_resp:
+                                if cart_resp.status == 200:
+                                    self.log_test("Add Item to Cart for Order Test", True, 
+                                                f"Added variant {variant_id} to cart")
+                                    
+                                    # Create order with coupon
+                                    order_data = {
+                                        "shipping_address": {
+                                            "first_name": "Test",
+                                            "last_name": "User",
+                                            "email": "test@example.com",
+                                            "phone": "+6512345678",
+                                            "address_line1": "123 Test Street",
+                                            "city": "Singapore",
+                                            "state": "Singapore",
+                                            "postal_code": "123456",
+                                            "country": "Singapore"
+                                        },
+                                        "payment_method": "stripe",
+                                        "coupon_code": coupon_validation_result['applied_coupon']['code'],
+                                        "discount_amount": coupon_validation_result['discount_amount']
+                                    }
+                                    
+                                    async with self.session.post(f"{API_BASE}/orders", json=order_data) as order_resp:
+                                        if order_resp.status == 200:
+                                            order_result = await order_resp.json()
+                                            
+                                            # Verify order includes coupon information
+                                            if (order_result.get('coupon_code') == test_coupon_code and 
+                                                order_result.get('discount_amount') > 0):
+                                                self.log_test("Order Creation with Coupon", True, 
+                                                            f"Order includes coupon: {order_result.get('coupon_code')}, "
+                                                            f"discount: {order_result.get('discount_amount')}")
+                                            else:
+                                                self.log_test("Order Creation with Coupon", False, 
+                                                            f"Order missing coupon info: {order_result.get('coupon_code')}")
+                                        else:
+                                            error_text = await order_resp.text()
+                                            self.log_test("Order Creation with Coupon", False, 
+                                                        f"Status {order_resp.status}: {error_text}")
+                                else:
+                                    error_text = await cart_resp.text()
+                                    self.log_test("Add Item to Cart for Order Test", False, 
+                                                f"Status {cart_resp.status}: {error_text}")
+                        else:
+                            self.log_test("Get Product for Cart Test", False, "No products with variants found")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Get Product for Cart Test", False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Order Creation with Coupon Test", False, f"Exception: {str(e)}")
+        
+        # Step 5: Test coupon validation edge cases
+        print("\n📝 Step 5: Test coupon validation edge cases")
+        
+        # Test with insufficient order amount
+        low_amount_data = {
+            "coupon_code": test_coupon_code,
+            "order_subtotal": 10.0,  # Below min_order_amount of 20.0
+            "user_id": None
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/promotions/validate", json=low_amount_data) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if not data.get('valid'):
+                        self.log_test("Coupon Min Order Amount Validation", True, 
+                                    f"Correctly rejected coupon for low amount: {data.get('error_message')}")
+                    else:
+                        self.log_test("Coupon Min Order Amount Validation", False, 
+                                    "Coupon should be invalid for low order amount")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Coupon Min Order Amount Validation", False, 
+                                f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Coupon Min Order Amount Validation", False, f"Exception: {str(e)}")
+        
+        # Test with invalid coupon code
+        invalid_coupon_data = {
+            "coupon_code": "INVALID123",
+            "order_subtotal": 50.0,
+            "user_id": None
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/promotions/validate", json=invalid_coupon_data) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if not data.get('valid'):
+                        self.log_test("Invalid Coupon Code Validation", True, 
+                                    f"Correctly rejected invalid coupon: {data.get('error_message')}")
+                    else:
+                        self.log_test("Invalid Coupon Code Validation", False, 
+                                    "Invalid coupon should be rejected")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Invalid Coupon Code Validation", False, 
+                                f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Invalid Coupon Code Validation", False, f"Exception: {str(e)}")
+        
+        # Step 6: Test coupon revalidation (simulating checkout page)
+        print("\n📝 Step 6: Test coupon revalidation on checkout page")
+        try:
+            async with self.session.post(f"{API_BASE}/promotions/validate", json=validation_data) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get('valid'):
+                        # Compare with original validation
+                        if (data.get('discount_amount') == coupon_validation_result.get('discount_amount') and
+                            data.get('applied_coupon', {}).get('code') == coupon_validation_result.get('applied_coupon', {}).get('code')):
+                            self.log_test("Checkout Page Coupon Revalidation", True, 
+                                        "Coupon validation consistent between cart and checkout")
+                        else:
+                            self.log_test("Checkout Page Coupon Revalidation", False, 
+                                        "Coupon validation results differ between cart and checkout")
+                    else:
+                        self.log_test("Checkout Page Coupon Revalidation", False, 
+                                    f"Coupon invalid on revalidation: {data.get('error_message')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Checkout Page Coupon Revalidation", False, 
+                                f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Checkout Page Coupon Revalidation", False, f"Exception: {str(e)}")
+
     async def test_discount_code_authentication_fix(self):
         """Test the discount code authentication fix - guest users should be able to validate coupons"""
         print("\n🎫 Testing Discount Code Authentication Fix...")
