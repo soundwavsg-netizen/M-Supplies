@@ -210,6 +210,17 @@ const Checkout = () => {
                       <span>-{formatPrice(discountAmount)}</span>
                     </div>
                   )}
+                  <div className="flex justify-between text-gray-600">
+                    <span>Shipping</span>
+                    <span>
+                      {cart.shipping_fee > 0 ? formatPrice(cart.shipping_fee) : 'Free'}
+                    </span>
+                  </div>
+                  {cart.total_weight_grams && (
+                    <div className="text-xs text-gray-500 mb-2">
+                      Weight: {Math.round(cart.total_weight_grams)}g • {cart.delivery_estimate}
+                    </div>
+                  )}
                   <div className="flex justify-between text-lg font-bold text-slate-900">
                     <span>Total</span>
                     <span data-testid="order-total">{formatPrice(finalTotal)}</span>
