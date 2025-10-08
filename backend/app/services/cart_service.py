@@ -129,9 +129,8 @@ class CartService:
                 'line_total': line_total
             })
         
-        # Calculate GST and total
-        gst = subtotal * (settings.gst_percent / 100)
-        total = subtotal + gst
+        # Calculate total (no GST)
+        total = subtotal
         
         return {
             'id': cart['id'],
@@ -139,7 +138,7 @@ class CartService:
             'session_id': cart.get('session_id'),
             'items': detailed_items,
             'subtotal': round(subtotal, 2),
-            'gst': round(gst, 2),
+            'gst': 0.0,  # No GST for now
             'total': round(total, 2),
             'updated_at': cart['updated_at']
         }
