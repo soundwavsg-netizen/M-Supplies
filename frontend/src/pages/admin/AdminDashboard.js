@@ -60,7 +60,7 @@ const AdminDashboard = () => {
 
         <div className="bg-white rounded-lg p-6">
           <h2 className="text-xl font-semibold text-slate-900 mb-4">Quick Actions</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             <Link to="/admin/inventory">
               <Button className="w-full" variant="outline">
                 Manage Inventory
@@ -73,7 +73,12 @@ const AdminDashboard = () => {
             </Link>
             <Link to="/admin/promotions">
               <Button className="w-full" variant="outline" className="bg-purple-600 hover:bg-purple-700 text-white">
-                🎟️ Promotions & Gifts
+                🎟️ Promotions
+              </Button>
+            </Link>
+            <Link to="/admin/gifts">
+              <Button className="w-full" variant="outline" className="bg-pink-600 hover:bg-pink-700 text-white">
+                🎁 Gift Management
               </Button>
             </Link>
             <Link to="/admin/orders">
