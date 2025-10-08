@@ -170,8 +170,8 @@ export const CartProvider = ({ children }) => {
     setAvailableGifts([]);
   }, []);
 
-  // Calculate final total with discount
-  const finalTotal = cart ? cart.total - discountAmount : 0;
+  // Calculate final total with discount and shipping
+  const finalTotal = cart ? (cart.subtotal + (cart.shipping_fee || 0) - discountAmount) : 0;
 
   const cartItemCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
