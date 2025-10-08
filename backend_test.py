@@ -1176,11 +1176,11 @@ class BackendTester:
         print("\n📝 Step 3: Create test coupon for discount testing")
         coupon_payload = {
             "code": "GIFT20OFF",
-            "description": "20% off for gift tier testing",
-            "discount_type": "percentage",
-            "discount_value": 20,
-            "usage_type": "unlimited",
-            "minimum_order_amount": 0,
+            "type": "percent",
+            "value": 20,
+            "min_order_amount": 0,
+            "valid_from": "2025-01-07T12:00:00.000Z",
+            "valid_to": "2025-12-31T23:59:59.000Z",
             "is_active": True
         }
         
