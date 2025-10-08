@@ -384,8 +384,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Automatic Coupon Revalidation System"
-  stuck_tasks: []
+    - "GST Removal Implementation"
+    - "Basic Shipping Calculation System"
+    - "Gift System APIs"
+    - "Updated Cart Structure with Shipping Fields"
+  stuck_tasks:
+    - "Gift System APIs"
   test_all: false
   test_priority: "high_first"
 
