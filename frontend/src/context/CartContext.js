@@ -22,6 +22,8 @@ export const CartProvider = ({ children }) => {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [availableGifts, setAvailableGifts] = useState([]);
 
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
   const fetchCart = async () => {
     try {
       setLoading(true);
