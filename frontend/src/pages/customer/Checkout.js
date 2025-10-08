@@ -12,7 +12,11 @@ import CouponSection from '@/components/ui/CouponSection';
 import GiftSelection from '@/components/ui/GiftSelection';
 
 const Checkout = () => {
-  const { cart, appliedCoupon, discountAmount, finalTotal } = useCart();
+  const { cart, appliedCoupon, discountAmount, availableGifts, finalTotal } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [selectedGifts, setSelectedGifts] = useState([]);
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
