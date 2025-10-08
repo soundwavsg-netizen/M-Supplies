@@ -7516,6 +7516,394 @@ class BackendTester:
         self.log_test("Field Mapping Analysis Complete", True, 
                     "Identified schema mismatch between user data and backend expectations")
 
+    async def test_automatic_coupon_revalidation_system(self):
+        """Test the automatic coupon revalidation system to prevent discount loopholes"""
+        print("\n🔒 Testing Automatic Coupon Revalidation System (Security Critical)...")
+        print("Testing percentage discount recalculation and minimum order security")
+        
+        if not self.admin_token:
+            self.log_test("Coupon Revalidation System Test", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Step 1: Create test coupons for different scenarios
+        print("\n📝 Step 1: Create test coupons for revalidation testing")
+        
+        # Percentage coupon for recalculation test
+        percentage_coupon = {
+            "code": "PERCENT10",
+            "type": "percent",
+            "value": 10,
+            "valid_from": "2025-01-07T12:00:00.000Z",
+            "valid_to": "2025-12-31T23:59:59.000Z",
+            "is_active": True,
+            "min_order_amount": 0.0
+        }
+        
+        # Percentage coupon with minimum order requirement
+        min_order_coupon = {
+            "code": "MIN50OFF10",
+            "type": "percent", 
+            "value": 10,
+            "valid_from": "2025-01-07T12:00:00.000Z",
+            "valid_to": "2025-12-31T23:59:59.000Z",
+            "is_active": True,
+            "min_order_amount": 50.0
+        }
+        
+        # High percentage coupon for edge case testing
+        high_percent_coupon = {
+            "code": "BIGDISCOUNT50",
+            "type": "percent",
+            "value": 50,
+            "valid_from": "2025-01-07T12:00:00.000Z", 
+            "valid_to": "2025-12-31T23:59:59.000Z",
+            "is_active": True,
+            "min_order_amount": 0.0
+        }
+        
+        # Fixed amount coupon for comparison
+        fixed_coupon = {
+            "code": "FIXED5OFF",
+            "type": "fixed",
+            "value": 5.0,
+            "valid_from": "2025-01-07T12:00:00.000Z",
+            "valid_to": "2025-12-31T23:59:59.000Z", 
+            "is_active": True,
+            "min_order_amount": 0.0
+        }
+        
+        created_coupons = []
+        for coupon_data in [percentage_coupon, min_order_coupon, high_percent_coupon, fixed_coupon]:
+            try:
+                async with self.session.post(f"{API_BASE}/admin/coupons", 
+                                           json=coupon_data, headers=headers) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        created_coupons.append(data)
+                        self.log_test(f"Create Test Coupon - {coupon_data['code']}", True, 
+                                    f"Created {coupon_data['type']} coupon")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test(f"Create Test Coupon - {coupon_data['code']}", False, 
+                                    f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test(f"Create Test Coupon - {coupon_data['code']}", False, f"Exception: {str(e)}")
+        
+        if len(created_coupons) < 4:
+            self.log_test("Coupon Creation for Revalidation Tests", False, 
+                        f"Only {len(created_coupons)}/4 coupons created successfully")
+            return
+        
+        # Step 2: Test Percentage Coupon Recalculation
+        print("\n📝 Step 2: Test Percentage Coupon Recalculation")
+        
+        # Test with $100 order (should give $10 discount)
+        validation_100 = {
+            "coupon_code": "PERCENT10",
+            "order_subtotal": 100.0,
+            "user_id": None
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/promotions/validate", json=validation_100) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get('valid') and abs(data.get('discount_amount', 0) - 10.0) < 0.01:
+                        self.log_test("Percentage Recalculation - $100 Order", True, 
+                                    f"10% of $100 = ${data.get('discount_amount')}")
+                    else:
+                        self.log_test("Percentage Recalculation - $100 Order", False, 
+                                    f"Expected $10 discount, got ${data.get('discount_amount')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Percentage Recalculation - $100 Order", False, 
+                                f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Percentage Recalculation - $100 Order", False, f"Exception: {str(e)}")
+        
+        # Test with $50 order (should give $5 discount)
+        validation_50 = {
+            "coupon_code": "PERCENT10",
+            "order_subtotal": 50.0,
+            "user_id": None
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/promotions/validate", json=validation_50) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get('valid') and abs(data.get('discount_amount', 0) - 5.0) < 0.01:
+                        self.log_test("Percentage Recalculation - $50 Order", True, 
+                                    f"10% of $50 = ${data.get('discount_amount')}")
+                    else:
+                        self.log_test("Percentage Recalculation - $50 Order", False, 
+                                    f"Expected $5 discount, got ${data.get('discount_amount')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Percentage Recalculation - $50 Order", False, 
+                                f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Percentage Recalculation - $50 Order", False, f"Exception: {str(e)}")
+        
+        # Test with $20 order (should give $2 discount)
+        validation_20 = {
+            "coupon_code": "PERCENT10",
+            "order_subtotal": 20.0,
+            "user_id": None
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/promotions/validate", json=validation_20) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get('valid') and abs(data.get('discount_amount', 0) - 2.0) < 0.01:
+                        self.log_test("Percentage Recalculation - $20 Order", True, 
+                                    f"10% of $20 = ${data.get('discount_amount')}")
+                    else:
+                        self.log_test("Percentage Recalculation - $20 Order", False, 
+                                    f"Expected $2 discount, got ${data.get('discount_amount')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Percentage Recalculation - $20 Order", False, 
+                                f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Percentage Recalculation - $20 Order", False, f"Exception: {str(e)}")
+        
+        # Step 3: Test Minimum Order Amount Security
+        print("\n📝 Step 3: Test Minimum Order Amount Security")
+        
+        # Test with $60 order (above $50 minimum - should work)
+        validation_above_min = {
+            "coupon_code": "MIN50OFF10",
+            "order_subtotal": 60.0,
+            "user_id": None
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/promotions/validate", json=validation_above_min) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get('valid'):
+                        self.log_test("Minimum Order Security - Above Minimum", True, 
+                                    f"$60 order with $50 minimum: Valid, discount ${data.get('discount_amount')}")
+                    else:
+                        self.log_test("Minimum Order Security - Above Minimum", False, 
+                                    f"$60 order should be valid with $50 minimum: {data.get('error_message')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Minimum Order Security - Above Minimum", False, 
+                                f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Minimum Order Security - Above Minimum", False, f"Exception: {str(e)}")
+        
+        # Test with $40 order (below $50 minimum - should fail)
+        validation_below_min = {
+            "coupon_code": "MIN50OFF10",
+            "order_subtotal": 40.0,
+            "user_id": None
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/promotions/validate", json=validation_below_min) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if not data.get('valid'):
+                        self.log_test("Minimum Order Security - Below Minimum", True, 
+                                    f"$40 order correctly rejected: {data.get('error_message')}")
+                    else:
+                        self.log_test("Minimum Order Security - Below Minimum", False, 
+                                    f"SECURITY ISSUE: $40 order accepted with $50 minimum requirement")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Minimum Order Security - Below Minimum", False, 
+                                f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Minimum Order Security - Below Minimum", False, f"Exception: {str(e)}")
+        
+        # Step 4: Test Edge Cases & Security Validation
+        print("\n📝 Step 4: Test Edge Cases & Security Validation")
+        
+        # Test 50% discount on $100 order → should give $50 discount
+        validation_high_percent = {
+            "coupon_code": "BIGDISCOUNT50",
+            "order_subtotal": 100.0,
+            "user_id": None
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/promotions/validate", json=validation_high_percent) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get('valid') and abs(data.get('discount_amount', 0) - 50.0) < 0.01:
+                        self.log_test("Edge Case - 50% Discount on $100", True, 
+                                    f"50% of $100 = ${data.get('discount_amount')}")
+                    else:
+                        self.log_test("Edge Case - 50% Discount on $100", False, 
+                                    f"Expected $50 discount, got ${data.get('discount_amount')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Edge Case - 50% Discount on $100", False, 
+                                f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Edge Case - 50% Discount on $100", False, f"Exception: {str(e)}")
+        
+        # Test same coupon with $10 order → should give $5 discount (not $50!)
+        validation_reduced_cart = {
+            "coupon_code": "BIGDISCOUNT50",
+            "order_subtotal": 10.0,
+            "user_id": None
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/promotions/validate", json=validation_reduced_cart) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    expected_discount = 5.0  # 50% of $10
+                    if data.get('valid') and abs(data.get('discount_amount', 0) - expected_discount) < 0.01:
+                        self.log_test("SECURITY TEST - Reduced Cart Recalculation", True, 
+                                    f"50% of $10 = ${data.get('discount_amount')} (not $50)")
+                    else:
+                        actual_discount = data.get('discount_amount', 0)
+                        if actual_discount >= 50.0:
+                            self.log_test("SECURITY TEST - Reduced Cart Recalculation", False, 
+                                        f"CRITICAL SECURITY ISSUE: User keeping $50 discount on $10 cart!")
+                        else:
+                            self.log_test("SECURITY TEST - Reduced Cart Recalculation", False, 
+                                        f"Expected $5 discount, got ${actual_discount}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("SECURITY TEST - Reduced Cart Recalculation", False, 
+                                f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("SECURITY TEST - Reduced Cart Recalculation", False, f"Exception: {str(e)}")
+        
+        # Test fixed amount coupon (should stay same regardless of cart changes)
+        validation_fixed_100 = {
+            "coupon_code": "FIXED5OFF",
+            "order_subtotal": 100.0,
+            "user_id": None
+        }
+        
+        validation_fixed_20 = {
+            "coupon_code": "FIXED5OFF", 
+            "order_subtotal": 20.0,
+            "user_id": None
+        }
+        
+        for validation_data, test_name in [(validation_fixed_100, "Fixed Discount - $100 Cart"), 
+                                         (validation_fixed_20, "Fixed Discount - $20 Cart")]:
+            try:
+                async with self.session.post(f"{API_BASE}/promotions/validate", json=validation_data) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        if data.get('valid') and abs(data.get('discount_amount', 0) - 5.0) < 0.01:
+                            self.log_test(test_name, True, 
+                                        f"Fixed $5 discount maintained: ${data.get('discount_amount')}")
+                        else:
+                            self.log_test(test_name, False, 
+                                        f"Expected $5 fixed discount, got ${data.get('discount_amount')}")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test(test_name, False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test(test_name, False, f"Exception: {str(e)}")
+        
+        # Step 5: Test API Integration Validation
+        print("\n📝 Step 5: Test API Integration Validation")
+        
+        # Test that the validation endpoint is being called correctly
+        test_scenarios = [
+            ({"coupon_code": "PERCENT10", "order_subtotal": 75.0, "user_id": None}, "API Integration - Guest User"),
+            ({"coupon_code": "PERCENT10", "order_subtotal": 75.0, "user_id": "test-user-123"}, "API Integration - Authenticated User"),
+            ({"coupon_code": "INVALID_CODE", "order_subtotal": 100.0, "user_id": None}, "API Integration - Invalid Coupon"),
+            ({"coupon_code": "PERCENT10", "order_subtotal": -10.0, "user_id": None}, "API Integration - Negative Amount")
+        ]
+        
+        for validation_data, test_name in test_scenarios:
+            try:
+                async with self.session.post(f"{API_BASE}/promotions/validate", json=validation_data) as resp:
+                    if test_name == "API Integration - Invalid Coupon":
+                        # Should return 200 but with valid=false
+                        if resp.status == 200:
+                            data = await resp.json()
+                            if not data.get('valid'):
+                                self.log_test(test_name, True, f"Invalid coupon correctly rejected")
+                            else:
+                                self.log_test(test_name, False, f"Invalid coupon was accepted")
+                        else:
+                            self.log_test(test_name, False, f"Expected 200 with valid=false, got {resp.status}")
+                    elif test_name == "API Integration - Negative Amount":
+                        # Should handle gracefully
+                        if resp.status in [200, 400]:
+                            self.log_test(test_name, True, f"Negative amount handled gracefully: {resp.status}")
+                        else:
+                            self.log_test(test_name, False, f"Unexpected status for negative amount: {resp.status}")
+                    else:
+                        # Normal validation should work
+                        if resp.status == 200:
+                            data = await resp.json()
+                            self.log_test(test_name, True, f"API call successful, valid: {data.get('valid')}")
+                        else:
+                            error_text = await resp.text()
+                            self.log_test(test_name, False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test(test_name, False, f"Exception: {str(e)}")
+        
+        # Step 6: Test Comprehensive Security Scenario
+        print("\n📝 Step 6: Test Comprehensive Security Scenario")
+        print("Simulating the exact loophole scenario described in the review")
+        
+        # Scenario: User applies 50% coupon on $100 order, then removes $90 worth of items
+        # Expected: Discount should drop to $5 (50% of $10), not stay at $50
+        
+        original_order = {
+            "coupon_code": "BIGDISCOUNT50",
+            "order_subtotal": 100.0,
+            "user_id": None
+        }
+        
+        reduced_order = {
+            "coupon_code": "BIGDISCOUNT50", 
+            "order_subtotal": 10.0,  # After removing $90 worth
+            "user_id": None
+        }
+        
+        try:
+            # First validation - large order
+            async with self.session.post(f"{API_BASE}/promotions/validate", json=original_order) as resp:
+                if resp.status == 200:
+                    original_data = await resp.json()
+                    original_discount = original_data.get('discount_amount', 0)
+                    
+                    # Second validation - reduced order
+                    async with self.session.post(f"{API_BASE}/promotions/validate", json=reduced_order) as resp2:
+                        if resp2.status == 200:
+                            reduced_data = await resp2.json()
+                            reduced_discount = reduced_data.get('discount_amount', 0)
+                            
+                            # Critical security check
+                            if abs(original_discount - 50.0) < 0.01 and abs(reduced_discount - 5.0) < 0.01:
+                                self.log_test("SECURITY LOOPHOLE TEST - Complete Scenario", True, 
+                                            f"✅ SECURE: $100 order → $50 discount, $10 order → $5 discount")
+                            elif reduced_discount >= 50.0:
+                                self.log_test("SECURITY LOOPHOLE TEST - Complete Scenario", False, 
+                                            f"🚨 CRITICAL VULNERABILITY: User can keep $50 discount on $10 order!")
+                            else:
+                                self.log_test("SECURITY LOOPHOLE TEST - Complete Scenario", False, 
+                                            f"Unexpected discount amounts: ${original_discount} → ${reduced_discount}")
+                        else:
+                            error_text = await resp2.text()
+                            self.log_test("SECURITY LOOPHOLE TEST - Reduced Order", False, 
+                                        f"Status {resp2.status}: {error_text}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("SECURITY LOOPHOLE TEST - Original Order", False, 
+                                f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("SECURITY LOOPHOLE TEST - Complete Scenario", False, f"Exception: {str(e)}")
+
 async def main():
     """Run backend tests focused on Coupon Persistence Between Cart and Checkout"""
     print("🚀 Starting M Supplies Backend API Tests - Coupon Persistence System")
