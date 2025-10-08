@@ -166,11 +166,11 @@ export const CartProvider = ({ children }) => {
     setAvailableGifts(gifts);
   };
 
-  const removeCoupon = () => {
+  const removeCoupon = useCallback(() => {
     setAppliedCoupon(null);
     setDiscountAmount(0);
     setAvailableGifts([]);
-  };
+  }, []);
 
   // Calculate final total with discount
   const finalTotal = cart ? cart.total - discountAmount : 0;
