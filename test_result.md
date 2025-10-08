@@ -404,6 +404,18 @@ test_plan:
   test_all: false
   test_priority: "high_first"
 
+  - task: "Complete Gift Tier System with Post-Discount Threshold Checking - Frontend Integration"
+    implemented: true
+    working: false
+    file: "frontend/src/pages/customer/Cart.js, frontend/src/pages/customer/Checkout.js, frontend/src/context/CartContext.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "🎯 COMPREHENSIVE GIFT TIER SYSTEM TESTING COMPLETED - MIXED RESULTS: Conducted extensive testing of the complete customer-facing gift tier system as specifically requested in the review. BACKEND API SUCCESS (100%): ✅ Gift Tiers API (/api/gift-tiers) - Working perfectly, returns 6 active tiers (Entry $30, Bronze $60, Silver $100, Gold $200, etc.) ✅ Gift Items API (/api/gift-items) - Working perfectly, returns 13 active gift items ✅ Nearby Gift Tiers API (/api/gift-tiers/nearby) - Working perfectly with correct parameter 'order_amount', shows promotional messages ✅ Available Gift Tiers API (/api/gift-tiers/available) - Working perfectly, returns qualified tiers ✅ Post-Discount Logic - Verified via API testing: $50 subtotal with 20% discount = $40 final amount correctly qualifies for $30 tier but not $60 tier ✅ Gift Tier Progression - Tested multiple amounts ($15→$25→$35→$65→$105) with correct tier availability at each level. CRITICAL FRONTEND ISSUES IDENTIFIED (0% working): ❌ Cart API Integration Broken - GET /api/cart returns 'Cart not found' for guest users, preventing cart functionality ❌ Add to Cart Functionality Missing - No working Add to Cart buttons found on product detail pages ❌ Gift Components Not Rendering - GiftSelection, GiftPromotion, and CouponSection components exist in code but not visible in UI ❌ CartContext Integration Issues - Cart context not properly loading, React components not initializing ❌ Empty Cart State - All cart pages show 'Your cart is empty' even after API cart creation attempts. ROOT CAUSE ANALYSIS: The gift tier system backend is fully functional with perfect API responses, but the frontend integration is completely broken due to: 1) Cart API returning 404 errors for guest users 2) Frontend components not rendering despite being properly imported 3) CartContext not properly fetching or displaying cart data 4) Add to Cart workflow completely non-functional. RECOMMENDATION: Fix the core e-commerce cart functionality (cart API, add to cart, CartContext) before the gift tier system can be properly tested in the customer-facing interface. The gift tier logic and APIs are ready and working perfectly."
+
   - task: "Automatic Coupon Revalidation System"
     implemented: true
     working: true
