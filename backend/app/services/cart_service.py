@@ -1,5 +1,6 @@
 from app.repositories.cart_repository import CartRepository
 from app.repositories.product_repository import ProductRepository
+from app.services.shipping_service import BasicShippingService, ShippingItem
 from app.core.config import settings
 from fastapi import HTTPException, status
 from typing import Dict, Any, Optional, List
