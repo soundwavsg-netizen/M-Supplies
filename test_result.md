@@ -102,9 +102,57 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: Fix variant creation process - remove pricing tiers and stock from variant creation, allow adding price/stock after creation, ensure product listing shows correct prices from variants
+user_problem_statement: Test the GST removal and basic shipping implementation - verify GST is 0.0 in calculations, test weight-based shipping with tiered rates, validate gift system APIs, and confirm cart structure includes shipping fields
 
 backend:
+  - task: "GST Removal Implementation"
+    implemented: true
+    working: true
+    file: "app/services/cart_service.py, app/services/order_service.py, app/schemas/cart.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ GST REMOVAL VERIFIED: Cart calculations correctly show GST = 0.0, total calculation works as Total = Subtotal + Shipping (no GST component), order service also sets GST to 0.0. All GST removal requirements successfully implemented."
+
+  - task: "Basic Shipping Calculation System"
+    implemented: true
+    working: true
+    file: "app/services/shipping_service.py, app/services/cart_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ WEIGHT-BASED SHIPPING WORKING: Tiered shipping rates implemented correctly - Light items (under 100g): $4.50, Medium items (250-500g): $8.00, Heavy items tested but limited by stock. Free shipping threshold working (orders under $50 get shipping fees). Default weight system functional with 120g-600g calculations. Minor: One heavy item test failed due to insufficient stock (not a shipping system issue)."
+
+  - task: "Gift System APIs"
+    implemented: true
+    working: false
+    file: "app/api/promotion.py, app/services/promotion_service.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ GIFT TIER CREATION FAILING: Gift items management working correctly (create, list, update, delete all functional), but gift tier creation fails with 422 error - missing 'spending_threshold' field. Schema mismatch between API expectation and request payload. Gift tier availability API working correctly. Needs schema fix for gift tier creation."
+
+  - task: "Updated Cart Structure with Shipping Fields"
+    implemented: true
+    working: true
+    file: "app/services/cart_service.py, app/schemas/cart.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ CART STRUCTURE UPDATED: All required shipping fields present (shipping_fee, shipping_method, total_weight_grams, delivery_estimate), field types correct, cart total calculation includes shipping, weight calculations working with default weights (240g-360g), cart updates properly recalculate shipping. Complete cart structure implementation successful."
+
   - task: "Backend API Routes"
     implemented: true
     working: true
