@@ -11,12 +11,8 @@ import axios from 'axios';
 import CouponSection from '@/components/ui/CouponSection';
 
 const Cart = () => {
-  const { cart, loading, updateCartItem, clearCart, appliedCoupon, discountAmount, availableGifts, finalTotal, applyCoupon, removeCoupon } = useCart();
+  const { cart, loading, updateCartItem, clearCart, appliedCoupon, discountAmount, availableGifts, finalTotal } = useCart();
   const navigate = useNavigate();
-  
-  // Coupon state (now managed in context, but we still need local state for input)
-  const [couponCode, setCouponCode] = useState('');
-  const [couponLoading, setCouponLoading] = useState(false);
   
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
