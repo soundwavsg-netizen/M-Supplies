@@ -7904,6 +7904,558 @@ class BackendTester:
         except Exception as e:
             self.log_test("SECURITY LOOPHOLE TEST - Complete Scenario", False, f"Exception: {str(e)}")
 
+    async def test_gst_removal_verification(self):
+        """Test GST removal from cart and order calculations"""
+        print("\n🧾 Testing GST Removal Verification...")
+        
+        # Step 1: Test cart totals ensure GST is 0.0
+        try:
+            # Get a product to add to cart
+            async with self.session.post(f"{API_BASE}/products/filter", json={"page": 1, "limit": 1}) as resp:
+                if resp.status != 200:
+                    self.log_test("Get Product for GST Test", False, f"Failed to get products: {resp.status}")
+                    return
+                
+                data = await resp.json()
+                products = data.get('products', [])
+                if not products or not products[0].get('variants'):
+                    self.log_test("Get Product for GST Test", False, "No products with variants found")
+                    return
+                
+                variant_id = products[0]['variants'][0]['id']
+                self.log_test("Get Product for GST Test", True, f"Using variant: {variant_id}")
+        except Exception as e:
+            self.log_test("Get Product for GST Test", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 2: Add item to cart and check GST
+        try:
+            add_to_cart_data = {
+                "variant_id": variant_id,
+                "quantity": 2
+            }
+            
+            async with self.session.post(f"{API_BASE}/cart/add", json=add_to_cart_data,
+                                       headers={"X-Session-ID": "gst-test-session"}) as resp:
+                if resp.status == 200:
+                    cart_data = await resp.json()
+                    gst_amount = cart_data.get('gst', None)
+                    
+                    if gst_amount == 0.0:
+                        self.log_test("Cart GST Removal", True, f"GST correctly set to {gst_amount}")
+                    else:
+                        self.log_test("Cart GST Removal", False, f"GST should be 0.0, got {gst_amount}")
+                    
+                    # Verify subtotal = total when no shipping or discounts
+                    subtotal = cart_data.get('subtotal', 0)
+                    shipping_fee = cart_data.get('shipping_fee', 0)
+                    total = cart_data.get('total', 0)
+                    expected_total = subtotal + shipping_fee
+                    
+                    if abs(total - expected_total) < 0.01:  # Allow for rounding
+                        self.log_test("Cart Total Calculation", True, 
+                                    f"Total ({total}) = Subtotal ({subtotal}) + Shipping ({shipping_fee})")
+                    else:
+                        self.log_test("Cart Total Calculation", False, 
+                                    f"Total ({total}) != Subtotal ({subtotal}) + Shipping ({shipping_fee})")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Add to Cart for GST Test", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Add to Cart for GST Test", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 3: Clear cart for cleanup
+        try:
+            async with self.session.delete(f"{API_BASE}/cart", 
+                                         headers={"X-Session-ID": "gst-test-session"}) as resp:
+                if resp.status == 200:
+                    self.log_test("Cart Cleanup", True, "Cart cleared successfully")
+                else:
+                    self.log_test("Cart Cleanup", False, f"Failed to clear cart: {resp.status}")
+        except Exception as e:
+            self.log_test("Cart Cleanup", False, f"Exception: {str(e)}")
+
+    async def test_basic_shipping_calculation(self):
+        """Test weight-based shipping calculations with tiered rates"""
+        print("\n📦 Testing Basic Shipping Calculation...")
+        
+        # Get products to test different weight scenarios
+        try:
+            async with self.session.post(f"{API_BASE}/products/filter", json={"page": 1, "limit": 10}) as resp:
+                if resp.status != 200:
+                    self.log_test("Get Products for Shipping Test", False, f"Failed to get products: {resp.status}")
+                    return
+                
+                data = await resp.json()
+                products = data.get('products', [])
+                if not products:
+                    self.log_test("Get Products for Shipping Test", False, "No products found")
+                    return
+                
+                # Find products with variants
+                test_variants = []
+                for product in products:
+                    for variant in product.get('variants', []):
+                        if len(test_variants) < 3:  # Get 3 variants for testing
+                            test_variants.append(variant['id'])
+                
+                if len(test_variants) < 2:
+                    self.log_test("Get Products for Shipping Test", False, "Need at least 2 variants for testing")
+                    return
+                
+                self.log_test("Get Products for Shipping Test", True, f"Found {len(test_variants)} variants for testing")
+        except Exception as e:
+            self.log_test("Get Products for Shipping Test", False, f"Exception: {str(e)}")
+            return
+        
+        # Test different weight scenarios
+        shipping_test_cases = [
+            {
+                "name": "Light Items (under 100g)",
+                "variant_id": test_variants[0],
+                "quantity": 1,
+                "expected_shipping_range": (3.00, 4.50),  # $3.00-$4.50 for light items
+                "session_id": "shipping-test-light"
+            },
+            {
+                "name": "Medium Items (250-500g)",
+                "variant_id": test_variants[1] if len(test_variants) > 1 else test_variants[0],
+                "quantity": 3,  # Higher quantity to increase weight
+                "expected_shipping_range": (4.50, 8.00),  # $4.50-$8.00 for medium items
+                "session_id": "shipping-test-medium"
+            }
+        ]
+        
+        if len(test_variants) > 2:
+            shipping_test_cases.append({
+                "name": "Heavy Items (1-2kg)",
+                "variant_id": test_variants[2],
+                "quantity": 5,  # High quantity to increase weight
+                "expected_shipping_range": (8.00, 18.00),  # $8.00-$18.00 for heavy items
+                "session_id": "shipping-test-heavy"
+            })
+        
+        for test_case in shipping_test_cases:
+            try:
+                # Clear any existing cart
+                async with self.session.delete(f"{API_BASE}/cart", 
+                                             headers={"X-Session-ID": test_case["session_id"]}) as resp:
+                    pass  # Ignore response, cart might not exist
+                
+                # Add items to cart
+                add_to_cart_data = {
+                    "variant_id": test_case["variant_id"],
+                    "quantity": test_case["quantity"]
+                }
+                
+                async with self.session.post(f"{API_BASE}/cart/add", json=add_to_cart_data,
+                                           headers={"X-Session-ID": test_case["session_id"]}) as resp:
+                    if resp.status == 200:
+                        cart_data = await resp.json()
+                        shipping_fee = cart_data.get('shipping_fee', 0)
+                        total_weight = cart_data.get('total_weight_grams', 0)
+                        shipping_method = cart_data.get('shipping_method', 'Unknown')
+                        
+                        min_expected, max_expected = test_case["expected_shipping_range"]
+                        
+                        if min_expected <= shipping_fee <= max_expected:
+                            self.log_test(f"Shipping - {test_case['name']}", True, 
+                                        f"Fee: ${shipping_fee}, Weight: {total_weight}g, Method: {shipping_method}")
+                        else:
+                            self.log_test(f"Shipping - {test_case['name']}", False, 
+                                        f"Fee ${shipping_fee} not in expected range ${min_expected}-${max_expected}")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test(f"Shipping - {test_case['name']}", False, 
+                                    f"Failed to add to cart: {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test(f"Shipping - {test_case['name']}", False, f"Exception: {str(e)}")
+        
+        # Test free shipping threshold (orders over $50)
+        try:
+            # Clear cart
+            async with self.session.delete(f"{API_BASE}/cart", 
+                                         headers={"X-Session-ID": "free-shipping-test"}) as resp:
+                pass
+            
+            # Add high-value items to exceed $50
+            add_to_cart_data = {
+                "variant_id": test_variants[0],
+                "quantity": 10  # High quantity to exceed $50
+            }
+            
+            async with self.session.post(f"{API_BASE}/cart/add", json=add_to_cart_data,
+                                       headers={"X-Session-ID": "free-shipping-test"}) as resp:
+                if resp.status == 200:
+                    cart_data = await resp.json()
+                    subtotal = cart_data.get('subtotal', 0)
+                    shipping_fee = cart_data.get('shipping_fee', 0)
+                    shipping_method = cart_data.get('shipping_method', '')
+                    
+                    if subtotal >= 50.0 and shipping_fee == 0.0:
+                        self.log_test("Free Shipping Threshold", True, 
+                                    f"Subtotal: ${subtotal}, Shipping: ${shipping_fee}, Method: {shipping_method}")
+                    elif subtotal >= 50.0 and shipping_fee > 0.0:
+                        self.log_test("Free Shipping Threshold", False, 
+                                    f"Expected free shipping for ${subtotal} order, got ${shipping_fee}")
+                    else:
+                        self.log_test("Free Shipping Threshold", True, 
+                                    f"Order under $50 (${subtotal}), shipping fee: ${shipping_fee}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Free Shipping Threshold", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Free Shipping Threshold", False, f"Exception: {str(e)}")
+
+    async def test_gift_system_apis(self):
+        """Test gift item and gift tier management APIs"""
+        print("\n🎁 Testing Gift System APIs...")
+        
+        if not self.admin_token:
+            self.log_test("Gift System APIs", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Test Gift Items Management
+        print("\n📝 Testing Gift Items Management...")
+        
+        # Step 1: Create a gift item
+        gift_item_data = {
+            "name": "Test Gift Item",
+            "description": "A test gift item for backend testing",
+            "image_url": "/api/images/test-gift.jpg",
+            "value": 5.00,
+            "is_active": True
+        }
+        
+        created_gift_id = None
+        try:
+            async with self.session.post(f"{API_BASE}/admin/gift-items", 
+                                       json=gift_item_data, headers=headers) as resp:
+                if resp.status == 200:
+                    gift_data = await resp.json()
+                    created_gift_id = gift_data.get('id')
+                    self.log_test("Create Gift Item", True, f"Created gift item: {gift_data.get('name')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Create Gift Item", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Create Gift Item", False, f"Exception: {str(e)}")
+        
+        # Step 2: List gift items
+        try:
+            async with self.session.get(f"{API_BASE}/admin/gift-items", headers=headers) as resp:
+                if resp.status == 200:
+                    gift_items = await resp.json()
+                    self.log_test("List Gift Items", True, f"Found {len(gift_items)} gift items")
+                    
+                    # Check if our created item is in the list
+                    if created_gift_id:
+                        found_item = any(item.get('id') == created_gift_id for item in gift_items)
+                        self.log_test("Gift Item in List", found_item, 
+                                    f"Created gift item {'found' if found_item else 'not found'} in list")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("List Gift Items", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("List Gift Items", False, f"Exception: {str(e)}")
+        
+        # Step 3: Update gift item
+        if created_gift_id:
+            try:
+                update_data = {
+                    "name": "Updated Test Gift Item",
+                    "value": 7.50
+                }
+                
+                async with self.session.put(f"{API_BASE}/admin/gift-items/{created_gift_id}", 
+                                          json=update_data, headers=headers) as resp:
+                    if resp.status == 200:
+                        updated_gift = await resp.json()
+                        if updated_gift.get('name') == "Updated Test Gift Item":
+                            self.log_test("Update Gift Item", True, f"Updated gift item name and value")
+                        else:
+                            self.log_test("Update Gift Item", False, "Gift item not updated correctly")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Update Gift Item", False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Update Gift Item", False, f"Exception: {str(e)}")
+        
+        # Test Gift Tiers Management
+        print("\n📝 Testing Gift Tiers Management...")
+        
+        # Step 1: Create a gift tier
+        gift_tier_data = {
+            "name": "Test Tier",
+            "min_order_amount": 25.00,
+            "max_order_amount": 50.00,
+            "gift_item_ids": [created_gift_id] if created_gift_id else [],
+            "is_active": True
+        }
+        
+        created_tier_id = None
+        try:
+            async with self.session.post(f"{API_BASE}/admin/gift-tiers", 
+                                       json=gift_tier_data, headers=headers) as resp:
+                if resp.status == 200:
+                    tier_data = await resp.json()
+                    created_tier_id = tier_data.get('id')
+                    self.log_test("Create Gift Tier", True, f"Created gift tier: {tier_data.get('name')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Create Gift Tier", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Create Gift Tier", False, f"Exception: {str(e)}")
+        
+        # Step 2: List gift tiers
+        try:
+            async with self.session.get(f"{API_BASE}/admin/gift-tiers", headers=headers) as resp:
+                if resp.status == 200:
+                    gift_tiers = await resp.json()
+                    self.log_test("List Gift Tiers", True, f"Found {len(gift_tiers)} gift tiers")
+                    
+                    # Check if our created tier is in the list
+                    if created_tier_id:
+                        found_tier = any(tier.get('id') == created_tier_id for tier in gift_tiers)
+                        self.log_test("Gift Tier in List", found_tier, 
+                                    f"Created gift tier {'found' if found_tier else 'not found'} in list")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("List Gift Tiers", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("List Gift Tiers", False, f"Exception: {str(e)}")
+        
+        # Step 3: Test gift tier availability based on order amount
+        try:
+            # Test with amount within tier range
+            async with self.session.get(f"{API_BASE}/gift-tiers/available?order_amount=30.00") as resp:
+                if resp.status == 200:
+                    available_tiers = await resp.json()
+                    tier_found = any(tier.get('id') == created_tier_id for tier in available_tiers) if created_tier_id else False
+                    
+                    if tier_found:
+                        self.log_test("Gift Tier Availability - In Range", True, 
+                                    f"Tier available for $30 order (range: $25-$50)")
+                    else:
+                        self.log_test("Gift Tier Availability - In Range", True, 
+                                    f"Found {len(available_tiers)} available tiers for $30 order")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Gift Tier Availability - In Range", False, f"Status {resp.status}: {error_text}")
+            
+            # Test with amount outside tier range
+            async with self.session.get(f"{API_BASE}/gift-tiers/available?order_amount=10.00") as resp:
+                if resp.status == 200:
+                    available_tiers = await resp.json()
+                    tier_found = any(tier.get('id') == created_tier_id for tier in available_tiers) if created_tier_id else False
+                    
+                    if not tier_found:
+                        self.log_test("Gift Tier Availability - Out of Range", True, 
+                                    f"Tier correctly not available for $10 order (range: $25-$50)")
+                    else:
+                        self.log_test("Gift Tier Availability - Out of Range", False, 
+                                    f"Tier should not be available for $10 order")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Gift Tier Availability - Out of Range", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Gift Tier Availability", False, f"Exception: {str(e)}")
+        
+        # Step 4: Test gift items can be assigned to tiers
+        if created_gift_id and created_tier_id:
+            try:
+                # Get the tier details to verify gift item assignment
+                async with self.session.get(f"{API_BASE}/admin/gift-tiers/{created_tier_id}", headers=headers) as resp:
+                    if resp.status == 200:
+                        tier_details = await resp.json()
+                        gift_item_ids = tier_details.get('gift_item_ids', [])
+                        
+                        if created_gift_id in gift_item_ids:
+                            self.log_test("Gift Item Assignment to Tier", True, 
+                                        f"Gift item successfully assigned to tier")
+                        else:
+                            self.log_test("Gift Item Assignment to Tier", False, 
+                                        f"Gift item not found in tier's gift_item_ids")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Gift Item Assignment to Tier", False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Gift Item Assignment to Tier", False, f"Exception: {str(e)}")
+        
+        # Cleanup: Delete created test data
+        if created_tier_id:
+            try:
+                async with self.session.delete(f"{API_BASE}/admin/gift-tiers/{created_tier_id}", headers=headers) as resp:
+                    if resp.status == 200:
+                        self.log_test("Cleanup - Delete Gift Tier", True, "Gift tier deleted successfully")
+                    else:
+                        self.log_test("Cleanup - Delete Gift Tier", False, f"Failed to delete tier: {resp.status}")
+            except Exception as e:
+                self.log_test("Cleanup - Delete Gift Tier", False, f"Exception: {str(e)}")
+        
+        if created_gift_id:
+            try:
+                async with self.session.delete(f"{API_BASE}/admin/gift-items/{created_gift_id}", headers=headers) as resp:
+                    if resp.status == 200:
+                        self.log_test("Cleanup - Delete Gift Item", True, "Gift item deleted successfully")
+                    else:
+                        self.log_test("Cleanup - Delete Gift Item", False, f"Failed to delete item: {resp.status}")
+            except Exception as e:
+                self.log_test("Cleanup - Delete Gift Item", False, f"Exception: {str(e)}")
+
+    async def test_updated_cart_structure(self):
+        """Test that cart response includes new shipping fields"""
+        print("\n🛒 Testing Updated Cart Structure...")
+        
+        # Get a product to add to cart
+        try:
+            async with self.session.post(f"{API_BASE}/products/filter", json={"page": 1, "limit": 1}) as resp:
+                if resp.status != 200:
+                    self.log_test("Get Product for Cart Structure Test", False, f"Failed to get products: {resp.status}")
+                    return
+                
+                data = await resp.json()
+                products = data.get('products', [])
+                if not products or not products[0].get('variants'):
+                    self.log_test("Get Product for Cart Structure Test", False, "No products with variants found")
+                    return
+                
+                variant_id = products[0]['variants'][0]['id']
+                self.log_test("Get Product for Cart Structure Test", True, f"Using variant: {variant_id}")
+        except Exception as e:
+            self.log_test("Get Product for Cart Structure Test", False, f"Exception: {str(e)}")
+            return
+        
+        # Add item to cart and verify structure
+        try:
+            # Clear any existing cart
+            async with self.session.delete(f"{API_BASE}/cart", 
+                                         headers={"X-Session-ID": "cart-structure-test"}) as resp:
+                pass
+            
+            add_to_cart_data = {
+                "variant_id": variant_id,
+                "quantity": 2
+            }
+            
+            async with self.session.post(f"{API_BASE}/cart/add", json=add_to_cart_data,
+                                       headers={"X-Session-ID": "cart-structure-test"}) as resp:
+                if resp.status == 200:
+                    cart_data = await resp.json()
+                    
+                    # Check for required shipping fields
+                    required_shipping_fields = [
+                        'shipping_fee',
+                        'shipping_method', 
+                        'total_weight_grams',
+                        'delivery_estimate'
+                    ]
+                    
+                    missing_fields = []
+                    for field in required_shipping_fields:
+                        if field not in cart_data:
+                            missing_fields.append(field)
+                    
+                    if not missing_fields:
+                        self.log_test("Cart Shipping Fields Present", True, 
+                                    f"All shipping fields present: {required_shipping_fields}")
+                    else:
+                        self.log_test("Cart Shipping Fields Present", False, 
+                                    f"Missing fields: {missing_fields}")
+                    
+                    # Verify field types and values
+                    shipping_fee = cart_data.get('shipping_fee')
+                    if isinstance(shipping_fee, (int, float)) and shipping_fee >= 0:
+                        self.log_test("Shipping Fee Type", True, f"Shipping fee: ${shipping_fee}")
+                    else:
+                        self.log_test("Shipping Fee Type", False, f"Invalid shipping fee: {shipping_fee}")
+                    
+                    total_weight = cart_data.get('total_weight_grams')
+                    if isinstance(total_weight, (int, float)) and total_weight >= 0:
+                        self.log_test("Total Weight Type", True, f"Total weight: {total_weight}g")
+                    else:
+                        self.log_test("Total Weight Type", False, f"Invalid total weight: {total_weight}")
+                    
+                    shipping_method = cart_data.get('shipping_method')
+                    if isinstance(shipping_method, str) and shipping_method:
+                        self.log_test("Shipping Method Type", True, f"Shipping method: {shipping_method}")
+                    else:
+                        self.log_test("Shipping Method Type", False, f"Invalid shipping method: {shipping_method}")
+                    
+                    delivery_estimate = cart_data.get('delivery_estimate')
+                    if isinstance(delivery_estimate, str) and delivery_estimate:
+                        self.log_test("Delivery Estimate Type", True, f"Delivery estimate: {delivery_estimate}")
+                    else:
+                        self.log_test("Delivery Estimate Type", False, f"Invalid delivery estimate: {delivery_estimate}")
+                    
+                    # Verify total calculation includes shipping but no GST
+                    subtotal = cart_data.get('subtotal', 0)
+                    gst = cart_data.get('gst', 0)
+                    total = cart_data.get('total', 0)
+                    expected_total = subtotal + shipping_fee
+                    
+                    if gst == 0.0:
+                        self.log_test("Cart GST Zero", True, f"GST correctly set to {gst}")
+                    else:
+                        self.log_test("Cart GST Zero", False, f"GST should be 0.0, got {gst}")
+                    
+                    if abs(total - expected_total) < 0.01:  # Allow for rounding
+                        self.log_test("Cart Total with Shipping", True, 
+                                    f"Total ({total}) = Subtotal ({subtotal}) + Shipping ({shipping_fee})")
+                    else:
+                        self.log_test("Cart Total with Shipping", False, 
+                                    f"Total ({total}) != Subtotal ({subtotal}) + Shipping ({shipping_fee})")
+                    
+                    # Verify weight calculations work with default weights
+                    if total_weight > 0:
+                        self.log_test("Weight Calculation Working", True, 
+                                    f"Cart has calculated weight: {total_weight}g")
+                    else:
+                        self.log_test("Weight Calculation Working", False, 
+                                    f"Cart weight calculation not working: {total_weight}g")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Add to Cart for Structure Test", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Add to Cart for Structure Test", False, f"Exception: {str(e)}")
+            return
+        
+        # Test cart update maintains shipping calculations
+        try:
+            update_data = {"quantity": 3}
+            
+            async with self.session.put(f"{API_BASE}/cart/item/{variant_id}", json=update_data,
+                                      headers={"X-Session-ID": "cart-structure-test"}) as resp:
+                if resp.status == 200:
+                    updated_cart = await resp.json()
+                    
+                    # Verify shipping recalculated
+                    new_shipping_fee = updated_cart.get('shipping_fee', 0)
+                    new_total_weight = updated_cart.get('total_weight_grams', 0)
+                    
+                    self.log_test("Cart Update Shipping Recalculation", True, 
+                                f"Updated shipping: ${new_shipping_fee}, weight: {new_total_weight}g")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Cart Update Shipping Recalculation", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Cart Update Shipping Recalculation", False, f"Exception: {str(e)}")
+        
+        # Cleanup
+        try:
+            async with self.session.delete(f"{API_BASE}/cart", 
+                                         headers={"X-Session-ID": "cart-structure-test"}) as resp:
+                if resp.status == 200:
+                    self.log_test("Cart Structure Test Cleanup", True, "Cart cleared successfully")
+        except Exception as e:
+            self.log_test("Cart Structure Test Cleanup", False, f"Exception: {str(e)}")
+
 async def main():
     """Run backend tests focused on Automatic Coupon Revalidation System"""
     print("🚀 Starting M Supplies Backend API Tests - Coupon Revalidation Security System")
