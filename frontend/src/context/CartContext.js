@@ -150,9 +150,7 @@ export const CartProvider = ({ children }) => {
       await cartAPI.clear();
       setCart({ ...cart, items: [], subtotal: 0, gst: 0, total: 0 });
       // Clear coupon state when cart is cleared
-      setAppliedCoupon(null);
-      setDiscountAmount(0);
-      setAvailableGifts([]);
+      removeCoupon();
       toast.success('Cart cleared');
     } catch (error) {
       toast.error('Failed to clear cart');
