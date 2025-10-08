@@ -187,9 +187,6 @@ const Cart = () => {
                   </div>
                 )}
                 <div className="flex justify-between text-gray-600">
-                  <span>GST (9%)</span>
-                  <span data-testid="gst">{formatPrice(cart.gst)}</span>
-                </div>
                 <div className="border-t pt-3 flex justify-between text-lg font-bold text-slate-900">
                   <span>Total</span>
                   <span data-testid="total" className={discountAmount > 0 ? 'text-green-600' : ''}>
