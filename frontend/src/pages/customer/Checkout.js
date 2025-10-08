@@ -41,10 +41,18 @@ const Checkout = () => {
 
     try {
       setLoading(true);
-      const response = await ordersAPI.create({
+      const orderData = {
         shipping_address: formData,
         payment_method: 'stripe'
-      });
+      };
+      
+      // Add coupon information if applied
+      if (appliedCoupon) {
+        orderData.coupon_code = appliedCoupon.code;
+        orderData.discount_amount = discountAmount;
+      }
+      
+      const response = await ordersAPI.create(orderData);
       
       const order = response.data;
       toast.success('Order placed successfully!');
