@@ -51,9 +51,7 @@ const Cart = () => {
       const response = await axios.post(`${BACKEND_URL}/api/promotions/validate`, validationData);
       
       if (response.data.valid) {
-        setAppliedCoupon(response.data.applied_coupon);
-        setDiscountAmount(response.data.discount_amount);
-        setAvailableGifts(response.data.available_gift_tiers || []);
+        applyCoupon(response.data.applied_coupon, response.data.discount_amount, response.data.available_gift_tiers || []);
         toast.success(`Coupon applied! You saved ${formatPrice(response.data.discount_amount)}`);
         
         if (response.data.available_gift_tiers?.length > 0) {
