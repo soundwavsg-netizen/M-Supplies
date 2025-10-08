@@ -174,7 +174,6 @@ const Cart = () => {
                     🎁 You qualify for free gifts! Select them at checkout.
                   </div>
                 )}
-              </div>
 
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between text-gray-600">
