@@ -27,6 +27,7 @@ import AdminProducts from '@/pages/admin/Products';
 import ProductForm from '@/pages/admin/ProductForm';
 import PackingInterface from '@/pages/admin/PackingInterface';
 import Promotions from '@/pages/admin/Promotions';
+import GiftManagement from '@/pages/admin/GiftManagement';
 
 import '@/App.css';
 
