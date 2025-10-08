@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import CouponSection from '@/components/ui/CouponSection';
 
 const Checkout = () => {
-  const { cart } = useCart();
+  const { cart, appliedCoupon, discountAmount, finalTotal } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
