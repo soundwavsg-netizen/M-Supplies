@@ -96,12 +96,33 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // Watch for cart changes and revalidate coupon
-  useEffect(() => {
-    if (appliedCoupon && cart && cart.subtotal !== undefined) {
-      revalidateCoupon(cart);
+  // Check gift tier eligibility based on post-discount amount
+  const checkGiftTierEligibility = useCallback(async (afterDiscountAmount) => {
+    try {
+      // Get available gift tiers for this amount
+      const response = await axios.get(`${BACKEND_URL}/api/gift-tiers/available?order_amount=${afterDiscountAmount}`);
+      const qualifyingTiers = response.data;
+      
+      setAvailableGifts(qualifyingTiers);
+      
+      // Also check nearby tiers (for promotional messages)
+      const nearbyResponse = await axios.get(`${BACKEND_URL}/api/gift-tiers/nearby?order_amount=${afterDiscountAmount}`);
+      setNearbyGiftTiers(nearbyResponse.data || []);
+      
+    } catch (error) {
+      console.error('Error checking gift tier eligibility:', error);
+      setAvailableGifts([]);
+      setNearbyGiftTiers([]);
     }
-  }, [cart?.subtotal, revalidateCoupon]); // Re-run when cart subtotal changes
+  }, [BACKEND_URL]);
+
+  // Watch for cart and discount changes to update gift eligibility
+  useEffect(() => {
+    if (cart && cart.subtotal !== undefined) {
+      const afterDiscountAmount = cart.subtotal - discountAmount;
+      checkGiftTierEligibility(afterDiscountAmount);
+    }
+  }, [cart?.subtotal, discountAmount, checkGiftTierEligibility]);
 
   useEffect(() => {
     fetchCart();
