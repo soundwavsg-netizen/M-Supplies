@@ -193,6 +193,20 @@ async def validate_promotion(
     
     return await service.validate_promotion(validation_data)
 
+@router.get("/gift-tiers", response_model=List[GiftTier], tags=["Promotions"])
+async def get_all_gift_tiers():
+    """Get all active gift tiers for public access"""
+    promotion_repo = PromotionRepository(get_database())
+    all_tiers = await promotion_repo.list_gift_tiers()
+    return [tier for tier in all_tiers if tier.is_active]
+
+@router.get("/gift-items", response_model=List[GiftItem], tags=["Promotions"])
+async def get_all_gift_items():
+    """Get all active gift items for public access"""
+    promotion_repo = PromotionRepository(get_database())
+    all_items = await promotion_repo.list_gift_items()
+    return [item for item in all_items if item.is_active]
+
 @router.get("/gift-tiers/available", response_model=List[GiftTier], tags=["Promotions"])
 async def get_available_gift_tiers(
     order_amount: float = Query(..., gt=0, description="Order total amount"),
