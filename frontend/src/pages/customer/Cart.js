@@ -169,13 +169,22 @@ const Cart = () => {
               
               {/* Coupon Code Section */}
               <CouponSection />
-                
-              {/* Gift Tier Notification */}
+              
+              {/* Gift Selection */}
               {availableGifts.length > 0 && (
-                <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded text-sm text-purple-700">
-                    🎁 You qualify for free gifts! Select them at checkout.
-                  </div>
-                )}
+                <GiftSelection 
+                  availableGifts={availableGifts} 
+                  onGiftSelect={selectGifts}
+                />
+              )}
+              
+              {/* Gift Promotion (when close to tiers) */}
+              {availableGifts.length === 0 && nearbyGiftTiers.length > 0 && (
+                <GiftPromotion 
+                  nearbyTiers={nearbyGiftTiers} 
+                  currentTotal={cart.subtotal - discountAmount}
+                />
+              )}
 
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between text-gray-600">
