@@ -21,6 +21,8 @@ export const CartProvider = ({ children }) => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [availableGifts, setAvailableGifts] = useState([]);
+  const [selectedGifts, setSelectedGifts] = useState([]);
+  const [nearbyGiftTiers, setNearbyGiftTiers] = useState([]);
 
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
