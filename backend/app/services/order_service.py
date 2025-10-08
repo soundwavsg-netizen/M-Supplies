@@ -74,11 +74,11 @@ class OrderService:
                     coupon_code = coupon['code']
                     await self.coupon_repo.increment_usage(coupon['id'])
         
-        # Calculate totals
+        # Calculate totals (no GST)
         after_discount = subtotal - discount
-        gst = after_discount * (settings.gst_percent / 100)
+        gst = 0.0  # No GST for now
         shipping_fee = 0.0  # TODO: Calculate based on shipping rules
-        total = after_discount + gst + shipping_fee
+        total = after_discount + shipping_fee
         
         # Create order
         order_dict = {
