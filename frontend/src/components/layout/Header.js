@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Menu, X, LogOut } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/ui/Logo';
 import { theme } from '@/theme.config';
@@ -10,7 +9,6 @@ import { theme } from '@/theme.config';
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, logout } = useAuth();
-  const { cartItemCount } = useCart();
   const navigate = useNavigate();
 
   const handleLogout = () => {
