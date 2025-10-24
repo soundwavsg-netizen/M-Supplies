@@ -6,6 +6,20 @@ import SmartChatWidget from '@/components/chat/SmartChatWidget';
 const About = () => {
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* New Homepage Banner */}
+      <section className="bg-gradient-to-r from-teal-50 via-orange-50 to-pink-50 py-16 lg:py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center animate-fade-in">
+            <h1 className="text-4xl lg:text-6xl font-bold text-slate-900 mb-4 leading-tight">
+              🌈 Premium Polymailers. Custom Packaging. Made with Care.
+            </h1>
+            <p className="text-xl lg:text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+              Discover the colors, quality, and creativity that make M Supplies stand out from the crowd!
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Hero Section with Banner */}
       <section className="bg-gradient-to-br from-teal-50 to-orange-50 py-16">
         <div className="container mx-auto px-4">
