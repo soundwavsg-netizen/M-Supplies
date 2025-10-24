@@ -38,7 +38,13 @@ const Header = () => {
               to="/about"
               className="text-gray-700 hover:text-teal-700 transition-colors font-medium"
             >
-              About
+              About Us
+            </Link>
+            <Link
+              to="/faq"
+              className="text-gray-700 hover:text-teal-700 transition-colors font-medium"
+            >
+              FAQ
             </Link>
             <Link
               to="/contact"
