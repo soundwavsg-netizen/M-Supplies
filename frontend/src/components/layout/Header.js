@@ -136,7 +136,14 @@ const Header = () => {
                 className="text-gray-700 hover:text-teal-700 transition-colors font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                About
+                About Us
+              </Link>
+              <Link
+                to="/faq"
+                className="text-gray-700 hover:text-teal-700 transition-colors font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                FAQ
               </Link>
               <Link
                 to="/contact"
