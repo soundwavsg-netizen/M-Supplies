@@ -6,6 +6,16 @@ import SmartChatWidget from '@/components/chat/SmartChatWidget';
 const About = () => {
   return (
     <div className="min-h-screen bg-gray-50">
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 1.2s ease-out forwards;
+        }
+      `}</style>
+      
       {/* New Homepage Banner */}
       <section className="bg-gradient-to-r from-teal-50 via-orange-50 to-pink-50 py-16 lg:py-20">
         <div className="container mx-auto px-4">
