@@ -125,19 +125,20 @@ const Header = () => {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200">
             <nav className="flex flex-col space-y-4">
-              <Link
+              {/* Temporarily hide products until ready */}
+              {/* <Link
                 to="/products"
                 className="text-gray-700 hover:text-teal-700 transition-colors font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Products
-              </Link>
+              </Link> */}
               <Link
-                to="/about"
+                to="/"
                 className="text-gray-700 hover:text-teal-700 transition-colors font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                About Us
+                Home
               </Link>
               <Link
                 to="/faq"
