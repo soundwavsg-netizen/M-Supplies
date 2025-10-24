@@ -27,18 +27,19 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link
+            {/* Temporarily hide products until ready */}
+            {/* <Link
               to="/products"
               className="text-gray-700 hover:text-teal-700 transition-colors font-medium"
               data-testid="products-nav-link"
             >
               Products
-            </Link>
+            </Link> */}
             <Link
-              to="/about"
+              to="/"
               className="text-gray-700 hover:text-teal-700 transition-colors font-medium"
             >
-              About Us
+              Home
             </Link>
             <Link
               to="/faq"
