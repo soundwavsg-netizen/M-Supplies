@@ -57,8 +57,8 @@ const Header = () => {
 
           {/* Right Actions */}
           <div className="flex items-center space-x-4">
-            {/* Cart */}
-            <Button
+            {/* Cart - temporarily hidden */}
+            {/* <Button
               variant="ghost"
               size="icon"
               className="relative"
@@ -74,7 +74,7 @@ const Header = () => {
                   {cartItemCount}
                 </span>
               )}
-            </Button>
+            </Button> */}
 
             {/* User Menu */}
             {user ? (
