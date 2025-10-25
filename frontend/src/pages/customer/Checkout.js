@@ -25,6 +25,7 @@ const Checkout = () => {
   const [userAddresses, setUserAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState('');
   const [saveToProfile, setSaveToProfile] = useState(false);
+  const [showAddressModal, setShowAddressModal] = useState(false);
   
   // Updated form data with Firebase-compatible field names
   const [formData, setFormData] = useState({
