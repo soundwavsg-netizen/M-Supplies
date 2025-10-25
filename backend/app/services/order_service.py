@@ -215,6 +215,37 @@ class OrderService:
         # Clear cart
         await self.cart_repo.clear_cart(cart['id'])
         
+        # Post-order processing for user profile integration
+        if user_id and self.address_repo and self.user_profile_repo:
+            try:
+                # Save address to profile if requested
+                if order_data.save_to_profile and order_data.firebase_shipping_address:
+                    # Check if user doesn't already have 5 addresses
+                    address_count = await self.address_repo.count_user_addresses(user_id)
+                    if address_count < 5:
+                        address_create = AddressCreate(
+                            **order_data.firebase_shipping_address.model_dump(),
+                            isDefault=(address_count == 0)  # Set as default if first address
+                        )
+                        new_address = await self.address_repo.create_address(user_id, address_create)
+                        
+                        # Update user's default address ID if this is their first
+                        if new_address.isDefault:
+                            await self.user_profile_repo.update_user_profile(user_id, {
+                                "defaultAddressId": new_address.id,
+                                "lastUsedAddressId": new_address.id
+                            })
+                
+                # Update last used address ID if existing address was selected
+                if order_data.address_id:
+                    await self.user_profile_repo.update_user_profile(user_id, {
+                        "lastUsedAddressId": order_data.address_id
+                    })
+                    
+            except Exception as e:
+                # Don't fail order creation if profile update fails
+                print(f"Profile update error (non-blocking): {e}")
+        
         return order
     
     async def _calculate_discount(self, coupon: Dict[str, Any], order_amount: float) -> float:
