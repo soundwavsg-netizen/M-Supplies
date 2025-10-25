@@ -9178,42 +9178,32 @@ class BackendTester:
             self.log_test("Cart Structure Test Cleanup", False, f"Exception: {str(e)}")
 
 async def main():
-    """Run backend tests focused on user profile management system"""
-    print("🚀 Starting M Supplies Backend API Tests - User Profile Management System")
+    """Run backend tests focused on checkout autofill and save-to-profile functionality"""
+    print("🚀 Starting M Supplies Backend API Tests - Checkout Autofill & Save-to-Profile")
     print(f"Testing against: {API_BASE}")
     print("=" * 80)
-    print("🎯 FOCUS: Test Firebase-compatible user profile management system")
+    print("🎯 FOCUS: Test checkout autofill and save-to-profile functionality")
     print("=" * 80)
     print("\nTesting Scenarios:")
-    print("1. Authentication Integration - Firebase-compatible user object with uid field")
-    print("2. User Profile Management - GET/PUT /api/users/me with Firebase fields")
-    print("3. Address Management System - Full CRUD operations")
-    print("4. Business Logic Validation - Max 5 addresses, postal code validation")
-    print("5. Default Address Logic - Only one default, auto-promotion")
-    print("6. Firebase-Compatible Structure - displayName, createdAt, updatedAt fields")
+    print("1. Address Autofill - Fetch user's saved addresses and auto-fill default address")
+    print("2. Address Dropdown - Show dropdown selector if user has multiple addresses")
+    print("3. Save-to-Profile - Checkbox to save new address to user profile during checkout")
+    print("4. Order Integration - Include shippingAddressSnapshot in orders")
+    print("5. Address Management - Max 5 addresses, postal code validation, default logic")
     print("\nExpected Results:")
-    print("✓ Authentication returns Firebase-style user object with uid field")
-    print("✓ All profile and address APIs working correctly")
-    print("✓ Address validation working (SG 6 digits, MY 5 digits, SG/MY only)")
-    print("✓ Default address logic enforced (one default, auto-promotion)")
-    print("✓ Maximum 5 addresses per user limit working")
+    print("✓ Checkout form auto-fills with user's default address")
+    print("✓ Address dropdown shows all saved addresses with default indicator")
+    print("✓ Save-to-profile checkbox saves new addresses correctly")
+    print("✓ Orders include complete shipping address snapshot")
+    print("✓ Integration between checkout and profile management seamless")
     print("=" * 80)
     
     async with BackendTester() as tester:
-        # Test 1: Firebase Authentication Integration
-        await tester.test_firebase_authentication_integration()
+        # Authenticate first
+        await tester.authenticate()
         
-        # Test 2: User Profile Management
-        await tester.test_user_profile_management()
-        
-        # Test 3: Address Management System (includes validation)
-        await tester.test_address_management_system()
-        
-        # Test 4: Default Address Logic
-        await tester.test_default_address_logic()
-        
-        # Test 5: Address CRUD Operations (includes auto-promotion)
-        await tester.test_address_crud_operations()
+        # Test 1: Checkout Autofill and Save-to-Profile Functionality
+        await tester.test_checkout_autofill_and_save_to_profile()
         
         # Print summary
         print("\n" + "=" * 80)
