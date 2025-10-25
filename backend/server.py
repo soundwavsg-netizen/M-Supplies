@@ -41,7 +41,7 @@ from app.services.inventory_service import InventoryService
 from app.services.upload_service import UploadService
 
 # Import API routers
-from app.api import promotion, chat, user_profile
+from app.api import promotion, chat, user_profile, contact
 
 # Configure logging
 logging.basicConfig(
