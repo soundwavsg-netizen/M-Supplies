@@ -8,6 +8,14 @@ import { organizationSchema } from '@/components/SEO/schemas';
 const About = () => {
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEOHead
+        title="M Supplies - Premium Polymailers & Custom Packaging Singapore"
+        description="Founded 2021. Premium polymailers, custom packaging solutions for Singapore & Malaysia businesses. Rainbow Palace, M Supplies, Mossom SG Studio brands."
+        keywords="M Supplies Singapore, premium polymailers, custom packaging, bubble wrap polymailers, online seller packaging, Singapore packaging, Malaysia shipping, Rainbow Palace, Mossom SG Studio"
+        ogImage="https://www.msupplies.sg/assets/m-supplies-logo-transparent.png"
+        structuredData={organizationSchema}
+      />
+      
       <style jsx>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px); }
