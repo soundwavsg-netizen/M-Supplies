@@ -1,0 +1,26 @@
+User-agent: *
+Allow: /
+Allow: /about
+Allow: /faq
+Allow: /contact
+Allow: /products
+Allow: /login
+
+# Disallow admin and private areas
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /account
+Disallow: /checkout
+Disallow: /cart
+Disallow: /order-success/*
+Disallow: /orders/*
+
+# Disallow API endpoints
+Disallow: /api
+Disallow: /api/*
+
+# Sitemap location
+Sitemap: https://www.msupplies.sg/sitemap.xml
+
+# Crawl delay to be respectful
+Crawl-delay: 1
