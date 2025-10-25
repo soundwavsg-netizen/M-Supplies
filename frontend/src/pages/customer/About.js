@@ -92,7 +92,11 @@ const About = () => {
                     <p className="text-gray-700 mb-4">
                       Our main brand offering thick polymailers, customised packaging, and branding solutions tailored for online sellers and small businesses. We focus on quality, durability, and style.
                     </p>
-                    <Button variant="outline" className="w-full border-teal-300 text-teal-700 hover:bg-teal-50">
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-teal-300 text-teal-700 hover:bg-teal-50"
+                      onClick={() => window.open('https://shopee.sg/msupplies', '_blank')}
+                    >
                       <ExternalLink className="w-4 h-4 mr-2" />
                       Visit our store
                     </Button>
