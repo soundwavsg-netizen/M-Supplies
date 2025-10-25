@@ -15,7 +15,7 @@ import CouponSection from '@/components/ui/CouponSection';
 import GiftSelection from '@/components/ui/GiftSelection';
 import GiftPromotion from '@/components/ui/GiftPromotion';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Checkout = () => {
   const { cart, appliedCoupon, discountAmount, availableGifts, nearbyGiftTiers, selectedGifts, selectGifts, finalTotal } = useCart();
