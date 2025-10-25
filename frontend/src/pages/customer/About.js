@@ -109,7 +109,11 @@ const About = () => {
                     <p className="text-gray-700 mb-4">
                       Our creative studio bringing bespoke floral arrangements and styling services to life. From personal gifts to event styling, we combine artistry and emotion to craft memorable experiences.
                     </p>
-                    <Button variant="outline" className="w-full border-green-300 text-green-700 hover:bg-green-50">
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-green-300 text-green-700 hover:bg-green-50"
+                      onClick={() => window.open('https://instagram.com/mossomsg', '_blank')}
+                    >
                       <ExternalLink className="w-4 h-4 mr-2" />
                       @mossomsg
                     </Button>
