@@ -9,6 +9,22 @@ class AuthService:
     def __init__(self, user_repo: UserRepository):
         self.user_repo = user_repo
     
+    def _transform_user_to_firebase_format(self, user: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform legacy user data to Firebase-compatible format"""
+        return {
+            "id": user.get("id"),
+            "uid": user.get("id"),  # Firebase-style UID field
+            "displayName": f"{user.get('first_name', '')} {user.get('last_name', '')}".strip(),
+            "email": user.get("email"),
+            "phone": user.get("phone"),
+            "role": user.get("role", "customer"),
+            "defaultAddressId": user.get("defaultAddressId"),
+            "lastUsedAddressId": user.get("lastUsedAddressId"),
+            "is_active": user.get("is_active", True),
+            "createdAt": user.get("created_at", datetime.now(timezone.utc)),
+            "updatedAt": user.get("updated_at", datetime.now(timezone.utc))
+        }
+    
     async def register(self, user_data: UserCreate) -> Dict[str, Any]:
         # Check if user exists
         existing_user = await self.user_repo.get_by_email(user_data.email)
