@@ -71,7 +71,7 @@ const Contact = () => {
         description="Contact M Supplies for custom packaging solutions, bulk orders, and enquiries. Email msuppliessg@gmail.com. Serving Singapore & Malaysia."
         keywords="contact M Supplies, custom packaging enquiry, bulk packaging orders, Singapore packaging supplier, Malaysia shipping, packaging consultation"
         ogImage="https://www.msupplies.sg/assets/m-supplies-logo-transparent.png"
-        structuredData={[contactSchema, organizationSchema]}
+        structuredData={contactSchema}
       />
       
       {/* Header Section */}
