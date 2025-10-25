@@ -1,6 +1,0 @@
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- M Supplies Favicon - Clean "M" design -->
-  <rect width="32" height="32" rx="6" fill="#0f766e"/>
-  <!-- Bold "M" letter optimized for small sizes -->
-  <path d="M6 24V8h5l3 9 3-9h5v16h-3V12l-2.5 7h-2L12 12v12H6z" fill="white" stroke="white" stroke-width="0.5"/>
-</svg>
