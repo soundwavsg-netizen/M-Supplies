@@ -16,7 +16,7 @@ async def get_user_profile_service() -> UserProfileService:
     return UserProfileService(user_repo, address_repo)
 
 # Profile Management
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=UserProfile)
 async def get_my_profile(
     user_id: str = Depends(get_current_user_id),
     service: UserProfileService = Depends(get_user_profile_service)
@@ -24,7 +24,7 @@ async def get_my_profile(
     """Get current user's profile"""
     return await service.get_user_profile(user_id)
 
-@router.put("/me", response_model=UserResponse)
+@router.put("/me", response_model=UserProfile)
 async def update_my_profile(
     updates: UserUpdate,
     user_id: str = Depends(get_current_user_id),
