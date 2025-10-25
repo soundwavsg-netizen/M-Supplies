@@ -807,6 +807,7 @@ app.include_router(promotion.router, prefix="/api")
 app.include_router(chat.router, prefix="/api/chat")
 app.include_router(user_profile.router, prefix="/api/users")
 app.include_router(contact.router, prefix="/api")
+app.include_router(reminders.router, prefix="/api/admin")
 
 # Serve uploaded files
 import os
