@@ -10541,23 +10541,17 @@ class BackendTester:
         ]
         
         try:
-            start_time = time.time()
-            tasks = [
-                self.session.post(f"{API_BASE}/contact", json=data)
-                for data in contact_requests
-            ]
+            async def send_contact(data):
+                async with self.session.post(f"{API_BASE}/contact", json=data) as resp:
+                    return resp.status
             
-            responses = await asyncio.gather(*tasks, return_exceptions=True)
+            start_time = time.time()
+            statuses = await asyncio.gather(*[send_contact(data) for data in contact_requests], return_exceptions=True)
             end_time = time.time()
             total_time = end_time - start_time
             
-            # Close all responses
-            success_count = 0
-            for resp in responses:
-                if not isinstance(resp, Exception):
-                    if resp.status == 200:
-                        success_count += 1
-                    await resp.close()
+            # Count successes
+            success_count = sum(1 for status in statuses if not isinstance(status, Exception) and status == 200)
             
             if success_count == 3 and total_time < 3.0:
                 self.log_test("Background Tasks - Concurrent Requests", True, 
