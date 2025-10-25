@@ -52,7 +52,7 @@ const FAQ = () => {
         description="Frequently asked questions about M Supplies polymailers, custom packaging, delivery times, international shipping to Singapore & Malaysia."
         keywords="M Supplies FAQ, polymailer questions, packaging delivery, Singapore shipping, Malaysia shipping, custom packaging FAQ, M Supplies support"
         ogImage="https://www.msupplies.sg/assets/m-supplies-logo-transparent.png"
-        structuredData={[faqSchema, organizationSchema]}
+        structuredData={faqSchema}
       />
       
       {/* Header Section */}
