@@ -106,61 +106,124 @@ const Account = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" data-testid="account-page">
+    <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-8">My Account</h1>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Profile */}
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-center space-x-3 mb-4">
-              <User className="w-8 h-8 text-teal-700" />
-              <h2 className="text-xl font-semibold text-slate-900">Profile</h2>
-            </div>
-            <div className="space-y-2 mb-4">
-              <p className="text-sm text-gray-600">Name</p>
-              <p className="font-medium text-slate-900">{user?.first_name} {user?.last_name}</p>
-              
-              <p className="text-sm text-gray-600 mt-3">Email</p>
-              <p className="font-medium text-slate-900">{user?.email}</p>
-              
-              {user?.phone && (
-                <>
-                  <p className="text-sm text-gray-600 mt-3">Phone</p>
-                  <p className="font-medium text-slate-900">{user?.phone}</p>
-                </>
-              )}
-            </div>
-            <Button variant="outline" className="w-full" disabled>
-              Edit Profile (Coming Soon)
-            </Button>
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-3xl font-bold text-slate-900 mb-8">My Account</h1>
+          
+          {/* Tab Navigation */}
+          <div className="flex space-x-1 mb-8 bg-white p-1 rounded-lg shadow-sm w-fit">
+            <TabButton
+              id="profile"
+              icon={User}
+              label="Profile"
+              isActive={activeTab === 'profile'}
+              onClick={() => setActiveTab('profile')}
+            />
+            <TabButton
+              id="addresses"
+              icon={MapPin}
+              label="Addresses"
+              isActive={activeTab === 'addresses'}
+              onClick={() => setActiveTab('addresses')}
+            />
+            <TabButton
+              id="orders"
+              icon={Package}
+              label="Orders"
+              isActive={activeTab === 'orders'}
+              onClick={() => setActiveTab('orders')}
+            />
           </div>
 
-          {/* Orders */}
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-center space-x-3 mb-4">
-              <Package className="w-8 h-8 text-teal-700" />
-              <h2 className="text-xl font-semibold text-slate-900">Orders</h2>
-            </div>
-            <p className="text-gray-600 mb-4">View and track all your orders</p>
-            <Link to="/orders">
-              <Button className="w-full bg-teal-700 hover:bg-teal-800">View Orders</Button>
-            </Link>
-          </div>
+          {/* Profile Tab */}
+          {activeTab === 'profile' && (
+            <Card className="bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="w-5 h-5 text-teal-600" />
+                  Profile Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="displayName">Display Name *</Label>
+                    <Input
+                      id="displayName"
+                      value={profileForm.displayName}
+                      onChange={(e) => setProfileForm(prev => ({...prev, displayName: e.target.value}))}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      value={user.email}
+                      disabled
+                      className="bg-gray-50"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      value={profileForm.phone}
+                      onChange={(e) => setProfileForm(prev => ({...prev, phone: e.target.value}))}
+                      placeholder="+65 9123 4567"
+                    />
+                  </div>
+                  
+                  <div className="flex items-end">
+                    <Button 
+                      onClick={handleProfileUpdate}
+                      disabled={loading || !profileForm.displayName}
+                      className="bg-teal-600 hover:bg-teal-700"
+                    >
+                      {loading ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Settings */}
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-center space-x-3 mb-4">
-              <Settings className="w-8 h-8 text-teal-700" />
-              <h2 className="text-xl font-semibold text-slate-900">Settings</h2>
-            </div>
-            <p className="text-gray-600 mb-4">Manage your account settings</p>
-            <Button variant="outline" className="w-full" disabled>
-              Settings (Coming Soon)
-            </Button>
-          </div>
+          {/* Addresses Tab */}
+          {activeTab === 'addresses' && (
+            <Card className="bg-white shadow-sm">
+              <CardContent className="text-center py-12">
+                <MapPin className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium text-gray-500 mb-2">Address Management</h3>
+                <p className="text-gray-400">Address management coming soon</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Orders Tab */}
+          {activeTab === 'orders' && (
+            <Card className="bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="w-5 h-5 text-teal-600" />
+                  Order History
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <Package className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-500 mb-2">No orders yet</h3>
+                  <p className="text-gray-400">Your order history will appear here</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
+      
+      <SmartChatWidget />
     </div>
   );
 };
