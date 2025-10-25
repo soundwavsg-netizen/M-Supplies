@@ -38,6 +38,12 @@ class UserAddress(BaseModel):
     createdAt: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
     updatedAt: datetime = Field(default_factory=datetime.utcnow, description="Last update timestamp")
     
+    @validator('country')
+    def validate_country(cls, v):
+        if v not in ['SG', 'MY']:
+            raise ValueError('Country must be SG (Singapore) or MY (Malaysia)')
+        return v
+
     @validator('postalCode')
     def validate_postal_code(cls, v, values):
         country = values.get('country', 'SG')
@@ -47,12 +53,6 @@ class UserAddress(BaseModel):
         elif country == 'MY':
             if not re.match(r'^\d{5}$', v):
                 raise ValueError('Malaysia postal code must be 5 digits')
-        return v
-    
-    @validator('country')
-    def validate_country(cls, v):
-        if v not in ['SG', 'MY']:
-            raise ValueError('Country must be SG (Singapore) or MY (Malaysia)')
         return v
 
 # Legacy User Schemas (for backward compatibility)
