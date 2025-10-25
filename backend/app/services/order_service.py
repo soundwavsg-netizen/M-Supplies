@@ -86,12 +86,76 @@ class OrderService:
         shipping_fee = 0.0  # TODO: Calculate based on shipping rules
         total = after_discount + shipping_fee
         
+        # Handle address selection and profile integration
+        final_shipping_address = None
+        firebase_address_snapshot = None
+        
+        if order_data.address_id and user_id and self.address_repo:
+            # Use existing address from user profile
+            try:
+                selected_address = await self.address_repo.get_address_by_id(order_data.address_id, user_id)
+                if selected_address:
+                    # Convert to legacy format for order
+                    final_shipping_address = {
+                        "first_name": selected_address.fullName.split()[0] if selected_address.fullName else "",
+                        "last_name": " ".join(selected_address.fullName.split()[1:]) if len(selected_address.fullName.split()) > 1 else "",
+                        "email": user.get("email", ""),
+                        "phone": selected_address.phone,
+                        "address_line1": selected_address.addressLine1,
+                        "address_line2": selected_address.addressLine2 or "",
+                        "city": selected_address.city,
+                        "state": selected_address.state,
+                        "postal_code": selected_address.postalCode,
+                        "country": "Singapore" if selected_address.country == "SG" else "Malaysia"
+                    }
+                    firebase_address_snapshot = selected_address.model_dump()
+            except Exception as e:
+                print(f"Error fetching address: {e}")
+                
+        elif order_data.firebase_shipping_address:
+            # Use new Firebase-format address
+            firebase_addr = order_data.firebase_shipping_address
+            final_shipping_address = {
+                "first_name": firebase_addr.fullName.split()[0] if firebase_addr.fullName else "",
+                "last_name": " ".join(firebase_addr.fullName.split()[1:]) if len(firebase_addr.fullName.split()) > 1 else "",
+                "email": user.get("email", "") if user_id else firebase_addr.fullName + "@guest.com",
+                "phone": firebase_addr.phone,
+                "address_line1": firebase_addr.addressLine1,
+                "address_line2": firebase_addr.addressLine2 or "",
+                "city": firebase_addr.city,
+                "state": firebase_addr.state,
+                "postal_code": firebase_addr.postalCode,
+                "country": "Singapore" if firebase_addr.country == "SG" else "Malaysia"
+            }
+            firebase_address_snapshot = firebase_addr.model_dump()
+        elif order_data.shipping_address:
+            # Use legacy format (backward compatibility)
+            final_shipping_address = order_data.shipping_address.model_dump()
+            # Convert legacy to Firebase for snapshot
+            firebase_address_snapshot = {
+                "fullName": f"{order_data.shipping_address.first_name} {order_data.shipping_address.last_name}",
+                "phone": order_data.shipping_address.phone,
+                "addressLine1": order_data.shipping_address.address_line1,
+                "addressLine2": order_data.shipping_address.address_line2,
+                "unit": "",
+                "postalCode": order_data.shipping_address.postal_code,
+                "city": order_data.shipping_address.city,
+                "state": order_data.shipping_address.state,
+                "country": "SG" if order_data.shipping_address.country == "Singapore" else "MY"
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No shipping address provided"
+            )
+        
         # Create order
         order_dict = {
             'user_id': user_id,
-            'guest_email': order_data.shipping_address.email if not user_id else None,
+            'guest_email': final_shipping_address.get("email") if not user_id else None,
             'items': order_items,
-            'shipping_address': order_data.shipping_address.model_dump(),
+            'shipping_address': final_shipping_address,
+            'shippingAddressSnapshot': firebase_address_snapshot,
             'subtotal': round(subtotal, 2),
             'discount': round(discount, 2),
             'gst': round(gst, 2),
@@ -99,6 +163,7 @@ class OrderService:
             'total': round(total, 2),
             'status': 'pending',
             'coupon_code': coupon_code,
+            'selected_gifts': order_data.selected_gifts or [],
             'payment_intent_id': None
         }
         
