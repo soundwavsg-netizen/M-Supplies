@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import List, Optional
-from app.schemas.user import UserResponse, UserUpdate, AddressCreate, AddressUpdate, AddressResponse
+from app.schemas.user import UserProfile, UserResponse, UserUpdate, AddressCreate, AddressUpdate, AddressResponse
 from app.services.user_profile_service import UserProfileService
 from app.repositories.user_profile_repository import UserProfileRepository, AddressRepository
 from app.core.database import get_database
