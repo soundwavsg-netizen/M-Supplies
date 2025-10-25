@@ -1,7 +1,8 @@
 from app.repositories.user_repository import UserRepository
+from app.services.email_service import email_service
 from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token
 from app.schemas.user import UserCreate, UserLogin
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, BackgroundTasks
 from typing import Dict, Any
 from datetime import datetime, timezone
 
