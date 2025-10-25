@@ -76,6 +76,7 @@ class UserUpdate(BaseModel):
 
 class UserResponse(BaseModel):
     id: str
+    uid: str = Field(..., description="Firebase-compatible user ID")
     displayName: str
     email: EmailStr
     phone: Optional[str] = None
