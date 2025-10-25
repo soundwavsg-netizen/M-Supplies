@@ -155,10 +155,10 @@ class AddressResponse(BaseModel):
     addressLine1: str
     addressLine2: Optional[str] = None
     unit: Optional[str] = None
-    postalCode: str
     city: str
     state: str
     country: str
+    postalCode: str
     isDefault: bool
     createdAt: datetime
     updatedAt: datetime
