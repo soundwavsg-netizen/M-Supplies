@@ -1,6 +1,6 @@
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- M Supplies Favicon - Clean "M" design -->
-  <rect width="32" height="32" rx="6" fill="#0f766e"/>
-  <!-- Bold "M" letter optimized for small sizes -->
-  <path d="M6 24V8h5l3 9 3-9h5v16h-3V12l-2.5 7h-2L12 12v12H6z" fill="white" stroke="white" stroke-width="0.5"/>
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- M Supplies Favicon - Larger and clearer for browser tabs -->
+  <rect width="64" height="64" rx="12" fill="#0f766e"/>
+  <!-- Bold "M" letter optimized for favicon display -->
+  <path d="M12 48V16h8l6 18 6-18h8v32h-6V24l-5 14h-4l-5-14v24h-8z" fill="white"/>
 </svg>
