@@ -8751,31 +8751,504 @@ class BackendTester:
         except Exception as e:
             self.log_test("Cart Structure Test Cleanup", False, f"Exception: {str(e)}")
 
+    async def test_user_profile_management(self):
+        """Test Firebase-compatible user profile management system"""
+        print("\n👤 Testing User Profile Management System...")
+        
+        if not self.customer_token:
+            self.log_test("User Profile Test", False, "No customer token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.customer_token}"}
+        
+        # Test 1: GET /api/users/me - Get user profile
+        print("\n📝 Test 1: Get User Profile")
+        try:
+            async with self.session.get(f"{API_BASE}/users/me", headers=headers) as resp:
+                if resp.status == 200:
+                    profile = await resp.json()
+                    
+                    # Verify Firebase-style structure
+                    required_fields = ['id', 'displayName', 'email', 'role', 'createdAt', 'updatedAt']
+                    missing_fields = [f for f in required_fields if f not in profile]
+                    
+                    if missing_fields:
+                        self.log_test("Get User Profile - Structure", False, f"Missing fields: {missing_fields}")
+                    else:
+                        self.log_test("Get User Profile - Structure", True, "All Firebase fields present")
+                    
+                    # Verify field types
+                    if isinstance(profile.get('displayName'), str):
+                        self.log_test("Get User Profile - displayName Type", True, f"displayName: {profile['displayName']}")
+                    else:
+                        self.log_test("Get User Profile - displayName Type", False, "displayName not a string")
+                    
+                    if profile.get('role') == 'customer':
+                        self.log_test("Get User Profile - Role", True, "Role is customer")
+                    else:
+                        self.log_test("Get User Profile - Role", False, f"Unexpected role: {profile.get('role')}")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Get User Profile", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Get User Profile", False, f"Exception: {str(e)}")
+            return
+        
+        # Test 2: PUT /api/users/me - Update profile
+        print("\n📝 Test 2: Update User Profile")
+        update_data = {
+            "displayName": "John Tan Updated",
+            "phone": "+6591234567"
+        }
+        
+        try:
+            async with self.session.put(f"{API_BASE}/users/me", json=update_data, headers=headers) as resp:
+                if resp.status == 200:
+                    updated_profile = await resp.json()
+                    
+                    if updated_profile.get('displayName') == update_data['displayName']:
+                        self.log_test("Update Profile - displayName", True, f"Updated to: {updated_profile['displayName']}")
+                    else:
+                        self.log_test("Update Profile - displayName", False, f"Expected {update_data['displayName']}, got {updated_profile.get('displayName')}")
+                    
+                    if updated_profile.get('phone') == update_data['phone']:
+                        self.log_test("Update Profile - phone", True, f"Updated to: {updated_profile['phone']}")
+                    else:
+                        self.log_test("Update Profile - phone", False, f"Expected {update_data['phone']}, got {updated_profile.get('phone')}")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Update User Profile", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Update User Profile", False, f"Exception: {str(e)}")
+    
+    async def test_address_management(self):
+        """Test address management CRUD operations"""
+        print("\n🏠 Testing Address Management System...")
+        
+        if not self.customer_token:
+            self.log_test("Address Management Test", False, "No customer token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.customer_token}"}
+        created_addresses = []
+        
+        # Test 1: POST /api/users/me/addresses - Create Singapore address
+        print("\n📝 Test 1: Create Singapore Address")
+        sg_address = {
+            "fullName": "John Tan",
+            "phone": "+6591234567",
+            "addressLine1": "123 Orchard Road",
+            "addressLine2": "Orchard Plaza",
+            "unit": "#12-34",
+            "postalCode": "238858",
+            "city": "Singapore",
+            "state": "Singapore",
+            "country": "SG",
+            "isDefault": True
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/users/me/addresses", json=sg_address, headers=headers) as resp:
+                if resp.status == 200:
+                    address = await resp.json()
+                    created_addresses.append(address['id'])
+                    
+                    # Verify structure
+                    required_fields = ['id', 'fullName', 'phone', 'addressLine1', 'postalCode', 'city', 'state', 'country', 'isDefault', 'createdAt', 'updatedAt']
+                    missing_fields = [f for f in required_fields if f not in address]
+                    
+                    if missing_fields:
+                        self.log_test("Create SG Address - Structure", False, f"Missing fields: {missing_fields}")
+                    else:
+                        self.log_test("Create SG Address - Structure", True, "All Firebase fields present")
+                    
+                    # Verify postal code validation
+                    if address.get('postalCode') == sg_address['postalCode']:
+                        self.log_test("Create SG Address - Postal Code", True, "6-digit SG postal code accepted")
+                    else:
+                        self.log_test("Create SG Address - Postal Code", False, "Postal code mismatch")
+                    
+                    # Verify default flag
+                    if address.get('isDefault') == True:
+                        self.log_test("Create SG Address - Default Flag", True, "First address set as default")
+                    else:
+                        self.log_test("Create SG Address - Default Flag", False, "First address should be default")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Create SG Address", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Create SG Address", False, f"Exception: {str(e)}")
+            return
+        
+        # Test 2: POST /api/users/me/addresses - Create Malaysia address
+        print("\n📝 Test 2: Create Malaysia Address")
+        my_address = {
+            "fullName": "Ahmad Ibrahim",
+            "phone": "+60123456789",
+            "addressLine1": "456 Jalan Bukit Bintang",
+            "addressLine2": "Pavilion KL",
+            "unit": "Level 3",
+            "postalCode": "55100",
+            "city": "Kuala Lumpur",
+            "state": "Wilayah Persekutuan",
+            "country": "MY",
+            "isDefault": False
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/users/me/addresses", json=my_address, headers=headers) as resp:
+                if resp.status == 200:
+                    address = await resp.json()
+                    created_addresses.append(address['id'])
+                    
+                    # Verify postal code validation
+                    if address.get('postalCode') == my_address['postalCode']:
+                        self.log_test("Create MY Address - Postal Code", True, "5-digit MY postal code accepted")
+                    else:
+                        self.log_test("Create MY Address - Postal Code", False, "Postal code mismatch")
+                    
+                    # Verify not default
+                    if address.get('isDefault') == False:
+                        self.log_test("Create MY Address - Default Flag", True, "Second address not default")
+                    else:
+                        self.log_test("Create MY Address - Default Flag", False, "Second address should not be default")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Create MY Address", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Create MY Address", False, f"Exception: {str(e)}")
+        
+        # Test 3: GET /api/users/me/addresses - List addresses
+        print("\n📝 Test 3: List User Addresses")
+        try:
+            async with self.session.get(f"{API_BASE}/users/me/addresses", headers=headers) as resp:
+                if resp.status == 200:
+                    addresses = await resp.json()
+                    
+                    if len(addresses) >= 2:
+                        self.log_test("List Addresses", True, f"Found {len(addresses)} addresses")
+                    else:
+                        self.log_test("List Addresses", False, f"Expected at least 2 addresses, found {len(addresses)}")
+                    
+                    # Verify default address is first
+                    if addresses and addresses[0].get('isDefault') == True:
+                        self.log_test("List Addresses - Default First", True, "Default address listed first")
+                    else:
+                        self.log_test("List Addresses - Default First", False, "Default address should be first")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("List Addresses", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("List Addresses", False, f"Exception: {str(e)}")
+        
+        # Test 4: PUT /api/users/me/addresses/{id} - Update address
+        if created_addresses:
+            print("\n📝 Test 4: Update Address")
+            address_id = created_addresses[0]
+            update_data = {
+                "fullName": "John Tan Updated",
+                "unit": "#12-35"
+            }
+            
+            try:
+                async with self.session.put(f"{API_BASE}/users/me/addresses/{address_id}", json=update_data, headers=headers) as resp:
+                    if resp.status == 200:
+                        updated_address = await resp.json()
+                        
+                        if updated_address.get('fullName') == update_data['fullName']:
+                            self.log_test("Update Address - fullName", True, f"Updated to: {updated_address['fullName']}")
+                        else:
+                            self.log_test("Update Address - fullName", False, "fullName not updated")
+                        
+                        if updated_address.get('unit') == update_data['unit']:
+                            self.log_test("Update Address - unit", True, f"Updated to: {updated_address['unit']}")
+                        else:
+                            self.log_test("Update Address - unit", False, "unit not updated")
+                        
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Update Address", False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Update Address", False, f"Exception: {str(e)}")
+        
+        # Test 5: POST /api/users/me/addresses/{id}/set-default - Set default address
+        if len(created_addresses) >= 2:
+            print("\n📝 Test 5: Set Default Address")
+            new_default_id = created_addresses[1]
+            
+            try:
+                async with self.session.post(f"{API_BASE}/users/me/addresses/{new_default_id}/set-default", headers=headers) as resp:
+                    if resp.status == 200:
+                        default_address = await resp.json()
+                        
+                        if default_address.get('isDefault') == True:
+                            self.log_test("Set Default Address", True, "Address set as default")
+                        else:
+                            self.log_test("Set Default Address", False, "Address not set as default")
+                        
+                        # Verify only one default
+                        async with self.session.get(f"{API_BASE}/users/me/addresses", headers=headers) as list_resp:
+                            if list_resp.status == 200:
+                                all_addresses = await list_resp.json()
+                                default_count = sum(1 for addr in all_addresses if addr.get('isDefault'))
+                                
+                                if default_count == 1:
+                                    self.log_test("Set Default - Only One Default", True, "Only one default address")
+                                else:
+                                    self.log_test("Set Default - Only One Default", False, f"Found {default_count} default addresses")
+                        
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Set Default Address", False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Set Default Address", False, f"Exception: {str(e)}")
+        
+        # Test 6: DELETE /api/users/me/addresses/{id} - Delete address
+        if created_addresses:
+            print("\n📝 Test 6: Delete Address")
+            address_to_delete = created_addresses[0]
+            
+            try:
+                async with self.session.delete(f"{API_BASE}/users/me/addresses/{address_to_delete}", headers=headers) as resp:
+                    if resp.status == 200:
+                        self.log_test("Delete Address", True, "Address deleted successfully")
+                        
+                        # Verify deletion
+                        async with self.session.get(f"{API_BASE}/users/me/addresses", headers=headers) as list_resp:
+                            if list_resp.status == 200:
+                                remaining_addresses = await list_resp.json()
+                                deleted_found = any(addr['id'] == address_to_delete for addr in remaining_addresses)
+                                
+                                if not deleted_found:
+                                    self.log_test("Delete Address - Verification", True, "Address removed from list")
+                                else:
+                                    self.log_test("Delete Address - Verification", False, "Address still in list")
+                        
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Delete Address", False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Delete Address", False, f"Exception: {str(e)}")
+    
+    async def test_address_validation(self):
+        """Test address validation rules"""
+        print("\n✅ Testing Address Validation Rules...")
+        
+        if not self.customer_token:
+            self.log_test("Address Validation Test", False, "No customer token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.customer_token}"}
+        
+        # Test 1: Invalid SG postal code (not 6 digits)
+        print("\n📝 Test 1: Invalid SG Postal Code")
+        invalid_sg_address = {
+            "fullName": "Test User",
+            "phone": "+6591234567",
+            "addressLine1": "123 Test Street",
+            "postalCode": "12345",  # Only 5 digits, should fail
+            "city": "Singapore",
+            "state": "Singapore",
+            "country": "SG",
+            "isDefault": False
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/users/me/addresses", json=invalid_sg_address, headers=headers) as resp:
+                if resp.status == 422:
+                    self.log_test("Invalid SG Postal Code - Validation", True, "5-digit SG postal code rejected")
+                elif resp.status == 200:
+                    self.log_test("Invalid SG Postal Code - Validation", False, "5-digit SG postal code should be rejected")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Invalid SG Postal Code - Validation", False, f"Unexpected status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Invalid SG Postal Code - Validation", False, f"Exception: {str(e)}")
+        
+        # Test 2: Invalid MY postal code (not 5 digits)
+        print("\n📝 Test 2: Invalid MY Postal Code")
+        invalid_my_address = {
+            "fullName": "Test User",
+            "phone": "+60123456789",
+            "addressLine1": "456 Test Street",
+            "postalCode": "123456",  # 6 digits, should fail for MY
+            "city": "Kuala Lumpur",
+            "state": "Wilayah Persekutuan",
+            "country": "MY",
+            "isDefault": False
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/users/me/addresses", json=invalid_my_address, headers=headers) as resp:
+                if resp.status == 422:
+                    self.log_test("Invalid MY Postal Code - Validation", True, "6-digit MY postal code rejected")
+                elif resp.status == 200:
+                    self.log_test("Invalid MY Postal Code - Validation", False, "6-digit MY postal code should be rejected")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Invalid MY Postal Code - Validation", False, f"Unexpected status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Invalid MY Postal Code - Validation", False, f"Exception: {str(e)}")
+        
+        # Test 3: Maximum 5 addresses per user
+        print("\n📝 Test 3: Maximum 5 Addresses Enforcement")
+        
+        # First, get current address count
+        try:
+            async with self.session.get(f"{API_BASE}/users/me/addresses", headers=headers) as resp:
+                if resp.status == 200:
+                    current_addresses = await resp.json()
+                    current_count = len(current_addresses)
+                    
+                    # Create addresses until we reach 5
+                    addresses_to_create = max(0, 5 - current_count)
+                    
+                    for i in range(addresses_to_create):
+                        test_address = {
+                            "fullName": f"Test User {i+1}",
+                            "phone": "+6591234567",
+                            "addressLine1": f"{i+1} Test Street",
+                            "postalCode": f"{238800 + i:06d}",
+                            "city": "Singapore",
+                            "state": "Singapore",
+                            "country": "SG",
+                            "isDefault": False
+                        }
+                        
+                        async with self.session.post(f"{API_BASE}/users/me/addresses", json=test_address, headers=headers) as create_resp:
+                            if create_resp.status == 200:
+                                self.log_test(f"Create Address {current_count + i + 1}/5", True, "Address created")
+                            else:
+                                error_text = await create_resp.text()
+                                self.log_test(f"Create Address {current_count + i + 1}/5", False, f"Status {create_resp.status}: {error_text}")
+                    
+                    # Now try to create a 6th address
+                    sixth_address = {
+                        "fullName": "Test User 6",
+                        "phone": "+6591234567",
+                        "addressLine1": "6 Test Street",
+                        "postalCode": "238806",
+                        "city": "Singapore",
+                        "state": "Singapore",
+                        "country": "SG",
+                        "isDefault": False
+                    }
+                    
+                    async with self.session.post(f"{API_BASE}/users/me/addresses", json=sixth_address, headers=headers) as sixth_resp:
+                        if sixth_resp.status == 400:
+                            error_data = await sixth_resp.json()
+                            if "Maximum 5 addresses" in error_data.get('detail', ''):
+                                self.log_test("Max 5 Addresses - Enforcement", True, "6th address rejected with proper error")
+                            else:
+                                self.log_test("Max 5 Addresses - Enforcement", False, f"Wrong error message: {error_data.get('detail')}")
+                        elif sixth_resp.status == 200:
+                            self.log_test("Max 5 Addresses - Enforcement", False, "6th address should be rejected")
+                        else:
+                            error_text = await sixth_resp.text()
+                            self.log_test("Max 5 Addresses - Enforcement", False, f"Unexpected status {sixth_resp.status}: {error_text}")
+                    
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Get Current Addresses", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Max 5 Addresses Test", False, f"Exception: {str(e)}")
+    
+    async def test_default_address_logic(self):
+        """Test default address enforcement and auto-promotion"""
+        print("\n🎯 Testing Default Address Logic...")
+        
+        if not self.customer_token:
+            self.log_test("Default Address Logic Test", False, "No customer token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.customer_token}"}
+        
+        # Test 1: Delete default address and verify auto-promotion
+        print("\n📝 Test 1: Default Address Auto-Promotion")
+        
+        try:
+            # Get current addresses
+            async with self.session.get(f"{API_BASE}/users/me/addresses", headers=headers) as resp:
+                if resp.status == 200:
+                    addresses = await resp.json()
+                    
+                    if len(addresses) < 2:
+                        self.log_test("Default Address Auto-Promotion", False, "Need at least 2 addresses for this test")
+                        return
+                    
+                    # Find the default address
+                    default_address = next((addr for addr in addresses if addr.get('isDefault')), None)
+                    
+                    if not default_address:
+                        self.log_test("Find Default Address", False, "No default address found")
+                        return
+                    
+                    default_id = default_address['id']
+                    self.log_test("Find Default Address", True, f"Default address ID: {default_id}")
+                    
+                    # Delete the default address
+                    async with self.session.delete(f"{API_BASE}/users/me/addresses/{default_id}", headers=headers) as delete_resp:
+                        if delete_resp.status == 200:
+                            self.log_test("Delete Default Address", True, "Default address deleted")
+                            
+                            # Verify another address was promoted to default
+                            async with self.session.get(f"{API_BASE}/users/me/addresses", headers=headers) as list_resp:
+                                if list_resp.status == 200:
+                                    remaining_addresses = await list_resp.json()
+                                    
+                                    if remaining_addresses:
+                                        new_default = next((addr for addr in remaining_addresses if addr.get('isDefault')), None)
+                                        
+                                        if new_default:
+                                            self.log_test("Auto-Promote New Default", True, f"New default: {new_default['id']}")
+                                        else:
+                                            self.log_test("Auto-Promote New Default", False, "No address promoted to default")
+                                    else:
+                                        self.log_test("Auto-Promote New Default", True, "No addresses remaining (expected)")
+                        else:
+                            error_text = await delete_resp.text()
+                            self.log_test("Delete Default Address", False, f"Status {delete_resp.status}: {error_text}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Get Addresses for Auto-Promotion Test", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Default Address Auto-Promotion", False, f"Exception: {str(e)}")
+
 async def main():
-    """Run backend tests focused on gift tier system with post-discount threshold checking"""
-    print("🚀 Starting M Supplies Backend API Tests - Gift Tier System Testing")
+    """Run backend tests focused on user profile management system"""
+    print("🚀 Starting M Supplies Backend API Tests - User Profile Management System")
     print(f"Testing against: {API_BASE}")
-    print("🎯 FOCUS: Test the complete gift tier system with post-discount threshold checking")
-    print("User Request: Test the complete gift tier system with post-discount threshold checking")
+    print("🎯 FOCUS: Test Firebase-compatible user profile management system")
+    print("User Request: Test the new Firebase-compatible user profile management system")
     print("Testing scenarios:")
-    print("1. Gift Tier Qualification After Discount - Check eligibility based on post-discount amount")
-    print("2. Nearby Gift Tiers API - Test promotional messages for nearby tiers")
-    print("3. Gift Tier Progression Testing - Test tier changes as order amount changes")
-    print("4. Gift Items and Tiers Management - Test CRUD operations")
-    print("5. Integration with Existing Systems - Test coupon + gift tier integration")
+    print("1. User Profile Management - GET/PUT /api/users/me")
+    print("2. Address Management System - Full CRUD operations")
+    print("3. Business Logic Validation - Max 5 addresses, postal code validation, default address logic")
+    print("4. Firebase-Compatible Structure - Verify data stored with Firebase-style field names")
+    print("5. Integration with Existing Auth - Test JWT authentication integration")
     print("Expected Results:")
-    print("- Gift tier eligibility calculated on post-discount amount")
-    print("- Promotional messages show 'spend $X more' correctly")
-    print("- Gift selection UI triggers when qualifying")
-    print("- Nearby tiers API returns relevant suggestions")
-    print("- Gift management APIs fully functional")
+    print("- All profile and address APIs working correctly")
+    print("- Firebase-compatible data structure maintained")
+    print("- Address validation working (SG 6 digits, MY 5 digits)")
+    print("- Default address logic enforced")
+    print("- Maximum 5 addresses per user limit working")
     
     async with BackendTester() as tester:
         # Run authentication first
         await tester.authenticate()
         
-        # PRIORITY TEST: Complete gift tier system testing
-        await tester.test_gift_tier_system_comprehensive()
+        # PRIORITY TESTS: User Profile Management System
+        await tester.test_user_profile_management()
+        await tester.test_address_management()
+        await tester.test_address_validation()
+        await tester.test_default_address_logic()
         
         # Print summary
         passed, failed = tester.print_summary()
