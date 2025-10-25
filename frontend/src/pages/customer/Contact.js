@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import SmartChatWidget from '@/components/chat/SmartChatWidget';
+import SEOHead from '@/components/SEO/SEOHead';
+import { organizationSchema } from '@/components/SEO/schemas';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
