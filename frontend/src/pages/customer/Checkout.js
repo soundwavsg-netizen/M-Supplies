@@ -211,39 +211,45 @@ const Checkout = () => {
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <h2 className="text-xl font-semibold text-slate-900 mb-4">Shipping Information</h2>
+                
+                {/* Address Selector (if user has addresses) */}
+                {user && userAddresses.length > 0 && (
+                  <div className="mb-6">
+                    <Label htmlFor="address-select">Select Shipping Address</Label>
+                    <Select value={selectedAddressId} onValueChange={handleAddressSelect}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Choose an address" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {userAddresses.map((address) => (
+                          <SelectItem key={address.id} value={address.id}>
+                            <div className="flex items-center gap-2">
+                              {address.isDefault && <Star className="w-3 h-3 text-yellow-500" />}
+                              <span>{address.fullName} - {address.addressLine1}, {address.city}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="new">
+                          <div className="flex items-center gap-2">
+                            <Plus className="w-3 h-3" />
+                            <span>Use a new address</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="first_name">First Name *</Label>
+                    <Label htmlFor="fullName">Full Name *</Label>
                     <Input
-                      id="first_name"
-                      name="first_name"
-                      value={formData.first_name}
+                      id="fullName"
+                      name="fullName"
+                      value={formData.fullName}
                       onChange={handleChange}
                       required
-                      data-testid="first-name-input"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="last_name">Last Name *</Label>
-                    <Input
-                      id="last_name"
-                      name="last_name"
-                      value={formData.last_name}
-                      onChange={handleChange}
-                      required
-                      data-testid="last-name-input"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      required
-                      data-testid="email-input"
+                      data-testid="full-name-input"
                     />
                   </div>
                   <div>
@@ -258,34 +264,47 @@ const Checkout = () => {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <Label htmlFor="address_line1">Address Line 1 *</Label>
+                    <Label htmlFor="addressLine1">Address Line 1 *</Label>
                     <Input
-                      id="address_line1"
-                      name="address_line1"
-                      value={formData.address_line1}
+                      id="addressLine1"
+                      name="addressLine1"
+                      value={formData.addressLine1}
                       onChange={handleChange}
                       required
-                      data-testid="address1-input"
+                      data-testid="address-line-1-input"
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <Label htmlFor="address_line2">Address Line 2</Label>
+                    <Label htmlFor="addressLine2">Address Line 2</Label>
                     <Input
-                      id="address_line2"
-                      name="address_line2"
-                      value={formData.address_line2}
+                      id="addressLine2"
+                      name="addressLine2"
+                      value={formData.addressLine2}
                       onChange={handleChange}
+                      data-testid="address-line-2-input"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="postal_code">Postal Code *</Label>
+                    <Label htmlFor="unit">Unit</Label>
                     <Input
-                      id="postal_code"
-                      name="postal_code"
-                      value={formData.postal_code}
+                      id="unit"
+                      name="unit"
+                      value={formData.unit}
+                      onChange={handleChange}
+                      data-testid="unit-input"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="postalCode">Postal Code *</Label>
+                    <Input
+                      id="postalCode"
+                      name="postalCode"
+                      value={formData.postalCode}
                       onChange={handleChange}
                       required
                       data-testid="postal-code-input"
+                      placeholder={formData.country === 'SG' ? '123456' : '12345'}
+                      maxLength={formData.country === 'SG' ? 6 : 5}
                     />
                   </div>
                   <div>
@@ -296,10 +315,41 @@ const Checkout = () => {
                       value={formData.city}
                       onChange={handleChange}
                       required
-                      readOnly
+                      data-testid="city-input"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="state">State *</Label>
+                    <Input
+                      id="state"
+                      name="state"
+                      value={formData.state}
+                      onChange={handleChange}
+                      required
+                      data-testid="state-input"
                     />
                   </div>
                 </div>
+                
+                {/* Save to Profile Checkbox */}
+                {user && (selectedAddressId === 'new' || selectedAddressId === '') && (
+                  <div className="mt-6 p-4 bg-teal-50 border border-teal-200 rounded-lg">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={saveToProfile}
+                        onChange={(e) => setSaveToProfile(e.target.checked)}
+                        className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                      />
+                      <span className="text-sm font-medium text-slate-900">
+                        💾 Save this address to my profile
+                      </span>
+                    </label>
+                    <p className="text-xs text-gray-600 mt-2 ml-6">
+                      Save this address for faster checkout next time
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Gift Selection Section */}
