@@ -1,6 +1,26 @@
 <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- M Supplies Favicon - Larger and clearer for browser tabs -->
-  <rect width="64" height="64" rx="12" fill="#0f766e"/>
-  <!-- Bold "M" letter optimized for favicon display -->
-  <path d="M12 48V16h8l6 18 6-18h8v32h-6V24l-5 14h-4l-5-14v24h-8z" fill="white"/>
+  <!-- M Supplies Favicon - Black "M" on white background matching logo design -->
+  <rect width="64" height="64" rx="12" fill="white" stroke="#e5e7eb" stroke-width="1"/>
+  <!-- Serif "M" letter matching M Supplies logo with sharp apex and serifs -->
+  <g fill="black">
+    <!-- Left upright stroke with serifs -->
+    <rect x="14" y="16" width="4" height="32"/>
+    <rect x="12" y="16" width="8" height="2"/>
+    <rect x="12" y="46" width="8" height="2"/>
+    
+    <!-- Right upright stroke with serifs -->
+    <rect x="46" y="16" width="4" height="32"/>
+    <rect x="44" y="16" width="8" height="2"/>
+    <rect x="44" y="46" width="8" height="2"/>
+    
+    <!-- Left diagonal stroke forming the "V" -->
+    <path d="M18 16 L32 30 L30 32 L16 18 Z"/>
+    
+    <!-- Right diagonal stroke forming the "V" -->
+    <path d="M46 16 L48 18 L34 32 L32 30 Z"/>
+    
+    <!-- Bottom serifs for diagonal strokes -->
+    <rect x="30" y="30" width="4" height="18"/>
+    <rect x="28" y="46" width="8" height="2"/>
+  </g>
 </svg>
