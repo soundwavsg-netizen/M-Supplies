@@ -39,17 +39,13 @@ class UserProfileRepository:
 
     async def get_user_profile(self, uid: str) -> Optional[UserProfile]:
         """Get user profile by UID"""
-        user_data = await self.users.find_one({"uid": uid})
+        user_data = await self.users.find_one({"id": uid})  # Use 'id' field, same as auth
         if not user_data:
             return None
         
-        # Parse datetime fields
-        if isinstance(user_data.get('createdAt'), str):
-            user_data['createdAt'] = datetime.fromisoformat(user_data['createdAt'])
-        if isinstance(user_data.get('updatedAt'), str):
-            user_data['updatedAt'] = datetime.fromisoformat(user_data['updatedAt'])
-        
-        return UserProfile(**user_data)
+        # Transform legacy data to Firebase format if needed
+        firebase_data = self._transform_legacy_to_firebase(user_data)
+        return UserProfile(**firebase_data)
 
     async def get_user_by_email(self, email: str) -> Optional[UserProfile]:
         """Get user profile by email"""
@@ -57,13 +53,23 @@ class UserProfileRepository:
         if not user_data:
             return None
         
-        # Parse datetime fields
-        if isinstance(user_data.get('createdAt'), str):
-            user_data['createdAt'] = datetime.fromisoformat(user_data['createdAt'])
-        if isinstance(user_data.get('updatedAt'), str):
-            user_data['updatedAt'] = datetime.fromisoformat(user_data['updatedAt'])
-        
-        return UserProfile(**user_data)
+        firebase_data = self._transform_legacy_to_firebase(user_data)
+        return UserProfile(**firebase_data)
+
+    def _transform_legacy_to_firebase(self, user_data: dict) -> dict:
+        """Transform legacy user data to Firebase-compatible format"""
+        return {
+            "uid": user_data.get("id"),
+            "displayName": f"{user_data.get('first_name', '')} {user_data.get('last_name', '')}".strip(),
+            "email": user_data.get("email"),
+            "phone": user_data.get("phone"),
+            "role": user_data.get("role", "customer"),
+            "defaultAddressId": user_data.get("defaultAddressId"),
+            "lastUsedAddressId": user_data.get("lastUsedAddressId"),
+            "is_active": user_data.get("is_active", True),
+            "createdAt": user_data.get("created_at") if isinstance(user_data.get("created_at"), datetime) else datetime.fromisoformat(user_data["created_at"]) if user_data.get("created_at") else datetime.now(timezone.utc),
+            "updatedAt": user_data.get("updated_at") if isinstance(user_data.get("updated_at"), datetime) else datetime.fromisoformat(user_data["updated_at"]) if user_data.get("updated_at") else datetime.now(timezone.utc)
+        }
 
     async def update_user_profile(self, uid: str, updates: Dict[str, Any]) -> bool:
         """Update user profile"""
