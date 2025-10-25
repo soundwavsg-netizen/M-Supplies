@@ -802,6 +802,7 @@ async def serve_image(filename: str):
 app.include_router(api_router)
 app.include_router(promotion.router, prefix="/api")
 app.include_router(chat.router, prefix="/api/chat")
+app.include_router(user_profile.router, prefix="/api/users")
 
 # Serve uploaded files
 import os
