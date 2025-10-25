@@ -238,5 +238,80 @@ M Supplies (INT) Pte Ltd — Official Store
             logger.error(f"Error sending welcome email: {str(e)}")
             return False
 
+    async def send_address_reminder_email(
+        self,
+        email: str,
+        display_name: str
+    ) -> bool:
+        """Send 24-hour address completion reminder email"""
+        
+        if not self.api_key:
+            logger.warning("Cannot send email - SendGrid API key not configured")
+            return False
+        
+        try:
+            # HTML reminder email
+            html_body = f"""
+<h2 style="font-family:Inter,Arial,sans-serif;color:#333;margin:0 0 12px;">Quick step: Add your delivery address for faster checkout</h2>
+<p style="font-family:Inter,Arial,sans-serif;color:#444;margin:0 0 16px;">
+Hi {display_name}, we noticed you haven't added a delivery address to your M Supplies account yet. Adding one now will make your next order super quick!
+</p>
+
+<p style="margin:0 0 20px;">
+  <a href="https://www.msupplies.sg/account?onboard=address" 
+     style="background:#0f766e;color:#fff;text-decoration:none;padding:12px 20px;border-radius:6px;display:inline-block;">
+    Add My Delivery Address
+  </a>
+</p>
+
+<p style="font-family:Inter,Arial,sans-serif;color:#666;font-size:14px;margin:16px 0 0;">
+This takes less than 2 minutes and makes checkout much faster for future orders.
+</p>
+
+<hr style="border:none;border-top:1px solid #eee;margin:24px 0;">
+<p style="font-family:Inter,Arial,sans-serif;color:#999;font-size:12px;margin:0;">M Supplies (INT) Pte Ltd — Premium Packaging Solutions</p>
+"""
+            
+            # Plain text version
+            text_body = f"""
+Quick step: Add your delivery address for faster checkout
+
+Hi {display_name}, 
+
+We noticed you haven't added a delivery address to your M Supplies account yet. Adding one now will make your next order super quick!
+
+Add your delivery address here: https://www.msupplies.sg/account?onboard=address
+
+This takes less than 2 minutes and makes checkout much faster for future orders.
+
+M Supplies (INT) Pte Ltd — Premium Packaging Solutions
+"""
+            
+            mail = Mail(
+                from_email=Email(self.from_email, "M Supplies"),
+                to_emails=To(email),
+                subject="Quick step: Add your delivery address for faster checkout",
+                plain_text_content=Content("text/plain", text_body),
+                html_content=Content("text/html", html_body)
+            )
+            
+            # Set reply-to
+            mail.reply_to = Email(self.reply_to_email, "M Supplies")
+            
+            # Send email
+            sg = SendGridAPIClient(self.api_key)
+            response = sg.client.mail.send.post(request_body=mail.get())
+            
+            if response.status_code == 202:
+                logger.info(f"Address reminder email sent to {email}")
+                return True
+            else:
+                logger.error(f"Failed to send address reminder email: {response.status_code}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error sending address reminder email: {str(e)}")
+            return False
+
 # Global email service instance
 email_service = EmailService()
