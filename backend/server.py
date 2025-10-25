@@ -29,6 +29,7 @@ from app.repositories.coupon_repository import CouponRepository
 from app.repositories.inventory_repository import (
     InventoryLedgerRepository, ChannelMappingRepository, SettingsRepository
 )
+from app.repositories.user_profile_repository import UserProfileRepository, AddressRepository
 
 # Services
 from app.services.auth_service import AuthService
