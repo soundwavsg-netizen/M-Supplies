@@ -46,6 +46,16 @@ const Account = () => {
 
   useEffect(() => {
     fetchUserData();
+    
+    // Check for onboard parameter
+    if (searchParams.get('onboard') === 'address') {
+      setActiveTab('addresses');
+      // Auto-open add address modal after data loads
+      setTimeout(() => {
+        resetAddressForm();
+        setIsAddressModalOpen(true);
+      }, 500);
+    }
   }, []);
 
   useEffect(() => {
