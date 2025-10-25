@@ -9533,33 +9533,63 @@ async def main():
     """Run backend tests focused on user profile management system"""
     print("🚀 Starting M Supplies Backend API Tests - User Profile Management System")
     print(f"Testing against: {API_BASE}")
+    print("=" * 80)
     print("🎯 FOCUS: Test Firebase-compatible user profile management system")
-    print("User Request: Test the new Firebase-compatible user profile management system")
-    print("Testing scenarios:")
-    print("1. User Profile Management - GET/PUT /api/users/me")
-    print("2. Address Management System - Full CRUD operations")
-    print("3. Business Logic Validation - Max 5 addresses, postal code validation, default address logic")
-    print("4. Firebase-Compatible Structure - Verify data stored with Firebase-style field names")
-    print("5. Integration with Existing Auth - Test JWT authentication integration")
-    print("Expected Results:")
-    print("- All profile and address APIs working correctly")
-    print("- Firebase-compatible data structure maintained")
-    print("- Address validation working (SG 6 digits, MY 5 digits)")
-    print("- Default address logic enforced")
-    print("- Maximum 5 addresses per user limit working")
+    print("=" * 80)
+    print("\nTesting Scenarios:")
+    print("1. Authentication Fix Verification - Firebase-compatible user object")
+    print("2. User Profile API Testing - GET/PUT /api/users/me")
+    print("3. Address Management System - Full CRUD operations")
+    print("4. Business Logic Validation - Max 5 addresses, postal code validation")
+    print("5. Default Address Logic - Only one default, auto-promotion")
+    print("6. Firebase-Compatible Structure - displayName, createdAt, updatedAt fields")
+    print("\nExpected Results:")
+    print("✓ Authentication returns Firebase-style user object")
+    print("✓ All profile and address APIs working correctly")
+    print("✓ Address validation working (SG 6 digits, MY 5 digits, SG/MY only)")
+    print("✓ Default address logic enforced (one default, auto-promotion)")
+    print("✓ Maximum 5 addresses per user limit working")
+    print("=" * 80)
     
     async with BackendTester() as tester:
-        # Run authentication first
-        await tester.authenticate()
+        # Test 1: Firebase Authentication Fix
+        await tester.test_firebase_authentication_fix()
         
-        # PRIORITY TESTS: User Profile Management System
-        await tester.test_user_profile_management()
-        await tester.test_address_management()
-        await tester.test_address_validation()
+        # Test 2: User Profile API
+        await tester.test_user_profile_api()
+        
+        # Test 3: Address Management System (includes validation)
+        await tester.test_address_management_system()
+        
+        # Test 4: Default Address Logic
         await tester.test_default_address_logic()
         
+        # Test 5: Address CRUD Operations (includes auto-promotion)
+        await tester.test_address_crud_operations()
+        
         # Print summary
-        passed, failed = tester.print_summary()
+        print("\n" + "=" * 80)
+        print("📊 TEST SUMMARY")
+        print("=" * 80)
+        
+        passed = sum(1 for r in tester.test_results if r['success'])
+        failed = sum(1 for r in tester.test_results if not r['success'])
+        total = len(tester.test_results)
+        
+        print(f"\nTotal Tests: {total}")
+        print(f"✅ Passed: {passed}")
+        print(f"❌ Failed: {failed}")
+        print(f"Success Rate: {(passed/total*100):.1f}%")
+        
+        if failed > 0:
+            print("\n❌ FAILED TESTS:")
+            for result in tester.test_results:
+                if not result['success']:
+                    print(f"  - {result['test']}")
+                    if result['details']:
+                        print(f"    {result['details']}")
+        
+        print("=" * 80)
         
         return failed == 0
 
