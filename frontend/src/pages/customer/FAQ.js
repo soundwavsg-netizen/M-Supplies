@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SmartChatWidget from '@/components/chat/SmartChatWidget';
+import SEOHead from '@/components/SEO/SEOHead';
+import { faqSchema, organizationSchema } from '@/components/SEO/schemas';
 
 const FAQ = () => {
   const [openItem, setOpenItem] = useState(null);
