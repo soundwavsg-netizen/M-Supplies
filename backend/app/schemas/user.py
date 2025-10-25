@@ -94,11 +94,28 @@ class AddressCreate(BaseModel):
     addressLine1: str = Field(..., max_length=200)
     addressLine2: Optional[str] = Field(None, max_length=200)
     unit: Optional[str] = Field(None, max_length=50)
-    postalCode: str = Field(...)
     city: str = Field(..., max_length=100)
     state: str = Field(..., max_length=100)
     country: str = Field(..., description="SG or MY")
+    postalCode: str = Field(...)
     isDefault: bool = Field(default=False)
+    
+    @validator('country')
+    def validate_country(cls, v):
+        if v not in ['SG', 'MY']:
+            raise ValueError('Country must be SG (Singapore) or MY (Malaysia)')
+        return v
+
+    @validator('postalCode')
+    def validate_postal_code(cls, v, values):
+        country = values.get('country', 'SG')
+        if country == 'SG':
+            if not re.match(r'^\d{6}$', v):
+                raise ValueError('Singapore postal code must be 6 digits')
+        elif country == 'MY':
+            if not re.match(r'^\d{5}$', v):
+                raise ValueError('Malaysia postal code must be 5 digits')
+        return v
 
 class AddressUpdate(BaseModel):
     fullName: Optional[str] = Field(None, max_length=100)
@@ -106,11 +123,30 @@ class AddressUpdate(BaseModel):
     addressLine1: Optional[str] = Field(None, max_length=200)
     addressLine2: Optional[str] = Field(None, max_length=200)
     unit: Optional[str] = Field(None, max_length=50)
-    postalCode: Optional[str] = None
     city: Optional[str] = Field(None, max_length=100)
     state: Optional[str] = Field(None, max_length=100)
     country: Optional[str] = None
+    postalCode: Optional[str] = None
     isDefault: Optional[bool] = None
+    
+    @validator('country')
+    def validate_country(cls, v):
+        if v and v not in ['SG', 'MY']:
+            raise ValueError('Country must be SG (Singapore) or MY (Malaysia)')
+        return v
+
+    @validator('postalCode')
+    def validate_postal_code(cls, v, values):
+        if not v:
+            return v
+        country = values.get('country', 'SG')
+        if country == 'SG':
+            if not re.match(r'^\d{6}$', v):
+                raise ValueError('Singapore postal code must be 6 digits')
+        elif country == 'MY':
+            if not re.match(r'^\d{5}$', v):
+                raise ValueError('Malaysia postal code must be 5 digits')
+        return v
 
 class AddressResponse(BaseModel):
     id: str
