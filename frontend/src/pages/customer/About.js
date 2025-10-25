@@ -75,7 +75,11 @@ const About = () => {
                     <p className="text-gray-700 mb-4">
                       Our Shopee store specializing in vibrant, high-quality polymailers and other essential packaging materials. Perfect for businesses that want their shipments to leave a lasting impression.
                     </p>
-                    <Button variant="outline" className="w-full border-pink-300 text-pink-700 hover:bg-pink-50">
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-pink-300 text-pink-700 hover:bg-pink-50"
+                      onClick={() => window.open('https://shopee.sg/rainbow.palace.sg', '_blank')}
+                    >
                       <ExternalLink className="w-4 h-4 mr-2" />
                       Visit our store
                     </Button>
