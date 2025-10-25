@@ -26,7 +26,7 @@ class AuthService:
             "updatedAt": user.get("updated_at", datetime.now(timezone.utc))
         }
     
-    async def register(self, user_data: UserCreate) -> Dict[str, Any]:
+    async def register(self, user_data: UserCreate, background_tasks: BackgroundTasks = None) -> Dict[str, Any]:
         # Check if user exists
         existing_user = await self.user_repo.get_by_email(user_data.email)
         if existing_user:
@@ -49,6 +49,23 @@ class AuthService:
         # Generate tokens
         access_token = create_access_token({"sub": user['id'], "email": user['email']})
         refresh_token = create_refresh_token({"sub": user['id']})
+        
+        # Send email notifications in background if available
+        if background_tasks:
+            # Send signup notification to admin
+            background_tasks.add_task(
+                email_service.send_signup_notification,
+                display_name=firebase_user['displayName'],
+                email=firebase_user['email'],
+                phone=firebase_user.get('phone')
+            )
+            
+            # Send welcome email to user
+            background_tasks.add_task(
+                email_service.send_welcome_email,
+                email=firebase_user['email'],
+                display_name=firebase_user['displayName']
+            )
         
         return {
             "user": firebase_user,
