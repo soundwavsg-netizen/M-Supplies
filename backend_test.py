@@ -10194,31 +10194,40 @@ class BackendTester:
 
 async def main():
     """Run backend tests focused on checkout autofill and save-to-profile functionality"""
-    print("🚀 Starting M Supplies Backend API Tests - Checkout Autofill & Save-to-Profile")
+    print("🚀 Starting M Supplies Backend API Tests - Checkout Autofill System")
     print(f"Testing against: {API_BASE}")
     print("=" * 80)
-    print("🎯 FOCUS: Test complete checkout autofill and save-to-profile integration")
+    print("🎯 FOCUS: Complete Checkout Autofill and Save-to-Profile Integration")
     print("=" * 80)
     print("\nTesting Scenarios:")
-    print("1. Checkout with Existing Address - Select from saved addresses")
-    print("2. Checkout with New Address + Save to Profile - Save during checkout")
-    print("3. Address Format Conversion - Firebase ↔ Legacy format")
-    print("4. Order Schema Integration - shippingAddressSnapshot and selected_gifts")
-    print("5. Business Logic Integration - Address limits, postal validation")
+    print("1. Order Creation Bug Fix - Verify stock check uses on_hand field")
+    print("2. Checkout with Existing Address - Select from saved addresses")
+    print("3. Checkout with New Address + Save to Profile - Save during checkout")
+    print("4. Address Format Conversion - Firebase ↔ Legacy format")
+    print("5. Complete Integration - shippingAddressSnapshot, lastUsedAddressId")
     print("\nExpected Results:")
-    print("✓ Orders created with existing addresses include correct snapshot")
+    print("✓ Order creation works with available stock (on_hand field)")
+    print("✓ Orders with existing addresses include shippingAddressSnapshot")
     print("✓ New addresses saved to profile when save_to_profile=true")
     print("✓ lastUsedAddressId updated correctly in user profile")
-    print("✓ All address conversions between Firebase/legacy formats working")
-    print("✓ Complete checkout integration with profile management")
+    print("✓ Address format conversions working (fullName split, country codes)")
     print("=" * 80)
     
     async with BackendTester() as tester:
         # Authenticate first
         await tester.authenticate()
         
-        # Test complete checkout autofill integration
-        await tester.test_complete_checkout_autofill_integration()
+        # Test 1: Order Creation Bug Fix Verification
+        await tester.test_order_creation_stock_bug_fix()
+        
+        # Test 2: Checkout with Existing Address
+        await tester.test_checkout_with_existing_address()
+        
+        # Test 3: Checkout with New Address + Save to Profile
+        await tester.test_checkout_with_new_address_and_save_to_profile()
+        
+        # Test 4: Address Format Conversion
+        await tester.test_address_format_conversion()
         
         # Print summary
         print("\n" + "=" * 80)
