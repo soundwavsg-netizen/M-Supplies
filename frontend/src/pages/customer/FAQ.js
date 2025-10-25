@@ -47,6 +47,14 @@ const FAQ = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEOHead
+        title="FAQ - M Supplies Polymailers & Packaging Questions"
+        description="Frequently asked questions about M Supplies polymailers, custom packaging, delivery times, international shipping to Singapore & Malaysia."
+        keywords="M Supplies FAQ, polymailer questions, packaging delivery, Singapore shipping, Malaysia shipping, custom packaging FAQ, M Supplies support"
+        ogImage="https://www.msupplies.sg/assets/m-supplies-logo-transparent.png"
+        structuredData={[faqSchema, organizationSchema]}
+      />
+      
       {/* Header Section */}
       <section className="bg-gradient-to-br from-teal-50 to-blue-50 py-16">
         <div className="container mx-auto px-4 text-center">
