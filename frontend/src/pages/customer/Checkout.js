@@ -17,18 +17,88 @@ const Checkout = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [userAddresses, setUserAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState('');
+  const [saveToProfile, setSaveToProfile] = useState(false);
+  
+  // Updated form data with Firebase-compatible field names
   const [formData, setFormData] = useState({
-    first_name: user?.first_name || '',
-    last_name: user?.last_name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    address_line1: '',
-    address_line2: '',
+    fullName: '',
+    phone: '',
+    addressLine1: '',
+    addressLine2: '',
+    unit: '',
+    postalCode: '',
     city: 'Singapore',
     state: 'Singapore',
-    postal_code: '',
-    country: 'Singapore',
+    country: 'SG',
   });
+
+  useEffect(() => {
+    if (user) {
+      fetchUserAddresses();
+    }
+  }, [user]);
+
+  const fetchUserAddresses = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get(`${BACKEND_URL}/api/users/me/addresses`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const addresses = response.data;
+      setUserAddresses(addresses);
+      
+      // Auto-select default address if available
+      const defaultAddress = addresses.find(addr => addr.isDefault);
+      if (defaultAddress) {
+        setSelectedAddressId(defaultAddress.id);
+        autofillFromAddress(defaultAddress);
+      }
+    } catch (error) {
+      console.error('Error fetching user addresses:', error);
+    }
+  };
+
+  const autofillFromAddress = (address) => {
+    setFormData({
+      fullName: address.fullName,
+      phone: address.phone,
+      addressLine1: address.addressLine1,
+      addressLine2: address.addressLine2 || '',
+      unit: address.unit || '',
+      postalCode: address.postalCode,
+      city: address.city,
+      state: address.state,
+      country: address.country,
+    });
+  };
+
+  const handleAddressSelect = (addressId) => {
+    setSelectedAddressId(addressId);
+    if (addressId === 'new') {
+      // Clear form for new address
+      setFormData({
+        fullName: user?.displayName || `${user?.first_name || ''} ${user?.last_name || ''}`.trim(),
+        phone: user?.phone || '',
+        addressLine1: '',
+        addressLine2: '',
+        unit: '',
+        postalCode: '',
+        city: 'Singapore',
+        state: 'Singapore',
+        country: 'SG',
+      });
+      setSaveToProfile(true); // Suggest saving new address
+    } else {
+      const selectedAddress = userAddresses.find(addr => addr.id === addressId);
+      if (selectedAddress) {
+        autofillFromAddress(selectedAddress);
+        setSaveToProfile(false); // Don't need to save existing address
+      }
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
