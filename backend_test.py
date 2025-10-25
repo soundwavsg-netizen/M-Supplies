@@ -1082,9 +1082,9 @@ class BackendTester:
         except Exception as e:
             self.log_test("Pricing Calculation Logic", False, f"Exception: {str(e)}")
 
-    async def test_firebase_authentication_fix(self):
+    async def test_firebase_authentication_integration(self):
         """Test authentication with Firebase-compatible user schema"""
-        print("\n🔐 Testing Firebase-Compatible Authentication Fix...")
+        print("\n🔐 Testing Firebase-Compatible Authentication Integration...")
         
         # Test admin login
         try:
@@ -1095,7 +1095,7 @@ class BackendTester:
                     user = data.get('user', {})
                     
                     # Check Firebase-style fields
-                    required_fields = ['displayName', 'createdAt', 'updatedAt', 'uid', 'email', 'role']
+                    required_fields = ['displayName', 'createdAt', 'updatedAt', 'uid', 'email', 'role', 'id']
                     missing_fields = [field for field in required_fields if field not in user]
                     
                     if missing_fields:
@@ -1112,7 +1112,7 @@ class BackendTester:
                     else:
                         self.log_test("Firebase Auth - displayName", False, "displayName is empty")
                     
-                    # Verify uid field
+                    # Verify uid field matches id
                     if user.get('uid') == user.get('id'):
                         self.log_test("Firebase Auth - uid Field", True, "uid matches id")
                     else:
@@ -1125,6 +1125,17 @@ class BackendTester:
                                     f"Token: {self.admin_token[:20]}...")
                     else:
                         self.log_test("Firebase Auth - JWT Token", False, "No token received")
+                    
+                    # Verify datetime fields are in ISO format
+                    created_at = user.get('createdAt')
+                    updated_at = user.get('updatedAt')
+                    
+                    if created_at and updated_at:
+                        self.log_test("Firebase Auth - Datetime Fields", True, 
+                                    f"createdAt and updatedAt present")
+                    else:
+                        self.log_test("Firebase Auth - Datetime Fields", False, 
+                                    "Missing datetime fields")
                     
                 else:
                     error_text = await resp.text()
