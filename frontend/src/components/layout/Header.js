@@ -25,14 +25,16 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {/* Temporarily hide products until ready */}
-            {/* <Link
-              to="/products"
-              className="text-gray-700 hover:text-teal-700 transition-colors font-medium"
-              data-testid="products-nav-link"
-            >
-              Products
-            </Link> */}
+            {/* Show Products link for admin users */}
+            {user && user.role !== 'customer' && (
+              <Link
+                to="/products"
+                className="text-gray-700 hover:text-teal-700 transition-colors font-medium"
+                data-testid="products-nav-link"
+              >
+                Products
+              </Link>
+            )}
             <Link
               to="/"
               className="text-gray-700 hover:text-teal-700 transition-colors font-medium"
