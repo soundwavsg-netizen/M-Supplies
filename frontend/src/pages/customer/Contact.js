@@ -8,6 +8,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import SmartChatWidget from '@/components/chat/SmartChatWidget';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
