@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: Test the GST removal and basic shipping implementation - verify GST is 0.0 in calculations, test weight-based shipping with tiered rates, validate gift system APIs, and confirm cart structure includes shipping fields
+user_problem_statement: Test the new Firebase-compatible user profile management system including profile management API, address management API with CRUD operations, business logic validation (max 5 addresses, postal code validation, default address logic), Firebase-compatible structure, and integration with existing JWT authentication
 
 backend:
   - task: "GST Removal Implementation"
