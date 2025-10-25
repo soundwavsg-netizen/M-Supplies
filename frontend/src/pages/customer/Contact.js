@@ -66,6 +66,14 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEOHead
+        title="Contact M Supplies - Custom Packaging Enquiries Singapore"
+        description="Contact M Supplies for custom packaging solutions, bulk orders, and enquiries. Email msuppliessg@gmail.com. Serving Singapore & Malaysia."
+        keywords="contact M Supplies, custom packaging enquiry, bulk packaging orders, Singapore packaging supplier, Malaysia shipping, packaging consultation"
+        ogImage="https://www.msupplies.sg/assets/m-supplies-logo-transparent.png"
+        structuredData={organizationSchema}
+      />
+      
       {/* Header Section */}
       <section className="bg-gradient-to-br from-teal-50 to-blue-50 py-16">
         <div className="container mx-auto px-4 text-center">
