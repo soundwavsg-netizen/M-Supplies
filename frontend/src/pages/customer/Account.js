@@ -1,8 +1,18 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import { User, Package, Settings } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, MapPin, Package, Plus, Edit, Trash2, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import { formatPrice } from '@/lib/utils';
+import SmartChatWidget from '@/components/chat/SmartChatWidget';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Account = () => {
   const { user } = useAuth();
