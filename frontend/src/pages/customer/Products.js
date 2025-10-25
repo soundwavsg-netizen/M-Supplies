@@ -177,6 +177,21 @@ const Products = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEOHead
+        title="Premium Polymailers & Packaging Products - M Supplies Singapore"
+        description="Shop premium polymailers, bubble wrap packaging, and custom solutions. Thick, colourful polymailers for Singapore & Malaysia businesses."
+        keywords="premium polymailers, thick polymailers, bubble wrap packaging, custom polymailers, Singapore packaging products, Malaysia shipping supplies, colorful mailers"
+        ogImage="https://www.msupplies.sg/assets/m-supplies-logo-transparent.png"
+        structuredData={[
+          createProductSchema({
+            name: "Premium Polymailers Collection",
+            description: "High-quality, thick polymailers in vibrant colors for professional shipping",
+            price: "7.99"
+          }),
+          organizationSchema
+        ]}
+      />
+      
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
