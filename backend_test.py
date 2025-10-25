@@ -1230,6 +1230,464 @@ class BackendTester:
         except Exception as e:
             self.log_test("PUT /users/me", False, f"Exception: {str(e)}")
     
+    async def test_order_creation_stock_bug_fix(self):
+        """Test order creation with on_hand stock field (Bug Fix Verification)"""
+        print("\n🐛 Testing Order Creation Stock Bug Fix...")
+        
+        if not self.admin_token:
+            self.log_test("Order Creation Stock Bug Fix", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Step 1: Find Baby Blue product variant with stock
+        try:
+            async with self.session.post(f"{API_BASE}/products/filter", 
+                                        json={"filters": {"colors": ["baby blue"]}, "page": 1, "limit": 10}) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    products = data.get('products', [])
+                    
+                    if not products:
+                        self.log_test("Find Baby Blue Product", False, "No Baby Blue products found")
+                        return
+                    
+                    product = products[0]
+                    variants = product.get('variants', [])
+                    
+                    if not variants:
+                        self.log_test("Find Baby Blue Variant", False, "No variants found")
+                        return
+                    
+                    variant = variants[0]
+                    variant_id = variant['id']
+                    on_hand = variant.get('on_hand', 0)
+                    
+                    self.log_test("Find Baby Blue Variant", True, 
+                                f"Variant ID: {variant_id}, on_hand: {on_hand}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Find Baby Blue Product", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Find Baby Blue Product", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 2: Add to cart
+        try:
+            add_to_cart_data = {
+                "variant_id": variant_id,
+                "quantity": 1
+            }
+            async with self.session.post(f"{API_BASE}/cart/add", 
+                                        json=add_to_cart_data, headers=headers) as resp:
+                if resp.status == 200:
+                    cart = await resp.json()
+                    self.log_test("Add Baby Blue to Cart", True, 
+                                f"Cart has {len(cart.get('items', []))} items")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Add Baby Blue to Cart", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Add Baby Blue to Cart", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 3: Create order with Firebase address format
+        try:
+            order_data = {
+                "firebase_shipping_address": {
+                    "fullName": "Test User",
+                    "phone": "+6591234567",
+                    "addressLine1": "123 Test Street",
+                    "addressLine2": "Unit 01-01",
+                    "unit": "#01-01",
+                    "postalCode": "123456",
+                    "city": "Singapore",
+                    "state": "Singapore",
+                    "country": "SG"
+                },
+                "payment_method": "stripe"
+            }
+            
+            async with self.session.post(f"{API_BASE}/orders", 
+                                        json=order_data, headers=headers) as resp:
+                if resp.status == 200:
+                    order = await resp.json()
+                    self.log_test("Order Creation with on_hand Stock", True, 
+                                f"Order {order.get('order_number')} created successfully")
+                    
+                    # Verify order has items
+                    if order.get('items'):
+                        self.log_test("Order Items Present", True, 
+                                    f"Order has {len(order.get('items'))} items")
+                    else:
+                        self.log_test("Order Items Present", False, "Order has no items")
+                    
+                    return order
+                else:
+                    error_text = await resp.text()
+                    # Check if it's the old stock_qty bug
+                    if "Insufficient stock" in error_text:
+                        self.log_test("Order Creation with on_hand Stock", False, 
+                                    f"CRITICAL BUG: Stock check still using stock_qty instead of on_hand - {error_text}")
+                    else:
+                        self.log_test("Order Creation with on_hand Stock", False, 
+                                    f"Status {resp.status}: {error_text}")
+                    return None
+        except Exception as e:
+            self.log_test("Order Creation with on_hand Stock", False, f"Exception: {str(e)}")
+            return None
+    
+    async def test_checkout_with_existing_address(self):
+        """Test order creation with address_id parameter"""
+        print("\n📍 Testing Checkout with Existing Address...")
+        
+        if not self.admin_token:
+            self.log_test("Checkout with Existing Address", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Step 1: Create a test address
+        test_address = {
+            "fullName": "John Tan",
+            "phone": "+6598765432",
+            "addressLine1": "50 Raffles Place",
+            "addressLine2": "Singapore Land Tower",
+            "unit": "#20-01",
+            "postalCode": "048623",
+            "city": "Singapore",
+            "state": "Singapore",
+            "country": "SG",
+            "isDefault": False
+        }
+        
+        address_id = None
+        try:
+            async with self.session.post(f"{API_BASE}/users/me/addresses", 
+                                        json=test_address, headers=headers) as resp:
+                if resp.status == 200:
+                    address = await resp.json()
+                    address_id = address['id']
+                    self.log_test("Create Test Address", True, f"Address ID: {address_id}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Create Test Address", False, f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Create Test Address", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 2: Add item to cart
+        try:
+            async with self.session.post(f"{API_BASE}/products/filter", 
+                                        json={"page": 1, "limit": 1}) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    products = data.get('products', [])
+                    if products and products[0].get('variants'):
+                        variant_id = products[0]['variants'][0]['id']
+                        
+                        add_to_cart_data = {"variant_id": variant_id, "quantity": 1}
+                        async with self.session.post(f"{API_BASE}/cart/add", 
+                                                    json=add_to_cart_data, headers=headers) as cart_resp:
+                            if cart_resp.status == 200:
+                                self.log_test("Add Item to Cart", True, "Item added")
+                            else:
+                                error_text = await cart_resp.text()
+                                self.log_test("Add Item to Cart", False, f"Status {cart_resp.status}: {error_text}")
+                                return
+                    else:
+                        self.log_test("Find Product for Cart", False, "No products with variants found")
+                        return
+        except Exception as e:
+            self.log_test("Add Item to Cart", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 3: Create order with address_id
+        try:
+            order_data = {
+                "address_id": address_id,
+                "payment_method": "stripe"
+            }
+            
+            async with self.session.post(f"{API_BASE}/orders", 
+                                        json=order_data, headers=headers) as resp:
+                if resp.status == 200:
+                    order = await resp.json()
+                    self.log_test("Order Creation with address_id", True, 
+                                f"Order {order.get('order_number')} created")
+                    
+                    # Verify shippingAddressSnapshot
+                    snapshot = order.get('shippingAddressSnapshot')
+                    if snapshot:
+                        self.log_test("shippingAddressSnapshot Present", True, 
+                                    f"Snapshot contains: {list(snapshot.keys())}")
+                        
+                        # Verify Firebase format fields
+                        firebase_fields = ['fullName', 'phone', 'addressLine1', 'postalCode', 'country']
+                        missing_fields = [f for f in firebase_fields if f not in snapshot]
+                        if missing_fields:
+                            self.log_test("shippingAddressSnapshot Format", False, 
+                                        f"Missing fields: {missing_fields}")
+                        else:
+                            self.log_test("shippingAddressSnapshot Format", True, 
+                                        "All Firebase fields present")
+                    else:
+                        self.log_test("shippingAddressSnapshot Present", False, 
+                                    "shippingAddressSnapshot field missing")
+                    
+                    # Verify legacy shipping_address
+                    shipping_addr = order.get('shipping_address')
+                    if shipping_addr:
+                        self.log_test("Legacy shipping_address Present", True, 
+                                    "Legacy format included for compatibility")
+                    else:
+                        self.log_test("Legacy shipping_address Present", False, 
+                                    "Legacy shipping_address missing")
+                    
+                    return order
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Order Creation with address_id", False, 
+                                f"Status {resp.status}: {error_text}")
+                    return None
+        except Exception as e:
+            self.log_test("Order Creation with address_id", False, f"Exception: {str(e)}")
+            return None
+    
+    async def test_checkout_with_new_address_and_save_to_profile(self):
+        """Test order creation with new address and save_to_profile flag"""
+        print("\n💾 Testing Checkout with New Address + Save to Profile...")
+        
+        if not self.admin_token:
+            self.log_test("Checkout with Save to Profile", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Step 1: Get current address count
+        initial_address_count = 0
+        try:
+            async with self.session.get(f"{API_BASE}/users/me/addresses", headers=headers) as resp:
+                if resp.status == 200:
+                    addresses = await resp.json()
+                    initial_address_count = len(addresses)
+                    self.log_test("Get Initial Address Count", True, 
+                                f"User has {initial_address_count} addresses")
+        except Exception as e:
+            self.log_test("Get Initial Address Count", False, f"Exception: {str(e)}")
+        
+        # Step 2: Add item to cart
+        try:
+            async with self.session.post(f"{API_BASE}/products/filter", 
+                                        json={"page": 1, "limit": 1}) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    products = data.get('products', [])
+                    if products and products[0].get('variants'):
+                        variant_id = products[0]['variants'][0]['id']
+                        
+                        add_to_cart_data = {"variant_id": variant_id, "quantity": 1}
+                        async with self.session.post(f"{API_BASE}/cart/add", 
+                                                    json=add_to_cart_data, headers=headers) as cart_resp:
+                            if cart_resp.status == 200:
+                                self.log_test("Add Item to Cart", True, "Item added")
+                            else:
+                                error_text = await cart_resp.text()
+                                self.log_test("Add Item to Cart", False, f"Status {cart_resp.status}: {error_text}")
+                                return
+        except Exception as e:
+            self.log_test("Add Item to Cart", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 3: Create order with new address and save_to_profile=true
+        new_address = {
+            "fullName": "Mary Lim",
+            "phone": "+6587654321",
+            "addressLine1": "100 Orchard Road",
+            "addressLine2": "ION Orchard",
+            "unit": "#B4-01",
+            "postalCode": "238840",
+            "city": "Singapore",
+            "state": "Singapore",
+            "country": "SG"
+        }
+        
+        try:
+            order_data = {
+                "firebase_shipping_address": new_address,
+                "save_to_profile": True,
+                "payment_method": "stripe"
+            }
+            
+            async with self.session.post(f"{API_BASE}/orders", 
+                                        json=order_data, headers=headers) as resp:
+                if resp.status == 200:
+                    order = await resp.json()
+                    self.log_test("Order Creation with save_to_profile", True, 
+                                f"Order {order.get('order_number')} created")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Order Creation with save_to_profile", False, 
+                                f"Status {resp.status}: {error_text}")
+                    return
+        except Exception as e:
+            self.log_test("Order Creation with save_to_profile", False, f"Exception: {str(e)}")
+            return
+        
+        # Step 4: Verify address was saved to profile
+        try:
+            async with self.session.get(f"{API_BASE}/users/me/addresses", headers=headers) as resp:
+                if resp.status == 200:
+                    addresses = await resp.json()
+                    new_address_count = len(addresses)
+                    
+                    if new_address_count > initial_address_count:
+                        self.log_test("Address Saved to Profile", True, 
+                                    f"Address count increased from {initial_address_count} to {new_address_count}")
+                        
+                        # Verify the new address exists
+                        found_address = False
+                        for addr in addresses:
+                            if (addr.get('fullName') == new_address['fullName'] and 
+                                addr.get('postalCode') == new_address['postalCode']):
+                                found_address = True
+                                self.log_test("New Address in Profile", True, 
+                                            f"Found address: {addr.get('fullName')}")
+                                break
+                        
+                        if not found_address:
+                            self.log_test("New Address in Profile", False, 
+                                        "Address count increased but new address not found")
+                    else:
+                        self.log_test("Address Saved to Profile", False, 
+                                    f"Address count unchanged: {new_address_count}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Verify Address Saved", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Verify Address Saved", False, f"Exception: {str(e)}")
+    
+    async def test_address_format_conversion(self):
+        """Test Firebase address format to legacy order format conversion"""
+        print("\n🔄 Testing Address Format Conversion...")
+        
+        if not self.admin_token:
+            self.log_test("Address Format Conversion", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        
+        # Test cases for address conversion
+        test_cases = [
+            {
+                "name": "Singapore Address",
+                "firebase_address": {
+                    "fullName": "Tan Wei Ming",
+                    "phone": "+6591234567",
+                    "addressLine1": "1 Marina Boulevard",
+                    "addressLine2": "Marina Bay Sands",
+                    "unit": "#10-01",
+                    "postalCode": "018989",
+                    "city": "Singapore",
+                    "state": "Singapore",
+                    "country": "SG"
+                },
+                "expected_country": "Singapore"
+            },
+            {
+                "name": "Malaysia Address",
+                "firebase_address": {
+                    "fullName": "Ahmad bin Abdullah",
+                    "phone": "+60123456789",
+                    "addressLine1": "Jalan Bukit Bintang",
+                    "addressLine2": "Pavilion KL",
+                    "unit": "Level 3",
+                    "postalCode": "55100",
+                    "city": "Kuala Lumpur",
+                    "state": "Wilayah Persekutuan",
+                    "country": "MY"
+                },
+                "expected_country": "Malaysia"
+            }
+        ]
+        
+        for test_case in test_cases:
+            # Add item to cart
+            try:
+                async with self.session.post(f"{API_BASE}/products/filter", 
+                                            json={"page": 1, "limit": 1}) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        products = data.get('products', [])
+                        if products and products[0].get('variants'):
+                            variant_id = products[0]['variants'][0]['id']
+                            
+                            add_to_cart_data = {"variant_id": variant_id, "quantity": 1}
+                            await self.session.post(f"{API_BASE}/cart/add", 
+                                                   json=add_to_cart_data, headers=headers)
+            except:
+                pass
+            
+            # Create order with Firebase address
+            try:
+                order_data = {
+                    "firebase_shipping_address": test_case["firebase_address"],
+                    "payment_method": "stripe"
+                }
+                
+                async with self.session.post(f"{API_BASE}/orders", 
+                                            json=order_data, headers=headers) as resp:
+                    if resp.status == 200:
+                        order = await resp.json()
+                        
+                        # Check fullName split
+                        shipping_addr = order.get('shipping_address', {})
+                        firebase_snapshot = order.get('shippingAddressSnapshot', {})
+                        
+                        full_name = test_case["firebase_address"]["fullName"]
+                        name_parts = full_name.split()
+                        expected_first_name = name_parts[0]
+                        expected_last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+                        
+                        if shipping_addr.get('first_name') == expected_first_name:
+                            self.log_test(f"{test_case['name']} - First Name Split", True, 
+                                        f"'{full_name}' → first_name: '{expected_first_name}'")
+                        else:
+                            self.log_test(f"{test_case['name']} - First Name Split", False, 
+                                        f"Expected '{expected_first_name}', got '{shipping_addr.get('first_name')}'")
+                        
+                        if shipping_addr.get('last_name') == expected_last_name:
+                            self.log_test(f"{test_case['name']} - Last Name Split", True, 
+                                        f"last_name: '{expected_last_name}'")
+                        else:
+                            self.log_test(f"{test_case['name']} - Last Name Split", False, 
+                                        f"Expected '{expected_last_name}', got '{shipping_addr.get('last_name')}'")
+                        
+                        # Check country conversion
+                        if shipping_addr.get('country') == test_case["expected_country"]:
+                            self.log_test(f"{test_case['name']} - Country Conversion", True, 
+                                        f"{test_case['firebase_address']['country']} → {test_case['expected_country']}")
+                        else:
+                            self.log_test(f"{test_case['name']} - Country Conversion", False, 
+                                        f"Expected '{test_case['expected_country']}', got '{shipping_addr.get('country')}'")
+                        
+                        # Verify Firebase snapshot preserved
+                        if firebase_snapshot.get('fullName') == full_name:
+                            self.log_test(f"{test_case['name']} - Firebase Snapshot", True, 
+                                        "Original Firebase format preserved")
+                        else:
+                            self.log_test(f"{test_case['name']} - Firebase Snapshot", False, 
+                                        "Firebase snapshot not preserved correctly")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test(f"{test_case['name']} - Order Creation", False, 
+                                    f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test(f"{test_case['name']} - Order Creation", False, f"Exception: {str(e)}")
+    
     async def test_checkout_autofill_and_save_to_profile(self):
         """Test checkout autofill and save-to-profile functionality"""
         print("\n🛒 Testing Checkout Autofill and Save-to-Profile Functionality...")
