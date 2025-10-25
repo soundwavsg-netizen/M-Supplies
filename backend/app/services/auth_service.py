@@ -41,15 +41,16 @@ class AuthService:
         # Create user
         user = await self.user_repo.create(user_dict)
         
-        # Remove password from response
+        # Remove password from response and transform to Firebase format
         user.pop('password', None)
+        firebase_user = self._transform_user_to_firebase_format(user)
         
         # Generate tokens
         access_token = create_access_token({"sub": user['id'], "email": user['email']})
         refresh_token = create_refresh_token({"sub": user['id']})
         
         return {
-            "user": user,
+            "user": firebase_user,
             "access_token": access_token,
             "refresh_token": refresh_token
         }
