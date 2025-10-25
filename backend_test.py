@@ -1144,9 +1144,9 @@ class BackendTester:
         except Exception as e:
             self.log_test("Firebase Auth - Login", False, f"Exception: {str(e)}")
     
-    async def test_user_profile_api(self):
+    async def test_user_profile_management(self):
         """Test user profile GET and PUT endpoints"""
-        print("\n👤 Testing User Profile API...")
+        print("\n👤 Testing User Profile Management...")
         
         if not self.admin_token:
             self.log_test("User Profile API", False, "No admin token available")
@@ -1161,7 +1161,7 @@ class BackendTester:
                     profile = await resp.json()
                     
                     # Verify Firebase-compatible structure
-                    required_fields = ['displayName', 'email', 'createdAt', 'updatedAt', 'role']
+                    required_fields = ['uid', 'displayName', 'email', 'createdAt', 'updatedAt', 'role']
                     missing_fields = [field for field in required_fields if field not in profile]
                     
                     if missing_fields:
@@ -1170,6 +1170,14 @@ class BackendTester:
                     else:
                         self.log_test("GET /users/me - Structure", True, 
                                     "All required fields present")
+                    
+                    # Verify Firebase field names (camelCase)
+                    if 'displayName' in profile and 'createdAt' in profile and 'updatedAt' in profile:
+                        self.log_test("GET /users/me - Firebase Field Names", True, 
+                                    "Using camelCase field names")
+                    else:
+                        self.log_test("GET /users/me - Firebase Field Names", False, 
+                                    "Not using Firebase-style camelCase")
                     
                     self.log_test("GET /users/me", True, 
                                 f"Profile: {profile.get('displayName')} ({profile.get('email')})")
@@ -1204,6 +1212,18 @@ class BackendTester:
                     else:
                         self.log_test("PUT /users/me - phone", False, 
                                     f"Expected: {update_data['phone']}, Got: {updated_profile.get('phone')}")
+                    
+                    # Verify profile update persists
+                    async with self.session.get(f"{API_BASE}/users/me", headers=headers) as verify_resp:
+                        if verify_resp.status == 200:
+                            verified_profile = await verify_resp.json()
+                            if verified_profile.get('displayName') == update_data['displayName']:
+                                self.log_test("Profile Update Persistence", True, 
+                                            "Profile changes persisted correctly")
+                            else:
+                                self.log_test("Profile Update Persistence", False, 
+                                            "Profile changes did not persist")
+                        
                 else:
                     error_text = await resp.text()
                     self.log_test("PUT /users/me", False, f"Status {resp.status}: {error_text}")
