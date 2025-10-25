@@ -113,8 +113,22 @@ const Checkout = () => {
 
     try {
       setLoading(true);
+      
+      // Prepare order data with shipping address snapshot
+      const shippingAddress = {
+        fullName: formData.fullName,
+        phone: formData.phone,
+        addressLine1: formData.addressLine1,
+        addressLine2: formData.addressLine2,
+        unit: formData.unit,
+        postalCode: formData.postalCode,
+        city: formData.city,
+        state: formData.state,
+        country: formData.country,
+      };
+
       const orderData = {
-        shipping_address: formData,
+        shipping_address: shippingAddress,
         payment_method: 'stripe'
       };
       
@@ -129,9 +143,44 @@ const Checkout = () => {
         orderData.selected_gifts = selectedGifts;
       }
       
+      // Create the order
       const response = await ordersAPI.create(orderData);
-      
       const order = response.data;
+      
+      // Save address to profile if requested and user is logged in
+      if (saveToProfile && user && selectedAddressId === 'new') {
+        try {
+          const token = localStorage.getItem('access_token');
+          const addressData = {
+            ...shippingAddress,
+            isDefault: userAddresses.length === 0 // Set as default if first address
+          };
+          
+          await axios.post(`${BACKEND_URL}/api/users/me/addresses`, addressData, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          toast.success('Address saved to your profile');
+        } catch (error) {
+          console.warn('Failed to save address to profile:', error);
+          // Don't block order completion for address save failure
+        }
+      }
+      
+      // Update last used address in profile
+      if (user && selectedAddressId && selectedAddressId !== 'new') {
+        try {
+          const token = localStorage.getItem('access_token');
+          await axios.put(`${BACKEND_URL}/api/users/me`, {
+            lastUsedAddressId: selectedAddressId
+          }, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        } catch (error) {
+          console.warn('Failed to update last used address:', error);
+        }
+      }
+      
       toast.success('Order placed successfully!');
       navigate(`/order-success/${order.id}`);
     } catch (error) {
