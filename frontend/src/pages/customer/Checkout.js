@@ -83,6 +83,30 @@ const Checkout = () => {
   const handleAddressSelect = (addressId) => {
     setSelectedAddressId(addressId);
     if (addressId === 'new') {
+  const handleAddressSelect = (addressId) => {
+    setSelectedAddressId(addressId);
+    if (addressId === 'new') {
+      // Clear form for new address
+      setFormData({
+        fullName: user?.displayName || `${user?.first_name || ''} ${user?.last_name || ''}`.trim(),
+        phone: user?.phone || '',
+        addressLine1: '',
+        addressLine2: '',
+        unit: '',
+        postalCode: '',
+        city: 'Singapore',
+        state: 'Singapore',
+        country: 'SG',
+      });
+      setSaveToProfile(true); // Suggest saving new address
+    } else {
+      const selectedAddress = userAddresses.find(addr => addr.id === addressId);
+      if (selectedAddress) {
+        autofillFromAddress(selectedAddress);
+        setSaveToProfile(false); // Don't need to save existing address
+      }
+    }
+  };
       // Clear form for new address
       setFormData({
         fullName: user?.displayName || `${user?.first_name || ''} ${user?.last_name || ''}`.trim(),
