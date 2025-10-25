@@ -20,6 +20,7 @@ import Account from '@/pages/customer/Account';
 import About from '@/pages/customer/About';
 import Contact from '@/pages/customer/Contact';
 import FAQ from '@/pages/customer/FAQ';
+import AddressBanner from '@/components/ui/AddressBanner';
 
 // Admin Pages
 import AdminDashboard from '@/pages/admin/AdminDashboard';
