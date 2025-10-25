@@ -12,6 +12,19 @@ class OrderStatus(str, Enum):
     cancelled = "cancelled"
     refunded = "refunded"
 
+# Firebase-compatible shipping address
+class FirebaseShippingAddress(BaseModel):
+    fullName: str = Field(..., max_length=100)
+    phone: str = Field(...)
+    addressLine1: str = Field(..., max_length=200)
+    addressLine2: Optional[str] = Field(None, max_length=200)
+    unit: Optional[str] = Field(None, max_length=50)
+    postalCode: str = Field(...)
+    city: str = Field(..., max_length=100)
+    state: str = Field(..., max_length=100)
+    country: str = Field(..., description="Country code (SG, MY)")
+
+# Legacy shipping address (keep for compatibility)
 class ShippingAddress(BaseModel):
     first_name: str
     last_name: str
