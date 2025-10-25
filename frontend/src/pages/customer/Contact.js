@@ -34,14 +34,26 @@ const Contact = () => {
     try {
       setIsSubmitting(true);
       
-      // For now, we'll show a success message
-      // TODO: Implement email sending service
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
-      toast.success('Thanks for reaching out! We\'ll reply soon.');
-      setFormData({ name: '', email: '', message: '' });
+      // Send to backend API
+      const response = await fetch(`${BACKEND_URL}/api/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success(result.message || 'Thanks for reaching out! We\'ll reply soon.');
+        setFormData({ name: '', email: '', message: '' });
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Failed to send message. Please try again.');
+      }
       
     } catch (error) {
+      console.error('Contact form error:', error);
       toast.error('Failed to send message. Please try again.');
     } finally {
       setIsSubmitting(false);
