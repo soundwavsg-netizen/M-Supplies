@@ -241,6 +241,38 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen bg-gray-50" data-testid="checkout-page">
+      {/* Checkout Guard Modal */}
+      <Dialog open={showAddressModal} onOpenChange={setShowAddressModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-teal-600" />
+              Add Delivery Address
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              You don't have a saved delivery address yet. Add one now for accurate shipping.
+            </p>
+            <div className="flex gap-3">
+              <Button 
+                onClick={() => navigate('/account?onboard=address')}
+                className="flex-1 bg-teal-600 hover:bg-teal-700"
+              >
+                Add Address
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowAddressModal(false)}
+                className="flex-1"
+              >
+                Continue without saving
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-slate-900 mb-8">Checkout</h1>
 
