@@ -78,7 +78,7 @@ const About = () => {
                     <Button 
                       variant="outline" 
                       className="w-full border-pink-300 text-pink-700 hover:bg-pink-50"
-                      onClick={() => window.open('https://shopee.sg/rainbow.palace.sg', '_blank')}
+                      onClick={() => window.open('https://shopee.sg/rainbowpalace', '_blank')}
                     >
                       <ExternalLink className="w-4 h-4 mr-2" />
                       Visit our store
