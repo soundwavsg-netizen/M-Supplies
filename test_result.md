@@ -261,6 +261,18 @@ backend:
           agent: "testing"
           comment: "🛡️ SAFETY STOCK MANAGEMENT SYSTEM COMPREHENSIVE TESTING COMPLETED: Conducted extensive testing of the safety stock adjustment functionality as specifically requested. TESTING RESULTS: ✅ GET /api/admin/inventory: Safety stock field properly included in inventory listings (safety_stock = 0 initially) ✅ POST /api/admin/inventory/adjust with 'set' type: Successfully set safety stock to 15 units ✅ POST /api/admin/inventory/adjust with 'change' type: Successfully increased safety stock by 5 units (15 + 5 = 20) ✅ Variant Document Updates: Safety stock changes persist correctly in database ✅ Available Stock Calculation: Correctly calculates available = on_hand - allocated - safety_stock (25 - 0 - 20 = 5) ✅ Baby Blue Product Testing: Used existing Baby Blue product ID (6084a6ff-1911-488b-9288-2bc95e50cafa) successfully ✅ Edge Cases: Negative safety stock changes work correctly (20 - 10 = 10) ✅ Inventory Listing Persistence: Final inventory listing shows updated safety stock values and correct available calculations. SUCCESS RATE: 93.3% (14/15 tests passed). The safety stock management system is working perfectly with proper persistence and calculation logic. Only minor issue: Only one Baby Blue variant available for testing instead of expected two variants."
 
+  - task: "Firebase-Compatible User Profile Management System"
+    implemented: true
+    working: false
+    file: "app/api/user_profile.py, app/services/user_profile_service.py, app/repositories/user_profile_repository.py, app/schemas/user.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ CRITICAL INTEGRATION ISSUE IDENTIFIED: Firebase-compatible user profile system has schema mismatch with existing authentication system. ROOT CAUSE: The new UserResponse schema was updated to use Firebase-style fields (displayName, createdAt, updatedAt) but the existing auth endpoints (login/register) still return users with legacy schema (first_name, last_name, created_at). DETAILED ANALYSIS: ❌ Authentication endpoints failing with 500 Internal Server Error ❌ Pydantic validation errors: 'displayName Field required', 'createdAt Field required', 'updatedAt Field required' ❌ Existing users in database have old schema: {first_name, last_name, created_at, is_active, role} ❌ New UserResponse expects: {displayName, email, createdAt, updatedAt, role} ❌ Auth service (auth_service.py) returns user data as-is from database without transformation ❌ Cannot test user profile APIs without valid authentication tokens. IMPACT: ✅ New user profile API routes implemented correctly (GET/PUT /api/users/me, address CRUD) ✅ Firebase-compatible schemas defined properly (UserProfile, UserAddress) ✅ Repository layer implemented with Firebase structure ✅ Service layer with business logic (max 5 addresses, postal validation, default address) ❌ BLOCKING ISSUE: Cannot authenticate to test any of the new APIs due to schema mismatch. SOLUTION REQUIRED: 1) Update auth_service.py to transform legacy user data to Firebase schema, OR 2) Create migration script to update existing users to Firebase schema, OR 3) Keep separate schemas for auth (legacy) and profile (Firebase) with mapping layer. The user profile system implementation is correct but cannot be tested due to authentication integration issue."
+
 frontend:
   - task: "Frontend Compilation Errors"
     implemented: true
