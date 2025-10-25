@@ -411,7 +411,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Complete Gift Tier System with Post-Discount Threshold Checking"
+    - "Firebase-Compatible User Profile Management System"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
