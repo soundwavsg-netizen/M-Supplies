@@ -43,8 +43,22 @@ const Checkout = () => {
   useEffect(() => {
     if (user) {
       fetchUserAddresses();
+    } else {
+      // Guest user - suggest saving address
+      setSaveToProfile(true);
     }
   }, [user]);
+
+  // Check if user needs address setup on page load
+  useEffect(() => {
+    if (user && userAddresses.length === 0) {
+      // Show modal after addresses are loaded and none found
+      const timer = setTimeout(() => {
+        setShowAddressModal(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [user, userAddresses]);
 
   const fetchUserAddresses = async () => {
     try {
