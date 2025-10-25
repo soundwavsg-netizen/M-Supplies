@@ -48,8 +48,12 @@ class OrderItem(BaseModel):
     line_total: float
 
 class OrderCreate(BaseModel):
-    shipping_address: ShippingAddress
+    shipping_address: Optional[ShippingAddress] = None  # For legacy compatibility
+    firebase_shipping_address: Optional[FirebaseShippingAddress] = None  # For new format
+    address_id: Optional[str] = None  # For selecting existing address
+    save_to_profile: bool = Field(default=False, description="Save address to user profile")
     coupon_code: Optional[str] = None
+    selected_gifts: Optional[List[str]] = Field(default_factory=list, description="Selected gift item IDs")
     payment_method: str = "stripe"  # stripe, paynow, grabpay
 
 class OrderResponse(BaseModel):
@@ -59,6 +63,7 @@ class OrderResponse(BaseModel):
     guest_email: Optional[str] = None
     items: List[OrderItem]
     shipping_address: ShippingAddress
+    shippingAddressSnapshot: Optional[FirebaseShippingAddress] = Field(None, description="Address snapshot for historical record")
     subtotal: float
     discount: float
     gst: float
@@ -68,6 +73,7 @@ class OrderResponse(BaseModel):
     payment_intent_id: Optional[str] = None
     tracking_number: Optional[str] = None
     coupon_code: Optional[str] = None
+    selected_gifts: Optional[List[str]] = Field(default_factory=list, description="Selected gift item IDs")
     created_at: datetime
     updated_at: datetime
 
