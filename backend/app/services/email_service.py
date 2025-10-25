@@ -15,7 +15,8 @@ class EmailService:
     def __init__(self):
         self.api_key = os.environ.get('SENDGRID_API_KEY')
         self.admin_email = "msuppliessg@gmail.com"
-        self.from_email = "no-reply@msupplies.sg"
+        # Use admin email as sender since domain verification is required for custom domains
+        self.from_email = "msuppliessg@gmail.com"
         self.reply_to_email = "msuppliessg@gmail.com"
         
         if not self.api_key:
