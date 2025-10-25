@@ -1,26 +1,11 @@
-<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- M Supplies Favicon - Black "M" on white background matching logo design -->
-  <rect width="64" height="64" rx="12" fill="white" stroke="#e5e7eb" stroke-width="1"/>
-  <!-- Serif "M" letter matching M Supplies logo with sharp apex and serifs -->
-  <g fill="black">
-    <!-- Left upright stroke with serifs -->
-    <rect x="14" y="16" width="4" height="32"/>
-    <rect x="12" y="16" width="8" height="2"/>
-    <rect x="12" y="46" width="8" height="2"/>
-    
-    <!-- Right upright stroke with serifs -->
-    <rect x="46" y="16" width="4" height="32"/>
-    <rect x="44" y="16" width="8" height="2"/>
-    <rect x="44" y="46" width="8" height="2"/>
-    
-    <!-- Left diagonal stroke forming the "V" -->
-    <path d="M18 16 L32 30 L30 32 L16 18 Z"/>
-    
-    <!-- Right diagonal stroke forming the "V" -->
-    <path d="M46 16 L48 18 L34 32 L32 30 Z"/>
-    
-    <!-- Bottom serifs for diagonal strokes -->
-    <rect x="30" y="30" width="4" height="18"/>
-    <rect x="28" y="46" width="8" height="2"/>
-  </g>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- M Supplies Favicon - Serif "M" on white background matching exact logo design -->
+  <rect width="32" height="32" rx="6" fill="white" stroke="#e5e7eb" stroke-width="0.5"/>
+  <!-- Serif "M" with sharp apex, distinct serifs, and high stroke contrast -->
+  <path d="M6 26V6h3.5L15.5 18.5 21.5 6H25v20h-2.5V12l-3.8 8.5h-1.4L13.5 12v14H6z" fill="black"/>
+  <!-- Add serif details -->
+  <rect x="5.5" y="6" width="4" height="1" fill="black"/>
+  <rect x="5.5" y="25" width="4" height="1" fill="black"/>
+  <rect x="22.5" y="6" width="3" height="1" fill="black"/>
+  <rect x="22.5" y="25" width="3" height="1" fill="black"/>
 </svg>
