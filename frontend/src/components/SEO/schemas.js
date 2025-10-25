@@ -1,3 +1,22 @@
+// Contact page structured data
+export const contactSchema = {
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  "url": "https://www.msupplies.sg/contact",
+  "mainEntity": {
+    "@type": "Organization",
+    "name": "M Supplies (INT) Pte Ltd",
+    "email": "msuppliessg@gmail.com",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "email": "msuppliessg@gmail.com",
+      "contactType": "customer service",
+      "areaServed": ["SG", "MY"],
+      "availableLanguage": "English"
+    }
+  }
+};
+
 // Organization structured data for M Supplies
 export const organizationSchema = {
   "@context": "https://schema.org",
