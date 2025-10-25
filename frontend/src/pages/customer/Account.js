@@ -294,13 +294,238 @@ const Account = () => {
 
           {/* Addresses Tab */}
           {activeTab === 'addresses' && (
-            <Card className="bg-white shadow-sm">
-              <CardContent className="text-center py-12">
-                <MapPin className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium text-gray-500 mb-2">Address Management</h3>
-                <p className="text-gray-400">Address management coming soon</p>
-              </CardContent>
-            </Card>
+            <div>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-slate-900">Shipping Addresses</h2>
+                <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      onClick={resetAddressForm}
+                      className="bg-teal-600 hover:bg-teal-700"
+                      disabled={addresses.length >= 5}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Address
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>{editingAddress ? 'Edit' : 'Add New'} Address</DialogTitle>
+                    </DialogHeader>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="fullName">Full Name *</Label>
+                        <Input
+                          id="fullName"
+                          value={addressForm.fullName}
+                          onChange={(e) => setAddressForm(prev => ({...prev, fullName: e.target.value}))}
+                          placeholder="Your full name"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="phone">Phone *</Label>
+                        <Input
+                          id="phone"
+                          value={addressForm.phone}
+                          onChange={(e) => setAddressForm(prev => ({...prev, phone: e.target.value}))}
+                          placeholder="+65 9123 4567"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="addressLine1">Address Line 1 *</Label>
+                        <Input
+                          id="addressLine1"
+                          value={addressForm.addressLine1}
+                          onChange={(e) => setAddressForm(prev => ({...prev, addressLine1: e.target.value}))}
+                          placeholder="Street address"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="addressLine2">Address Line 2</Label>
+                        <Input
+                          id="addressLine2"
+                          value={addressForm.addressLine2}
+                          onChange={(e) => setAddressForm(prev => ({...prev, addressLine2: e.target.value}))}
+                          placeholder="Apartment, suite, etc. (optional)"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="unit">Unit</Label>
+                        <Input
+                          id="unit"
+                          value={addressForm.unit}
+                          onChange={(e) => setAddressForm(prev => ({...prev, unit: e.target.value}))}
+                          placeholder="Unit number (optional)"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="postalCode">Postal Code *</Label>
+                          <Input
+                            id="postalCode"
+                            value={addressForm.postalCode}
+                            onChange={(e) => setAddressForm(prev => ({...prev, postalCode: e.target.value}))}
+                            placeholder={addressForm.country === 'SG' ? '123456' : '12345'}
+                            maxLength={addressForm.country === 'SG' ? 6 : 5}
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="country">Country *</Label>
+                          <Select 
+                            value={addressForm.country} 
+                            onValueChange={(value) => setAddressForm(prev => ({
+                              ...prev, 
+                              country: value,
+                              city: value === 'SG' ? 'Singapore' : 'Kuala Lumpur',
+                              state: value === 'SG' ? 'Singapore' : 'Selangor'
+                            }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="SG">Singapore</SelectItem>
+                              <SelectItem value="MY">Malaysia</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="city">City *</Label>
+                          <Input
+                            id="city"
+                            value={addressForm.city}
+                            onChange={(e) => setAddressForm(prev => ({...prev, city: e.target.value}))}
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="state">State *</Label>
+                          <Input
+                            id="state"
+                            value={addressForm.state}
+                            onChange={(e) => setAddressForm(prev => ({...prev, state: e.target.value}))}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-3 pt-4">
+                        <Button 
+                          onClick={handleCreateAddress}
+                          disabled={!addressForm.fullName || !addressForm.phone || !addressForm.addressLine1 || !addressForm.postalCode}
+                          className="flex-1 bg-teal-600 hover:bg-teal-700"
+                        >
+                          {editingAddress ? 'Update' : 'Add'} Address
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setIsAddressModalOpen(false)}
+                          className="flex-1"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              {/* Address List */}
+              {addresses.length === 0 ? (
+                <Card className="bg-white shadow-sm">
+                  <CardContent className="text-center py-12">
+                    <MapPin className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-500 mb-2">No saved address yet</h3>
+                    <p className="text-gray-400 mb-6">Add one to speed up checkout.</p>
+                    <Button 
+                      onClick={() => {resetAddressForm(); setIsAddressModalOpen(true)}}
+                      className="bg-teal-600 hover:bg-teal-700"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Your First Address
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {addresses.map((address) => (
+                    <Card key={address.id} className={`bg-white shadow-sm transition-all hover:shadow-md ${address.isDefault ? 'ring-2 ring-teal-200 bg-teal-50' : ''}`}>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="font-semibold text-slate-900">{address.fullName}</h3>
+                          {address.isDefault && (
+                            <Badge className="bg-teal-100 text-teal-700 border-teal-200">
+                              <Star className="w-3 h-3 mr-1" />
+                              Default
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <div className="text-sm text-gray-600 space-y-1">
+                          <p className="font-medium">{address.addressLine1}</p>
+                          {address.addressLine2 && <p>{address.addressLine2}</p>}
+                          {address.unit && <p>Unit: {address.unit}</p>}
+                          <p>{address.city}, {address.state} {address.postalCode}</p>
+                          <p className="font-medium">{address.country === 'SG' ? 'Singapore' : 'Malaysia'}</p>
+                          <p className="text-gray-500">{address.phone}</p>
+                        </div>
+                        
+                        <div className="flex gap-1 mt-4">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => openEditAddressModal(address)}
+                            className="flex-1 text-xs"
+                          >
+                            <Edit className="w-3 h-3 mr-1" />
+                            Edit
+                          </Button>
+                          
+                          {!address.isDefault && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => handleSetDefaultAddress(address.id)}
+                              className="flex-1 text-xs"
+                            >
+                              <Star className="w-3 h-3 mr-1" />
+                              Set Default
+                            </Button>
+                          )}
+                          
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => handleDeleteAddress(address.id)}
+                            className="text-red-600 hover:text-red-700 text-xs"
+                            disabled={addresses.length === 1}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+              
+              {addresses.length >= 5 && (
+                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm text-amber-700">
+                    📌 You've reached the maximum of 5 saved addresses. Delete one to add a new address.
+                  </p>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Orders Tab */}
