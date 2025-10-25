@@ -29,6 +29,14 @@ class UserProfileService:
         if not update_data:
             return user
         
+        # Transform displayName to first_name/last_name for legacy database
+        if 'displayName' in update_data:
+            display_name = update_data.pop('displayName')
+            # Split displayName into first_name and last_name
+            name_parts = display_name.split(' ', 1)
+            update_data['first_name'] = name_parts[0] if name_parts else ''
+            update_data['last_name'] = name_parts[1] if len(name_parts) > 1 else ''
+        
         success = await self.user_repo.update_user_profile(uid, update_data)
         if not success:
             raise HTTPException(
