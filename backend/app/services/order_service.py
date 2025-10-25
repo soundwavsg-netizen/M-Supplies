@@ -57,11 +57,12 @@ class OrderService:
             if not product:
                 continue
             
-            # Check stock
-            if variant.get('stock_qty', 0) < cart_item['quantity']:
+            # Check stock (use on_hand field from inventory system)
+            available_stock = variant.get('on_hand', variant.get('stock_qty', 0))
+            if available_stock < cart_item['quantity']:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Insufficient stock for {product['name']}"
+                    detail=f"Insufficient stock for {product['name']}. Available: {available_stock}"
                 )
             
             line_total = cart_item['price'] * cart_item['quantity']
