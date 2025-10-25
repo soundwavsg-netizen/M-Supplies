@@ -493,7 +493,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Checkout Autofill and Save-to-Profile Functionality"
+    - "Real SendGrid API Key Email Delivery Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
