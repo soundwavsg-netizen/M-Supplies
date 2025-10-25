@@ -82,13 +82,13 @@ app.add_middleware(
 # ==================== AUTH ROUTES ====================
 
 @api_router.post("/auth/register", response_model=TokenResponse, tags=["Auth"])
-async def register(user_data: UserCreate):
+async def register(user_data: UserCreate, background_tasks: BackgroundTasks):
     """Register a new user"""
     db = get_database()
     user_repo = UserRepository(db)
     auth_service = AuthService(user_repo)
     
-    result = await auth_service.register(user_data)
+    result = await auth_service.register(user_data, background_tasks)
     
     return TokenResponse(
         access_token=result['access_token'],
