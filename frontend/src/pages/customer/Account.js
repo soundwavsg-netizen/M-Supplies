@@ -26,6 +26,22 @@ const Account = () => {
     phone: ''
   });
 
+  // Address form
+  const [addressForm, setAddressForm] = useState({
+    fullName: '',
+    phone: '',
+    addressLine1: '',
+    addressLine2: '',
+    unit: '',
+    postalCode: '',
+    city: 'Singapore',
+    state: 'Singapore',
+    country: 'SG'
+  });
+
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(null);
+
   useEffect(() => {
     fetchUserData();
   }, []);
