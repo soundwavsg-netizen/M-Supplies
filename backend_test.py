@@ -1595,6 +1595,17 @@ class BackendTester:
                                 f"Status {resp.status}: {error_text}")
         except Exception as e:
             self.log_test("Get Addresses for CRUD Test", False, f"Exception: {str(e)}")
+    
+    async def test_gift_tier_system_comprehensive(self):
+        """Test the complete gift tier system with post-discount threshold checking"""
+        print("\n🎁 Testing Complete Gift Tier System with Post-Discount Threshold Checking...")
+        print("Testing gift tier eligibility based on amount AFTER discount is applied")
+        
+        if not self.admin_token:
+            self.log_test("Gift Tier System Test", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
         
         # Step 5: Test nearby gift tiers API
         print("\n📝 Step 5: Test nearby gift tiers API")
