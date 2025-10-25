@@ -3,6 +3,7 @@ from app.core.security import hash_password, verify_password, create_access_toke
 from app.schemas.user import UserCreate, UserLogin
 from fastapi import HTTPException, status
 from typing import Dict, Any
+from datetime import datetime, timezone
 
 class AuthService:
     def __init__(self, user_repo: UserRepository):
