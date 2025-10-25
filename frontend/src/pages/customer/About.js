@@ -2,6 +2,8 @@ import React from 'react';
 import { ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SmartChatWidget from '@/components/chat/SmartChatWidget';
+import SEOHead from '@/components/SEO/SEOHead';
+import { organizationSchema } from '@/components/SEO/schemas';
 
 const About = () => {
   return (
