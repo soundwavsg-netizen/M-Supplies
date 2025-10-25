@@ -101,4 +101,4 @@ class AuthService:
             )
         
         user.pop('password', None)
-        return user
+        return self._transform_user_to_firebase_format(user)
