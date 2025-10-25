@@ -14,12 +14,16 @@ from datetime import datetime, timezone
 class OrderService:
     def __init__(self, order_repo: OrderRepository, cart_repo: CartRepository,
                  product_repo: ProductRepository, coupon_repo: CouponRepository,
-                 ledger_repo: Optional[InventoryLedgerRepository] = None):
+                 ledger_repo: Optional[InventoryLedgerRepository] = None,
+                 user_profile_repo: Optional[UserProfileRepository] = None,
+                 address_repo: Optional[AddressRepository] = None):
         self.order_repo = order_repo
         self.cart_repo = cart_repo
         self.product_repo = product_repo
         self.coupon_repo = coupon_repo
         self.ledger_repo = ledger_repo
+        self.user_profile_repo = user_profile_repo
+        self.address_repo = address_repo
     
     async def create_order(self, order_data: OrderCreate, user_id: Optional[str] = None,
                           session_id: Optional[str] = None) -> Dict[str, Any]:
