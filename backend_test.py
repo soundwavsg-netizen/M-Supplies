@@ -1230,6 +1230,313 @@ class BackendTester:
         except Exception as e:
             self.log_test("PUT /users/me", False, f"Exception: {str(e)}")
     
+    async def test_checkout_autofill_and_save_to_profile(self):
+        """Test checkout autofill and save-to-profile functionality"""
+        print("\n🛒 Testing Checkout Autofill and Save-to-Profile Functionality...")
+        
+        if not self.admin_token:
+            self.log_test("Checkout Autofill Test", False, "No admin token available")
+            return
+        
+        headers = {"Authorization": f"Bearer {self.admin_token}"}
+        created_addresses = []
+        
+        # Test 1: Get user addresses (should be empty or have existing addresses)
+        try:
+            async with self.session.get(f"{API_BASE}/users/me/addresses", headers=headers) as resp:
+                if resp.status == 200:
+                    addresses = await resp.json()
+                    self.log_test("GET /users/me/addresses", True, 
+                                f"Found {len(addresses)} existing addresses")
+                    
+                    # Store existing addresses for cleanup
+                    for addr in addresses:
+                        created_addresses.append(addr['id'])
+                else:
+                    error_text = await resp.text()
+                    self.log_test("GET /users/me/addresses", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("GET /users/me/addresses", False, f"Exception: {str(e)}")
+        
+        # Test 2: Create first address (should auto-set as default)
+        first_address = {
+            "fullName": "Sarah Lim",
+            "phone": "+6598765432",
+            "addressLine1": "10 Marina Boulevard",
+            "addressLine2": "Marina Bay Financial Centre",
+            "unit": "#15-01",
+            "postalCode": "018983",
+            "city": "Singapore",
+            "state": "Singapore",
+            "country": "SG",
+            "isDefault": False
+        }
+        
+        first_address_id = None
+        try:
+            async with self.session.post(f"{API_BASE}/users/me/addresses", 
+                                        json=first_address, headers=headers) as resp:
+                if resp.status == 200:
+                    address = await resp.json()
+                    first_address_id = address['id']
+                    created_addresses.append(first_address_id)
+                    
+                    # Verify first address is automatically default
+                    if address.get('isDefault'):
+                        self.log_test("First Address Auto-Default", True, 
+                                    "First address automatically set as default")
+                    else:
+                        self.log_test("First Address Auto-Default", False, 
+                                    "First address should be auto-set as default")
+                    
+                    self.log_test("Create First Address", True, 
+                                f"Created: {address.get('fullName')}, Postal: {address.get('postalCode')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Create First Address", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Create First Address", False, f"Exception: {str(e)}")
+        
+        # Test 3: Create second address (should NOT be default)
+        second_address = {
+            "fullName": "Sarah Lim",
+            "phone": "+6598765432",
+            "addressLine1": "1 Raffles Place",
+            "addressLine2": "One Raffles Place",
+            "unit": "#20-05",
+            "postalCode": "048616",
+            "city": "Singapore",
+            "state": "Singapore",
+            "country": "SG",
+            "isDefault": False
+        }
+        
+        second_address_id = None
+        try:
+            async with self.session.post(f"{API_BASE}/users/me/addresses", 
+                                        json=second_address, headers=headers) as resp:
+                if resp.status == 200:
+                    address = await resp.json()
+                    second_address_id = address['id']
+                    created_addresses.append(second_address_id)
+                    
+                    # Verify second address is NOT default
+                    if not address.get('isDefault'):
+                        self.log_test("Second Address Not Default", True, 
+                                    "Second address correctly not set as default")
+                    else:
+                        self.log_test("Second Address Not Default", False, 
+                                    "Second address should not be default")
+                    
+                    self.log_test("Create Second Address", True, 
+                                f"Created: {address.get('fullName')}, Postal: {address.get('postalCode')}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Create Second Address", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Create Second Address", False, f"Exception: {str(e)}")
+        
+        # Test 4: Get all addresses (should show 2 addresses with one default)
+        try:
+            async with self.session.get(f"{API_BASE}/users/me/addresses", headers=headers) as resp:
+                if resp.status == 200:
+                    addresses = await resp.json()
+                    
+                    # Count default addresses
+                    default_count = sum(1 for addr in addresses if addr.get('isDefault'))
+                    
+                    if default_count == 1:
+                        self.log_test("Only One Default Address", True, 
+                                    "Exactly one default address exists")
+                    else:
+                        self.log_test("Only One Default Address", False, 
+                                    f"Found {default_count} default addresses, expected 1")
+                    
+                    # Find the default address
+                    default_address = next((addr for addr in addresses if addr.get('isDefault')), None)
+                    if default_address:
+                        self.log_test("Default Address Found", True, 
+                                    f"Default: {default_address.get('fullName')} - {default_address.get('addressLine1')}")
+                    else:
+                        self.log_test("Default Address Found", False, "No default address found")
+                    
+                    self.log_test("Address List Retrieved", True, 
+                                f"Total addresses: {len(addresses)}")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("Address List Retrieved", False, f"Status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("Address List Retrieved", False, f"Exception: {str(e)}")
+        
+        # Test 5: Set second address as default
+        if second_address_id:
+            try:
+                async with self.session.post(f"{API_BASE}/users/me/addresses/{second_address_id}/set-default", 
+                                            headers=headers) as resp:
+                    if resp.status == 200:
+                        address = await resp.json()
+                        
+                        if address.get('isDefault'):
+                            self.log_test("Set Second Address as Default", True, 
+                                        "Second address successfully set as default")
+                        else:
+                            self.log_test("Set Second Address as Default", False, 
+                                        "Address isDefault flag not updated")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test("Set Second Address as Default", False, f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test("Set Second Address as Default", False, f"Exception: {str(e)}")
+            
+            # Verify only one default exists after change
+            try:
+                async with self.session.get(f"{API_BASE}/users/me/addresses", headers=headers) as resp:
+                    if resp.status == 200:
+                        addresses = await resp.json()
+                        default_count = sum(1 for addr in addresses if addr.get('isDefault'))
+                        
+                        if default_count == 1:
+                            self.log_test("Default Address Uniqueness", True, 
+                                        "Only one default address after change")
+                        else:
+                            self.log_test("Default Address Uniqueness", False, 
+                                        f"Found {default_count} default addresses after change")
+                        
+                        # Verify the correct address is now default
+                        default_address = next((addr for addr in addresses if addr.get('isDefault')), None)
+                        if default_address and default_address['id'] == second_address_id:
+                            self.log_test("Correct Default Address", True, 
+                                        "Second address is now the default")
+                        else:
+                            self.log_test("Correct Default Address", False, 
+                                        "Wrong address is default")
+            except Exception as e:
+                self.log_test("Default Address Verification", False, f"Exception: {str(e)}")
+        
+        # Test 6: Test address limit (max 5 addresses)
+        for i in range(3, 8):  # Try to create 5 more addresses (total would be 7)
+            test_address = {
+                "fullName": f"Test User {i}",
+                "phone": "+6591234567",
+                "addressLine1": f"{i} Test Street",
+                "addressLine2": f"Unit {i}",
+                "unit": f"#{i:02d}-01",
+                "postalCode": f"{100000 + i:06d}",
+                "city": "Singapore",
+                "state": "Singapore",
+                "country": "SG",
+                "isDefault": False
+            }
+            
+            try:
+                async with self.session.post(f"{API_BASE}/users/me/addresses", 
+                                            json=test_address, headers=headers) as resp:
+                    if resp.status == 200:
+                        address = await resp.json()
+                        created_addresses.append(address['id'])
+                        
+                        if i <= 5:
+                            self.log_test(f"Create Address {i}", True, 
+                                        f"Address {i} created successfully")
+                        else:
+                            self.log_test(f"Address Limit Enforcement", False, 
+                                        f"Should not allow more than 5 addresses")
+                    elif resp.status == 400 and i > 5:
+                        error_data = await resp.json()
+                        if "maximum" in error_data.get('detail', '').lower():
+                            self.log_test("Address Limit Enforcement", True, 
+                                        "Correctly rejected 6th address")
+                        else:
+                            self.log_test("Address Limit Enforcement", False, 
+                                        f"Wrong error: {error_data.get('detail')}")
+                    else:
+                        error_text = await resp.text()
+                        if i <= 5:
+                            self.log_test(f"Create Address {i}", False, 
+                                        f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test(f"Create Address {i}", False, f"Exception: {str(e)}")
+        
+        # Test 7: Test postal code validation
+        # Invalid SG postal code (5 digits instead of 6)
+        invalid_sg_address = {
+            "fullName": "Invalid SG",
+            "phone": "+6591234567",
+            "addressLine1": "Test Street",
+            "addressLine2": "",
+            "unit": "#01-01",
+            "postalCode": "12345",  # Invalid: 5 digits
+            "city": "Singapore",
+            "state": "Singapore",
+            "country": "SG",
+            "isDefault": False
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/users/me/addresses", 
+                                        json=invalid_sg_address, headers=headers) as resp:
+                if resp.status == 422:
+                    self.log_test("SG Postal Code Validation", True, 
+                                "Correctly rejected invalid SG postal code (5 digits)")
+                elif resp.status == 200:
+                    address = await resp.json()
+                    created_addresses.append(address['id'])
+                    self.log_test("SG Postal Code Validation", False, 
+                                "Should reject 5-digit SG postal code")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("SG Postal Code Validation", False, 
+                                f"Unexpected status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("SG Postal Code Validation", False, f"Exception: {str(e)}")
+        
+        # Invalid MY postal code (6 digits instead of 5)
+        invalid_my_address = {
+            "fullName": "Invalid MY",
+            "phone": "+60123456789",
+            "addressLine1": "Test Jalan",
+            "addressLine2": "",
+            "unit": "Level 1",
+            "postalCode": "123456",  # Invalid: 6 digits
+            "city": "Kuala Lumpur",
+            "state": "Wilayah Persekutuan",
+            "country": "MY",
+            "isDefault": False
+        }
+        
+        try:
+            async with self.session.post(f"{API_BASE}/users/me/addresses", 
+                                        json=invalid_my_address, headers=headers) as resp:
+                if resp.status == 422:
+                    self.log_test("MY Postal Code Validation", True, 
+                                "Correctly rejected invalid MY postal code (6 digits)")
+                elif resp.status == 200:
+                    address = await resp.json()
+                    created_addresses.append(address['id'])
+                    self.log_test("MY Postal Code Validation", False, 
+                                "Should reject 6-digit MY postal code")
+                else:
+                    error_text = await resp.text()
+                    self.log_test("MY Postal Code Validation", False, 
+                                f"Unexpected status {resp.status}: {error_text}")
+        except Exception as e:
+            self.log_test("MY Postal Code Validation", False, f"Exception: {str(e)}")
+        
+        # Test 8: Cleanup - Delete all created addresses
+        print("\n🧹 Cleaning up test addresses...")
+        for address_id in created_addresses:
+            try:
+                async with self.session.delete(f"{API_BASE}/users/me/addresses/{address_id}", 
+                                              headers=headers) as resp:
+                    if resp.status == 200:
+                        self.log_test(f"Delete Address {address_id[:8]}", True, "Deleted successfully")
+                    else:
+                        error_text = await resp.text()
+                        self.log_test(f"Delete Address {address_id[:8]}", False, 
+                                    f"Status {resp.status}: {error_text}")
+            except Exception as e:
+                self.log_test(f"Delete Address {address_id[:8]}", False, f"Exception: {str(e)}")
+
     async def test_address_management_system(self):
         """Test complete address management system with validation"""
         print("\n🏠 Testing Address Management System...")
