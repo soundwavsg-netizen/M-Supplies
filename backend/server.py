@@ -275,7 +275,9 @@ async def create_order(
     product_repo = ProductRepository(db)
     coupon_repo = CouponRepository(db)
     ledger_repo = InventoryLedgerRepository(db)
-    order_service = OrderService(order_repo, cart_repo, product_repo, coupon_repo, ledger_repo)
+    user_profile_repo = UserProfileRepository(db)
+    address_repo = AddressRepository(db)
+    order_service = OrderService(order_repo, cart_repo, product_repo, coupon_repo, ledger_repo, user_profile_repo, address_repo)
     
     return await order_service.create_order(order_data, user_id, x_session_id)
 
