@@ -76,7 +76,7 @@ class UserProfileRepository:
         updates['updatedAt'] = datetime.now(timezone.utc).isoformat()
         
         result = await self.users.update_one(
-            {"uid": uid},
+            {"id": uid},  # Use 'id' field, same as auth
             {"$set": updates}
         )
         return result.modified_count > 0
