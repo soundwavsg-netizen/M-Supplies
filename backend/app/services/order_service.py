@@ -27,6 +27,15 @@ class OrderService:
     
     async def create_order(self, order_data: OrderCreate, user_id: Optional[str] = None,
                           session_id: Optional[str] = None) -> Dict[str, Any]:
+        # Get user data if user_id provided
+        user = None
+        if user_id and self.user_profile_repo:
+            try:
+                user_profile = await self.user_profile_repo.get_user_profile(user_id)
+                user = user_profile.model_dump() if user_profile else None
+            except:
+                user = None
+        
         # Get cart
         cart = await self.cart_repo.get_cart(user_id, session_id)
         if not cart or not cart.get('items'):
