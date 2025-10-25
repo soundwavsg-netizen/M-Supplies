@@ -9348,14 +9348,14 @@ async def main():
     print("🎯 FOCUS: Test Firebase-compatible user profile management system")
     print("=" * 80)
     print("\nTesting Scenarios:")
-    print("1. Authentication Fix Verification - Firebase-compatible user object")
-    print("2. User Profile API Testing - GET/PUT /api/users/me")
+    print("1. Authentication Integration - Firebase-compatible user object with uid field")
+    print("2. User Profile Management - GET/PUT /api/users/me with Firebase fields")
     print("3. Address Management System - Full CRUD operations")
     print("4. Business Logic Validation - Max 5 addresses, postal code validation")
     print("5. Default Address Logic - Only one default, auto-promotion")
     print("6. Firebase-Compatible Structure - displayName, createdAt, updatedAt fields")
     print("\nExpected Results:")
-    print("✓ Authentication returns Firebase-style user object")
+    print("✓ Authentication returns Firebase-style user object with uid field")
     print("✓ All profile and address APIs working correctly")
     print("✓ Address validation working (SG 6 digits, MY 5 digits, SG/MY only)")
     print("✓ Default address logic enforced (one default, auto-promotion)")
@@ -9363,11 +9363,11 @@ async def main():
     print("=" * 80)
     
     async with BackendTester() as tester:
-        # Test 1: Firebase Authentication Fix
-        await tester.test_firebase_authentication_fix()
+        # Test 1: Firebase Authentication Integration
+        await tester.test_firebase_authentication_integration()
         
-        # Test 2: User Profile API
-        await tester.test_user_profile_api()
+        # Test 2: User Profile Management
+        await tester.test_user_profile_management()
         
         # Test 3: Address Management System (includes validation)
         await tester.test_address_management_system()
