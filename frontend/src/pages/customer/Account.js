@@ -102,6 +102,91 @@ const Account = () => {
     }
   };
 
+  const handleCreateAddress = async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      
+      if (editingAddress) {
+        await axios.put(`${BACKEND_URL}/api/users/me/addresses/${editingAddress.id}`, addressForm, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        toast.success('Address updated');
+      } else {
+        await axios.post(`${BACKEND_URL}/api/users/me/addresses`, addressForm, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        toast.success('Address saved');
+      }
+      
+      resetAddressForm();
+      setIsAddressModalOpen(false);
+      await fetchAddresses();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to save address');
+    }
+  };
+
+  const handleDeleteAddress = async (addressId) => {
+    if (!window.confirm('Are you sure you want to delete this address?')) return;
+
+    try {
+      const token = localStorage.getItem('access_token');
+      await axios.delete(`${BACKEND_URL}/api/users/me/addresses/${addressId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success('Address removed');
+      await fetchAddresses();
+    } catch (error) {
+      toast.error('Failed to delete address');
+    }
+  };
+
+  const handleSetDefaultAddress = async (addressId) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      await axios.post(`${BACKEND_URL}/api/users/me/addresses/${addressId}/set-default`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success('Default updated');
+      await fetchAddresses();
+    } catch (error) {
+      toast.error('Failed to set default address');
+    }
+  };
+
+  const resetAddressForm = () => {
+    setAddressForm({
+      fullName: '',
+      phone: '',
+      addressLine1: '',
+      addressLine2: '',
+      unit: '',
+      postalCode: '',
+      city: 'Singapore',
+      state: 'Singapore',
+      country: 'SG'
+    });
+    setEditingAddress(null);
+  };
+
+  const openEditAddressModal = (address) => {
+    setAddressForm({
+      fullName: address.fullName,
+      phone: address.phone,
+      addressLine1: address.addressLine1,
+      addressLine2: address.addressLine2 || '',
+      unit: address.unit || '',
+      postalCode: address.postalCode,
+      city: address.city,
+      state: address.state,
+      country: address.country
+    });
+    setEditingAddress(address);
+    setIsAddressModalOpen(true);
+  };
+
   const TabButton = ({ id, icon: Icon, label, isActive, onClick }) => (
     <Button
       variant={isActive ? 'default' : 'ghost'}
