@@ -134,6 +134,40 @@ async def get_current_user(user_id: str = Depends(get_current_user_id)):
     return UserResponse(**user)
 
 
+# ==================== FIREBASE AUTH ROUTES ====================
+
+@api_router.post("/auth/firebase/register", tags=["Firebase Auth"])
+async def firebase_register(user_data: UserCreate, background_tasks: BackgroundTasks):
+    """Register a new user with Firebase Authentication"""
+    db = get_database()
+    user_repo = UserRepository(db)
+    firebase_auth_service = FirebaseAuthService(user_repo)
+    
+    result = await firebase_auth_service.register(user_data, background_tasks)
+    
+    return {
+        "success": True,
+        "custom_token": result['custom_token'],
+        "user": result['user'],
+        "message": result.get('message', 'Registration successful')
+    }
+
+
+@api_router.post("/auth/firebase/verify", tags=["Firebase Auth"])
+async def verify_firebase_token(id_token: str):
+    """Verify Firebase ID token and return user data"""
+    db = get_database()
+    user_repo = UserRepository(db)
+    firebase_auth_service = FirebaseAuthService(user_repo)
+    
+    user = await firebase_auth_service.verify_id_token(id_token)
+    
+    return {
+        "success": True,
+        "user": UserResponse(**user)
+    }
+
+
 # ==================== PRODUCT ROUTES ====================
 
 @api_router.get("/products", response_model=List[ProductListItem], tags=["Products"])
