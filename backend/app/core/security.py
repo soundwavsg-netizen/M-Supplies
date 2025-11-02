@@ -6,6 +6,7 @@ from fastapi import HTTPException, status, Depends, Cookie
 from fastapi.security import HTTPBearer
 from fastapi.security.http import HTTPAuthorizationCredentials
 from app.core.config import settings
+from app.core.firebase import verify_firebase_token
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer(auto_error=False)
@@ -34,6 +35,7 @@ def create_refresh_token(data: dict) -> str:
     return encoded_jwt
 
 def decode_token(token: str) -> Dict[str, Any]:
+    """Decode JWT token (legacy auth)"""
     try:
         payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
         return payload
@@ -44,8 +46,24 @@ def decode_token(token: str) -> Dict[str, Any]:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+def decode_firebase_token(token: str) -> Dict[str, Any]:
+    """Decode and verify Firebase ID token"""
+    try:
+        decoded_token = verify_firebase_token(token)
+        return decoded_token
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e),
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
 async def get_current_user_id(authorization: Optional[HTTPAuthorizationCredentials] = Depends(security)) -> str:
-    """Extract user_id from JWT token"""
+    """
+    Extract user_id from token (supports both JWT and Firebase ID tokens)
+    
+    Tries Firebase ID token first, falls back to JWT for backward compatibility
+    """
     if not authorization:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -53,32 +71,65 @@ async def get_current_user_id(authorization: Optional[HTTPAuthorizationCredentia
         )
     
     token = authorization.credentials
-    payload = decode_token(token)
     
-    if payload.get("type") != "access":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token type"
-        )
+    # Try Firebase ID token first
+    try:
+        firebase_payload = decode_firebase_token(token)
+        # Get user_id from Firebase UID
+        from app.core.database import get_database
+        from app.repositories.user_repository import UserRepository
+        
+        db = get_database()
+        user_repo = UserRepository(db)
+        user = await user_repo.get_by_uid(firebase_payload['uid'])
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User profile not found"
+            )
+        
+        return user['id']
     
-    user_id = payload.get("sub")
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token"
-        )
-    
-    return user_id
+    except HTTPException as e:
+        # If it's a 404 (user not found), re-raise it
+        if e.status_code == status.HTTP_404_NOT_FOUND:
+            raise
+        
+        # Otherwise, try JWT token (legacy auth)
+        try:
+            payload = decode_token(token)
+            
+            if payload.get("type") != "access":
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token type"
+                )
+            
+            user_id = payload.get("sub")
+            if not user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token"
+                )
+            
+            return user_id
+        
+        except:
+            # Both Firebase and JWT token verification failed
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
 async def get_current_user_optional(authorization: Optional[HTTPAuthorizationCredentials] = Depends(security)) -> Optional[str]:
-    """Extract user_id from JWT token, but allow None (for guest checkout)"""
+    """Extract user_id from token (Firebase or JWT), but allow None (for guest checkout)"""
     if not authorization:
         return None
     
     try:
-        token = authorization.credentials
-        payload = decode_token(token)
-        return payload.get("sub")
+        return await get_current_user_id(authorization)
     except:
         return None
 
@@ -86,11 +137,9 @@ async def require_role(required_roles: list[str]):
     """Dependency to check if user has required role"""
     async def role_checker(user_id: str = Depends(get_current_user_id)):
         from app.repositories.user_repository import UserRepository
-        from motor.motor_asyncio import AsyncIOMotorClient
-        import os
+        from app.core.database import get_database
         
-        client = AsyncIOMotorClient(os.getenv('MONGO_URL'))
-        db = client[os.getenv('DB_NAME')]
+        db = get_database()
         user_repo = UserRepository(db)
         
         user = await user_repo.get_by_id(user_id)
