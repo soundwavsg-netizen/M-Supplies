@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 import logging
 from typing import Optional, List
 
-from app.core.database import connect_to_mongo, close_mongo_connection, get_database
+from app.core.database import connect_to_mongo, close_mongo_connection, get_database, connect_to_firestore
 from app.core.config import settings
 from app.core.security import get_current_user_id, get_current_user_optional
 
