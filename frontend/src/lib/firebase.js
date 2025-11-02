@@ -14,14 +14,13 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 // Firebase configuration
-// TODO: Update these values from Firebase Console → Project Settings → Your apps
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIzaSyDummyKeyForDevelopment123456789",
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIz...ulI",
   authDomain: "msupplies-ecommerce.firebaseapp.com",
   projectId: "msupplies-ecommerce",
   storageBucket: "msupplies-ecommerce.appspot.com",
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "123456789012",
-  appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:123456789012:web:abc123def456"
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "1045737885011",
+  appId: process.env.REACT_APP_FIREBASE_APP_ID || "1:1045737885011:web:a297f06e1cdee47e7525a6"
 };
 
 // Initialize Firebase
