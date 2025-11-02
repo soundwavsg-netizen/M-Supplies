@@ -1,71 +1,71 @@
 <analysis>
-The trajectory details the continued development of the M Supplies e-commerce application by the AI engineer. The work initiated by addressing critical frontend/backend issues like incorrect pricing, duplicate categories, and faulty image uploads. Significant improvements include refining variant creation and display, implementing granular inventory management (on-hand, allocated, safety stock), and enhancing the customer's product selection experience with a two-step process. A major feature addition was a comprehensive promotional system for coupons and tiered free gifts, covering backend schema, API, admin interface, and customer-facing cart integration. The most recent task involves integrating a custom Emergent AI chat assistant across various application pages, with specialized sub-agents. The engineer consistently followed a pattern of investigating user-reported issues, identifying root causes (often involving schema mismatches, frontend display logic, or data inconsistencies), implementing targeted fixes, and verifying through testing and screenshots.
+The AI engineer's work on M Supplies involved several development phases. Initially, it addressed core e-commerce functionalities like inventory management, variant creation, and a promotional system for coupons and gifts. A significant focus was integrating a context-aware AI chat assistant across various application pages. Subsequently, GST was removed, a basic weight-based shipping system was implemented, and essential informational pages (About Us, FAQ, Contact Us) were added. The engineer also redesigned user profile, address, and order management to be Firebase-compatible. Email notifications for user signup and contact form submissions were integrated using SendGrid. Finally, comprehensive SEO metadata, structured data, a sitemap, and robots.txt were implemented. The trajectory concluded with the creation and provision of a standalone demo page component for the M Supplies application to be used as a portfolio piece on another website. The engineer consistently debugged issues across frontend and backend, ensuring functional and robust features.
 </analysis>
 
 <product_requirements>
-The user, Sean, required a production-ready e-commerce platform, M Supplies, for polymailers. The application necessitates distinct customer and admin portals, facilitating a smooth shopping experience for multi-variant products complemented by robust admin tools.
+The user, Sean, required a production-ready e-commerce platform, M Supplies, for polymailers, necessitating distinct customer and admin portals for a smooth shopping experience with multi-variant products and robust admin tools.
 
-**Implemented Features & Current State:**
-The application now supports centralized inventory (, , , ), dynamic branding, and advanced product filtering with deep-linking. Admin users can manage products (CRUD, image uploads, quantity-based pricing), colors, types, and categories. The customer experience includes multi-variant product displays, accurate stock/pricing, and a two-step size/pack-size selection process. Core e-commerce features (auth, cart, orders, GST) are functional. A comprehensive promotional system with admin-managed discount coupons (percentage/fixed, usage rules, min order, dates) and tiered free gifts (logic implemented, admin interface for gifts/tiers pending) is integrated. A real-time packing interface (6x6 grid, visual stock, +/- adjustment, filters) is deployed for efficient fulfillment, now displaying available stock and product images. The groundwork for an AI chat assistant is laid.
+**Current State & Implemented Features:**
+The application now supports centralized inventory (, , , ), dynamic branding, and advanced product filtering with deep-linking. Admin users can manage products (CRUD, image uploads), colors, types, and categories. The customer experience includes multi-variant product displays, accurate stock/pricing via a two-step size/pack-size selection. Core e-commerce features (auth, cart, orders) are functional, with GST removed. A comprehensive promotional system with admin-managed discount coupons and tiered free gifts (logic implemented, admin interface for gifts/tiers complete, customer selection/messaging working post-discount) is integrated. A real-time packing interface (6x6 grid, visual stock, images) is deployed. An AI chat assistant is integrated across key pages (Homepage, Product, FAQ, Contact) with context-aware sub-agents (Sales, Sizing, Customer Care). Informational pages (About Us, FAQ, Contact Us) are live, with About Us set as the main homepage, featuring a promotional banner. External links in the About Us section are functional, and the footer is updated. User profile management, including addresses (max 5, one default, SG postal validation, MY secondary), and order history are implemented with a Firebase-compatible data structure. Checkout includes address autofill and save-to-profile functionality. Email notifications (admin signup, customer welcome, contact form, 24-hour address reminder) are operational via SendGrid. Basic SEO (sitemap, robots.txt, meta tags, structured data) is complete.
 </product_requirements>
 
 <key_technical_concepts>
-- **Full-stack**: FastAPI (Python) backend, React (JS) frontend.
-- **Database**: MongoDB (using UUIDs).
-- **Frontend**: React, Tailwind CSS, Shadcn UI, React Router, Context API.
-- **Backend**: FastAPI, Pydantic (schemas), layered architecture, JWT.
-- **Inventory**: , , ,  management.
-- **File Storage**: Local for images, served via FastAPI endpoint.
-- **URL Routing**: Deep-linkable routes,  prefix for backend.
-- **Authentication**: JWT-based.
-- **Promotions**: Coupon codes, gift tiers.
-- **AI Integration**: Custom Emergent agents.
+-   **Full-stack**: FastAPI (Python) backend, React (JS) frontend.
+-   **Database**: MongoDB (UUIDs), Firebase-compatible schema.
+-   **Frontend**: React, Tailwind CSS, Shadcn UI, React Router, Context API.
+-   **Backend**: FastAPI, Pydantic, layered architecture, JWT.
+-   **Integrations**: Emergent AI (custom agents, LLM key), SendGrid (email).
+-   **Auth**: JWT-based with role claim.
+-   **Promotions**: Coupon codes, gift tiers (post-discount).
+-   **SEO**: Sitemap, Robots.txt, Meta tags, Structured Data (JSON-LD).
 </key_technical_concepts>
 
 <code_architecture>
-safety_stockStockAdjustmentpack_sizeVariantAttributessafety_stock/api/images/{filename}safety_stockadminUploadAPIadminSettingsAPI
+The application utilizes a full-stack architecture consisting of a React frontend and a FastAPI backend, with MongoDB serving as the database.
+
+
 **Key Files and Changes:**
-- : Integrated new API routes, especially  for proper image serving,  for coupon management.
-- :  schema extended to include .
-- :  method updated to handle  adjustments.
-- :  logic fixed to normalize category case and filter out zero-value prices.
-- :  price range calculation updated to exclude 0 values from price tiers.
-- , , , : These are **new files** establishing the backend for the promotions system. They define models, database interactions, business logic, and API endpoints for managing coupons and gifts.
-- : New routes added for  and .
-- : Simplified variant creation by removing stock/pricing fields, updated to correctly display images served from the backend's new API endpoint.
-- : Added navigation buttons to the new Packing Interface and Promotions pages.
-- : UI updated to include  adjustment fields.
-- :  configured to correctly handle  for image uploads (resolved Content-Type override).
-- : Implemented a two-step variant selection dropdown (size then pack size), ensured cm units are displayed with dimensions, and added stock validation for customer quantity input.
-- : This is a **new file** implementing the real-time packing interface, displaying available stock, product images, and +/- adjustment buttons in a responsive grid. Also contains logic for font consistency and pack size display.
-- : This is a **new file** providing the admin UI for managing discount coupons, including form validation and improved error handling.
-- : Modified to include a promo code input field with integration to the backend promotions API.
-- : This is a **new file** for the AI chat assistant UI.
-- : This is a **new file** for integrating with Emergent custom agents.
+-   : Central Fast API entry point; integrated all new API routers for chat, contact, reminders, and user profiles, and adjusted existing image serving.
+-   : Significantly updated to incorporate Firebase-compatible user and address data models, enabling detailed user profiles and multiple addresses.
+-   : Modified to include data transformation logic, adapting existing user data to the new Firebase-compatible schema.
+-   : A new service created to manage sending various email notifications (signup, contact form, welcome, reminders) using the SendGrid API.
+-   : Expanded to centralize coupon and gift state management, including revalidation logic for dynamic cart updates, and shipping fee calculations.
+-   : Developed into a comprehensive user account interface with distinct tabs for Profile, Addresses (featuring CRUD operations), and Order History, following Firebase-compatible data.
+-   : Repurposed as the application's homepage, featuring a new marketing banner, detailed company overview, business segments, and functional external links.
+-   : Major modifications for address autofill from user profiles, an option to save new addresses, integration of coupon/gift sections, and a graceful checkout guard modal.
+-   : Enhanced with dynamic page titles, SEO-optimized meta tags, Open Graph and Twitter tags, canonical URLs, and the global Organization Schema.
+-    & : New static files generated to improve SEO and guide search engine crawling.
+-    & : New React components to dynamically inject page-specific SEO metadata and structured data (JSON-LD) for enhanced search visibility.
+-   : A new standalone React component providing a self-contained demo of the AI chatbot for integration into external portfolio pages.
 </code_architecture>
 
 <pending_tasks>
-- Full implementation of Google OAuth.
-- PDF invoice/packing slip generation.
-- Storybook component documentation.
-- Playwright E2E tests.
-- Stripe PayNow/GrabPay integration (user requested Stripe).
-- Full settings page for business configuration beyond just the name, colors, types, categories.
-- Complete Shopee integration (beyond CSV import/webhook stub).
-- EasyParcel integration (bulk upload template).
-- Full implementation of the gift items and gift tiers for the promotional system.
-- Integration of the AI chat widget across all specified pages (Homepage, Product pages, FAQ/Contact) with sub-agents.
+-   Full implementation of Google OAuth.
+-   PDF invoice/packing slip generation.
+-   Storybook component documentation.
+-   Playwright E2E tests.
+-   Stripe PayNow/GrabPay integration.
+-   Full settings page for business configuration.
+-   Complete Shopee integration.
+-   Full EasyParcel integration (beyond basic weight calculation).
+-   Scheduled job/cron for the 24-hour address reminder email.
+-   Complete Admin Console UI for Customers and Orders tables (search, filter, export, detail drawers per detailed spec).
+-   WhatsApp webhook integration.
 </pending_tasks>
 
 <current_work>
-Immediately prior to this summary, the AI engineer was in the process of integrating an AI chat assistant into the M Supplies website, as requested by the user. The user specified that their agent is built using Emergent custom agents and detailed where different specialized sub-agents should be deployed (e.g., sales expert on homepage, sizing expert on product pages).
+Immediately prior to this summary, the AI engineer was working on a user request to provide the M Supplies chatbot functionality for their *other* Emergent-built website (CCC website). The initial request was to embed the chatbot widget, but the user clarified that they needed a *complete new page* to showcase M Supplies as a portfolio demo piece on their CCC website.
 
-The engineer has started this integration by:
-1. Creating a new React component for the chat widget: . This component will likely house the UI and interaction logic for the chat assistant.
-2. Creating a custom React hook for Emergent Agent integration: . This hook will abstract the logic for communicating with the custom Emergent agents, likely handling state, API calls, and context relevant to the AI assistant.
-3. The next step identified in the trajectory is to integrate this chat widget into the main pages, starting with the homepage. The work is currently paused after creating these foundational files and before actively embedding the  component and utilizing the  hook across the application's routes.
+In response, the AI engineer delivered the entire React component code for a standalone demo page, named . This comprehensive component is designed to present the M Supplies platform's key features, technical stack, and business impact. It includes sections detailing:
+*   A project overview with M Supplies' business segments (Rainbow Palace, M Supplies, Mossom SG Studio).
+*   The AI Chat Assistant's multi-agent capabilities (Sales, Sizing, Customer Care).
+*   The full suite of E-commerce features for both customers and administrators, including the advanced promotion and gift tier system.
+*   The underlying Technical Implementation (React/Tailwind, FastAPI/MongoDB, Emergent LLM integration, SendGrid).
+*   The overall Results & Impact of the project.
+The demo page also features an  embedding the live M Supplies website.
+The provided code included necessary imports, state management, and an interactive tabbed interface to navigate through the different feature highlights. Accompanying instructions detailed how to integrate this page into the CCC website's routing system and navigation. The task of providing this self-contained demo page code was concluded.
 </current_work>
 
 <optional_next_step>
-Integrate the newly created  component and  hook into the homepage ().
+The last task was concluded by providing the code for the M Supplies Demo Page. No explicit next steps were requested by the user.
 </optional_next_step>
