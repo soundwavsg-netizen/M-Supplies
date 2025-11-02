@@ -36,7 +36,7 @@ import '@/App.css';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { userProfile, loading } = useFirebaseAuth();
 
   if (loading) {
     return (
@@ -46,7 +46,7 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  if (!user) {
+  if (!userProfile) {
     return <Navigate to="/login" replace />;
   }
 
@@ -55,7 +55,7 @@ const ProtectedRoute = ({ children }) => {
 
 // Admin Route Component
 const AdminRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { userProfile, loading } = useFirebaseAuth();
 
   if (loading) {
     return (
@@ -65,11 +65,11 @@ const AdminRoute = ({ children }) => {
     );
   }
 
-  if (!user) {
+  if (!userProfile) {
     return <Navigate to="/login" replace />;
   }
 
-  if (user.role === 'customer') {
+  if (userProfile.role === 'customer') {
     return <Navigate to="/" replace />;
   }
 
