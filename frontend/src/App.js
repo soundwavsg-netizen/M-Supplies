@@ -216,11 +216,11 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
+      <FirebaseAuthProvider>
         <CartProvider>
           <AppContent />
         </CartProvider>
-      </AuthProvider>
+      </FirebaseAuthProvider>
     </BrowserRouter>
   );
 }
