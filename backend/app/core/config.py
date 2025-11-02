@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     mongo_url: str = os.getenv('MONGO_URL', 'mongodb://localhost:27017')
     db_name: str = os.getenv('DB_NAME', 'polymailer_db')
     
+    # Firebase
+    firebase_credentials_path: str = os.getenv('FIREBASE_CREDENTIALS_PATH', '/app/backend/firebase-credentials.json')
+    firebase_project_id: str = os.getenv('FIREBASE_PROJECT_ID', 'msupplies-ecommerce')
+    
     # JWT
     jwt_secret: str = os.getenv('JWT_SECRET', 'change-me-in-production')
     jwt_algorithm: str = os.getenv('JWT_ALGORITHM', 'HS256')
@@ -46,5 +50,6 @@ class Settings(BaseSettings):
     
     class Config:
         env_file = '.env'
+        extra = 'allow'  # Allow extra fields from environment
 
 settings = Settings()
