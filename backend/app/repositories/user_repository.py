@@ -22,6 +22,10 @@ class UserRepository:
     async def get_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         return await self.collection.find_one({'email': email})
     
+    async def get_by_uid(self, uid: str) -> Optional[Dict[str, Any]]:
+        """Get user by Firebase UID"""
+        return await self.collection.find_one({'uid': uid})
+    
     async def update(self, user_id: str, update_data: Dict[str, Any]) -> bool:
         result = await self.collection.update_one(
             {'id': user_id},
