@@ -54,6 +54,15 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    try:
+        # Initialize Firestore (primary database)
+        connect_to_firestore()
+        logger.info("✅ Firestore initialized as primary database")
+    except Exception as e:
+        logger.error(f"❌ Firestore initialization failed: {str(e)}")
+        logger.info("Falling back to MongoDB...")
+    
+    # Keep MongoDB connection as backup
     await connect_to_mongo()
     logger.info("Application started")
     yield
