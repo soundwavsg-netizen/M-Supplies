@@ -14,15 +14,11 @@ import { useAuthenticatedAPI } from '@/hooks/useAuthenticatedAPI';
 const Promotions = () => {
   const { idToken } = useAuthenticatedAPI();
   const [coupons, setCoupons] = useState([]);
-  const [giftItems, setGiftItems] = useState([]);
-  const [giftTiers, setGiftTiers] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   
   // Modal states
   const [showCouponModal, setShowCouponModal] = useState(false);
-  const [showGiftModal, setShowGiftModal] = useState(false);
-  const [showTierModal, setShowTierModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
 
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
