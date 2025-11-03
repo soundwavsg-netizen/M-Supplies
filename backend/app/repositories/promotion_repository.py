@@ -185,9 +185,8 @@ class PromotionRepository:
 
     async def list_gift_items(self, active_only: bool = False) -> List[GiftItem]:
         """List gift items"""
-        filter_query = {"is_active": True} if active_only else {}
-        cursor = self.gift_items.find(filter_query).sort("name", 1)
-        gifts = await cursor.to_list(length=None)
+        filter_query = {"is_active": True} if active_only else None
+        gifts = await self.gift_items.find(query=filter_query, limit=1000, sort=[("name", 1)])
         return [GiftItem(**gift) for gift in gifts]
 
     async def update_gift_item(self, gift_id: str, update_data: GiftItemUpdate) -> Optional[GiftItem]:
