@@ -250,7 +250,7 @@ const Promotions = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Tag className="w-12 h-12 text-teal-600 mx-auto mb-4 animate-pulse" />
-          <p className="text-gray-600">Loading promotions...</p>
+          <p className="text-gray-600">Loading coupons...</p>
         </div>
       </div>
     );
