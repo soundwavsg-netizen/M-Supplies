@@ -107,14 +107,13 @@ class ChatRepository:
         """Get messages for a session"""
         query = {"session_id": session_id}
         
-        cursor = self.messages.find(query).sort("timestamp", 1)
+        messages_data = await self.messages.find(
+            query=query, 
+            skip=offset if offset > 0 else 0,
+            limit=limit if limit else 1000,
+            sort=[("timestamp", 1)]
+        )
         
-        if offset > 0:
-            cursor = cursor.skip(offset)
-        if limit:
-            cursor = cursor.limit(limit)
-        
-        messages_data = await cursor.to_list(length=None)
         messages = []
         
         for message_data in messages_data:
