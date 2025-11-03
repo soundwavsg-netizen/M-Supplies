@@ -17,6 +17,7 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Account = () => {
+  const { userProfile, currentUser, idToken } = useFirebaseAuth();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
