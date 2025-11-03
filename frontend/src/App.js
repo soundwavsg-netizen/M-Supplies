@@ -187,7 +187,7 @@ function AppContent() {
             }
           />
           <Route
-            path="/admin/promotions"
+            path="/admin/coupons"
             element={
               <AdminRoute>
                 <Promotions />
