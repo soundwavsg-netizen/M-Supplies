@@ -250,9 +250,8 @@ class PromotionRepository:
 
     async def list_gift_tiers(self, active_only: bool = False) -> List[GiftTier]:
         """List gift tiers with populated items"""
-        filter_query = {"is_active": True} if active_only else {}
-        cursor = self.gift_tiers.find(filter_query).sort("spending_threshold", 1)
-        tiers = await cursor.to_list(length=None)
+        filter_query = {"is_active": True} if active_only else None
+        tiers = await self.gift_tiers.find(query=filter_query, limit=1000, sort=[("spending_threshold", 1)])
 
         result = []
         for tier in tiers:
