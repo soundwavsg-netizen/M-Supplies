@@ -144,9 +144,9 @@ const Account = () => {
     if (!window.confirm('Are you sure you want to delete this address?')) return;
 
     try {
-      const token = localStorage.getItem('access_token');
-      await axios.delete(`${BACKEND_URL}/api/users/me/addresses/${addressId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+      if (!idToken) return;
+      await axios.delete(`${BACKEND_URL}/api/auth/me/addresses/${addressId}`, {
+        headers: { Authorization: `Bearer ${idToken}` }
       });
       
       toast.success('Address removed');
