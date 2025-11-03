@@ -72,12 +72,12 @@ const AdminDashboard = () => {
               </Button>
             </Link>
             <Link to="/admin/promotions">
-              <Button className="w-full" variant="outline" className="bg-purple-600 hover:bg-purple-700 text-white">
+              <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
                 🎟️ Promotions
               </Button>
             </Link>
             <Link to="/admin/gifts">
-              <Button className="w-full" variant="outline" className="bg-pink-600 hover:bg-pink-700 text-white">
+              <Button className="w-full bg-pink-600 hover:bg-pink-700 text-white">
                 🎁 Gift Management
               </Button>
             </Link>
