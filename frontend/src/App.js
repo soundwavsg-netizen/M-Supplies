@@ -30,6 +30,8 @@ import AdminProducts from '@/pages/admin/Products';
 import ProductForm from '@/pages/admin/ProductForm';
 import PackingInterface from '@/pages/admin/PackingInterface';
 import Promotions from '@/pages/admin/Promotions';
+import Orders from '@/pages/admin/Orders';
+import Users from '@/pages/admin/Users';
 import GiftManagement from '@/pages/admin/GiftManagement';
 
 import '@/App.css';
