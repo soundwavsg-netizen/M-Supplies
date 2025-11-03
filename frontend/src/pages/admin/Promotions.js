@@ -104,7 +104,7 @@ const Promotions = () => {
       }
       
       try {
-        const token = localStorage.getItem('access_token');
+        const token = idToken;
         const payload = {
           code: formData.code.toUpperCase(),
           type: formData.type,
@@ -399,7 +399,7 @@ const Promotions = () => {
                           onClick={async () => {
                             if (window.confirm('Delete this coupon?')) {
                               try {
-                                const token = localStorage.getItem('access_token');
+                                const token = idToken;
                                 await axios.delete(`${BACKEND_URL}/api/admin/coupons/${coupon.id}`, {
                                   headers: { Authorization: `Bearer ${token}` }
                                 });

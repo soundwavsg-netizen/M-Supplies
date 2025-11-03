@@ -48,7 +48,7 @@ const GiftManagement = () => {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('access_token');
+      const token = idToken;
       const headers = { Authorization: `Bearer ${token}` };
 
       const [itemsResponse, tiersResponse] = await Promise.all([
@@ -68,7 +68,7 @@ const GiftManagement = () => {
 
   const handleCreateGiftItem = async () => {
     try {
-      const token = localStorage.getItem('access_token');
+      const token = idToken;
       const headers = { Authorization: `Bearer ${token}` };
 
       if (editingItem) {
@@ -89,7 +89,7 @@ const GiftManagement = () => {
 
   const handleCreateGiftTier = async () => {
     try {
-      const token = localStorage.getItem('access_token');
+      const token = idToken;
       const headers = { Authorization: `Bearer ${token}` };
 
       if (editingTier) {
@@ -112,7 +112,7 @@ const GiftManagement = () => {
     if (!window.confirm('Are you sure you want to delete this gift item?')) return;
 
     try {
-      const token = localStorage.getItem('access_token');
+      const token = idToken;
       await axios.delete(`${BACKEND_URL}/api/admin/gift-items/${itemId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -128,7 +128,7 @@ const GiftManagement = () => {
     if (!window.confirm('Are you sure you want to delete this gift tier?')) return;
 
     try {
-      const token = localStorage.getItem('access_token');
+      const token = idToken;
       await axios.delete(`${BACKEND_URL}/api/admin/gift-tiers/${tierId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
