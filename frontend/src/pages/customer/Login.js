@@ -302,14 +302,24 @@ const Login = () => {
                 </div>
                 <div>
                   <Label htmlFor="register-password">Password</Label>
-                  <Input
-                    id="register-password"
-                    type="password"
-                    value={registerForm.password}
-                    onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                    required
-                    data-testid="register-password-input"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="register-password"
+                      type={showRegisterPassword ? "text" : "password"}
+                      value={registerForm.password}
+                      onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                      required
+                      data-testid="register-password-input"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showRegisterPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
                 <Button
                   type="submit"
