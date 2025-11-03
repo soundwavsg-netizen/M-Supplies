@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MapPin, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useFirebaseAuth } from '@/context/FirebaseAuthContext';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
