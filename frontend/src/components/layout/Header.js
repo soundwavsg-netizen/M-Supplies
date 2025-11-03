@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Menu, X, LogOut } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useFirebaseAuth } from '@/context/FirebaseAuthContext';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/ui/Logo';
 import { theme } from '@/theme.config';
