@@ -122,7 +122,7 @@ const AdminDashboard = () => {
                 📦 Packing Interface
               </Button>
             </Link>
-            <Link to="/admin/promotions">
+            <Link to="/admin/coupons">
               <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
                 🎟️ Coupon Management
               </Button>
