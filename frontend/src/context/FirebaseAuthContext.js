@@ -131,6 +131,8 @@ export const FirebaseAuthProvider = ({ children }) => {
           const adminEmails = ['soundwavsg@gmail.com', 'msuppliessg@gmail.com'];
           const role = adminEmails.includes(result.user.email) ? 'admin' : 'customer';
           
+          console.log(`Creating user with role: ${role} for email: ${result.user.email}`);
+          
           await api.post('/auth/firebase/register', {
             email: result.user.email,
             password: Math.random().toString(36).slice(-8), // Random password (not used with OAuth)
@@ -140,9 +142,14 @@ export const FirebaseAuthProvider = ({ children }) => {
             role: role
           });
           
+          // Wait a moment for Firestore to sync
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
           // Fetch the newly created profile
           const newProfileResponse = await api.get('/auth/me');
           setUserProfile(newProfileResponse.data);
+          
+          console.log('User profile:', newProfileResponse.data);
         } else {
           throw error;
         }
