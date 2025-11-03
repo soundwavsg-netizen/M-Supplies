@@ -178,14 +178,24 @@ const Login = () => {
                 </div>
                 <div>
                   <Label htmlFor="login-password">Password</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    value={loginForm.password}
-                    onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                    required
-                    data-testid="login-password-input"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="login-password"
+                      type={showLoginPassword ? "text" : "password"}
+                      value={loginForm.password}
+                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                      required
+                      data-testid="login-password-input"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLoginPassword(!showLoginPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div className="text-right">
                   <button
