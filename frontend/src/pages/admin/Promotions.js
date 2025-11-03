@@ -434,8 +434,19 @@ const Promotions = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Gift Items Management</CardTitle>
-                <CardDescription>Coming soon - Gift item management interface</CardDescription>
+                <CardDescription>Manage gift items and tiers on the dedicated page</CardDescription>
               </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Gift className="w-16 h-16 mx-auto mb-4 text-pink-600" />
+                  <p className="text-gray-600 mb-4">
+                    For comprehensive gift items and tiers management, please visit the dedicated Gift Management page.
+                  </p>
+                  <Button onClick={() => window.location.href = '/admin/gifts'}>
+                    Go to Gift Management
+                  </Button>
+                </div>
+              </CardContent>
             </Card>
           </TabsContent>
           
@@ -443,8 +454,19 @@ const Promotions = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Gift Tiers Management</CardTitle>
-                <CardDescription>Coming soon - Gift tier management interface</CardDescription>
+                <CardDescription>Manage gift tiers on the dedicated page</CardDescription>
               </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Award className="w-16 h-16 mx-auto mb-4 text-purple-600" />
+                  <p className="text-gray-600 mb-4">
+                    For comprehensive gift tiers management, please visit the dedicated Gift Management page.
+                  </p>
+                  <Button onClick={() => window.location.href = '/admin/gifts'}>
+                    Go to Gift Management
+                  </Button>
+                </div>
+              </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
