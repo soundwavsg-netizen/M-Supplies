@@ -29,8 +29,12 @@ class OrderRepository:
         return await self.collection.find_one({'order_number': order_number})
     
     async def list_user_orders(self, user_id: str, skip: int = 0, limit: int = 50) -> List[Dict[str, Any]]:
-        cursor = self.collection.find({'user_id': user_id}).skip(skip).limit(limit).sort('created_at', -1)
-        return await cursor.to_list(length=limit)
+        return await self.collection.find(
+            query={'user_id': user_id},
+            skip=skip,
+            limit=limit,
+            sort=[('created_at', -1)]
+        )
     
     async def list_orders(self, skip: int = 0, limit: int = 50, status: Optional[str] = None,
                          search: Optional[str] = None) -> List[Dict[str, Any]]:
