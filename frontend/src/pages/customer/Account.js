@@ -158,9 +158,9 @@ const Account = () => {
 
   const handleSetDefaultAddress = async (addressId) => {
     try {
-      const token = localStorage.getItem('access_token');
-      await axios.post(`${BACKEND_URL}/api/users/me/addresses/${addressId}/set-default`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
+      if (!idToken) return;
+      await axios.post(`${BACKEND_URL}/api/auth/me/addresses/${addressId}/set-default`, {}, {
+        headers: { Authorization: `Bearer ${idToken}` }
       });
       
       toast.success('Default updated');
