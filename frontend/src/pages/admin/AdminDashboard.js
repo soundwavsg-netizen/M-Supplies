@@ -10,6 +10,8 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const AdminDashboard = () => {
   const { idToken } = useAuthenticatedAPI();
   const [skuCount, setSkuCount] = useState('--');
+  const [orderCount, setOrderCount] = useState('--');
+  const [userCount, setUserCount] = useState('--');
   const [couponCount, setCouponCount] = useState('--');
   const [giftItemCount, setGiftItemCount] = useState('--');
   const [giftTierCount, setGiftTierCount] = useState('--');
@@ -17,6 +19,8 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (idToken) {
       fetchInventoryCount();
+      fetchOrderCount();
+      fetchUserCount();
       fetchCouponCount();
       fetchGiftCounts();
     }
@@ -31,6 +35,30 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Error fetching inventory count:', error);
       setSkuCount('0 SKUs');
+    }
+  };
+
+  const fetchOrderCount = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/admin/orders`, {
+        headers: { Authorization: `Bearer ${idToken}` }
+      });
+      setOrderCount(response.data.length || 0);
+    } catch (error) {
+      console.error('Error fetching order count:', error);
+      setOrderCount(0);
+    }
+  };
+
+  const fetchUserCount = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/admin/users`, {
+        headers: { Authorization: `Bearer ${idToken}` }
+      });
+      setUserCount(response.data.length || 0);
+    } catch (error) {
+      console.error('Error fetching user count:', error);
+      setUserCount(0);
     }
   };
 
