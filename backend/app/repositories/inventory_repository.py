@@ -15,16 +15,14 @@ class InventoryLedgerRepository:
         return entry_data
     
     async def get_by_variant(self, variant_id: str, skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
-        cursor = self.collection.find({'variant_id': variant_id}).sort('created_at', -1).skip(skip).limit(limit)
-        return await cursor.to_list(length=limit)
+        return await self.collection.find(query={'variant_id': variant_id}, skip=skip, limit=limit, sort=[('created_at', -1)])
     
     async def get_by_reference(self, reference_id: str) -> List[Dict[str, Any]]:
-        cursor = self.collection.find({'reference_id': reference_id})
+        return await self.collection.find(query={'reference_id': reference_id})
         return await cursor.to_list(length=100)
     
     async def get_recent(self, skip: int = 0, limit: int = 50) -> List[Dict[str, Any]]:
-        cursor = self.collection.find().sort('created_at', -1).skip(skip).limit(limit)
-        return await cursor.to_list(length=limit)
+        cursor = self.collection.find(, skip=skip, limit=limit, sort=[('created_at', -1)])
 
 class ChannelMappingRepository:
     def __init__(self, db: AsyncIOMotorDatabase):
