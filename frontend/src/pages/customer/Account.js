@@ -118,16 +118,16 @@ const Account = () => {
 
   const handleCreateAddress = async () => {
     try {
-      const token = localStorage.getItem('access_token');
+      if (!idToken) return;
       
       if (editingAddress) {
-        await axios.put(`${BACKEND_URL}/api/users/me/addresses/${editingAddress.id}`, addressForm, {
-          headers: { Authorization: `Bearer ${token}` }
+        await axios.put(`${BACKEND_URL}/api/auth/me/addresses/${editingAddress.id}`, addressForm, {
+          headers: { Authorization: `Bearer ${idToken}` }
         });
         toast.success('Address updated');
       } else {
-        await axios.post(`${BACKEND_URL}/api/users/me/addresses`, addressForm, {
-          headers: { Authorization: `Bearer ${token}` }
+        await axios.post(`${BACKEND_URL}/api/auth/me/addresses`, addressForm, {
+          headers: { Authorization: `Bearer ${idToken}` }
         });
         toast.success('Address saved');
       }
