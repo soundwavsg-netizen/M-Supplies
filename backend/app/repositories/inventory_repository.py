@@ -43,12 +43,10 @@ class ChannelMappingRepository:
         })
     
     async def get_by_variant(self, variant_id: str) -> List[Dict[str, Any]]:
-        cursor = self.collection.find({'internal_variant_id': variant_id, 'is_active': True})
-        return await cursor.to_list(length=100)
+        return await self.collection.find(query={'internal_variant_id': variant_id, 'is_active': True}, limit=100)
     
     async def list_by_channel(self, channel: str) -> List[Dict[str, Any]]:
-        cursor = self.collection.find({'channel': channel, 'is_active': True})
-        return await cursor.to_list(length=1000)
+        return await self.collection.find(query={'channel': channel, 'is_active': True}, limit=1000)
     
     async def update(self, mapping_id: str, update_data: Dict[str, Any]) -> bool:
         result = await self.collection.update_one(
