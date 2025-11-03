@@ -77,7 +77,7 @@ const Header = () => {
             </Button> */}
 
             {/* User Menu */}
-            {user ? (
+            {userProfile ? (
               <div className="hidden md:flex items-center space-x-2">
                 <Link to="/account">
                   <Button variant="ghost" size="sm" data-testid="account-link">
@@ -85,7 +85,7 @@ const Header = () => {
                     Account
                   </Button>
                 </Link>
-                {user.role !== 'customer' && (
+                {userProfile.role !== 'customer' && (
                   <Link to="/admin">
                     <Button variant="outline" size="sm" data-testid="admin-link">
                       Admin
