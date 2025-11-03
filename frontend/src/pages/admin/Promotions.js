@@ -268,71 +268,50 @@ const Promotions = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Promotions & Gifts</h1>
-            <p className="text-gray-600 mt-2">Manage discount coupons and free gift campaigns</p>
-          </div>
-        </div>
+      <h1 className="text-3xl font-bold text-slate-900 mb-8">Coupon Management</h1>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Coupons</CardTitle>
-              <Percent className="h-4 w-4 text-teal-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.active_coupons || 0}</div>
-              <p className="text-xs text-muted-foreground">of {stats.total_coupons || 0} total</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Gift Items</CardTitle>
-              <Gift className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.active_gift_items || 0}</div>
-              <p className="text-xs text-muted-foreground">available gifts</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Gift Tiers</CardTitle>
-              <Calendar className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.active_gift_tiers || 0}</div>
-              <p className="text-xs text-muted-foreground">spending tiers</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>
-              <Users className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{(stats.total_coupons || 0) + (stats.total_gift_tiers || 0)}</div>
-              <p className="text-xs text-muted-foreground">active campaigns</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Management Tabs */}
-        <Tabs defaultValue="coupons" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="coupons">Discount Coupons</TabsTrigger>
-            <TabsTrigger value="gifts">Gift Items</TabsTrigger>
-            <TabsTrigger value="tiers">Gift Tiers</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="coupons">
+      {/* Stats Grid */}
+      {loading ? (
+        <div className="text-center py-8">Loading...</div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Coupons</CardTitle>
+                <Tag className="h-4 w-4 text-teal-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.total_coupons || 0}</div>
+                <p className="text-xs text-muted-foreground">All coupons created</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Active Coupons</CardTitle>
+                <Percent className="h-4 w-4 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.active_coupons || 0}</div>
+                <p className="text-xs text-muted-foreground">Currently available</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Usage</CardTitle>
+                <Users className="h-4 w-4 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.total_coupon_usage || 0}</div>
+                <p className="text-xs text-muted-foreground">Times used</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Coupons List */}
+          <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
