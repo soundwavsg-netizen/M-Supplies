@@ -586,6 +586,7 @@ async def admin_list_users(
             'displayName': u.get('displayName', f"{u.get('first_name', '')} {u.get('last_name', '')}".strip()),
             'phone': u.get('phone'),
             'role': u.get('role', 'customer'),
+            'is_active': u.get('is_active', True),
             'createdAt': u.get('createdAt') or u.get('created_at') or datetime.now(timezone.utc).isoformat(),
             'updatedAt': u.get('updatedAt') or u.get('updated_at') or datetime.now(timezone.utc).isoformat(),
             'password': None
