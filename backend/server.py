@@ -572,7 +572,26 @@ async def admin_list_users(
     user_repo = UserRepository(db)
     
     users = await user_repo.list_users(skip, limit, search)
-    return [UserResponse(**{**u, 'password': None}) for u in users]
+    
+    # Transform users to match UserResponse schema
+    transformed_users = []
+    for u in users:
+        user_data = {
+            'id': u.get('id'),
+            'uid': u.get('uid', u.get('id')),  # Use id as fallback if uid doesn't exist
+            'email': u.get('email'),
+            'first_name': u.get('first_name', ''),
+            'last_name': u.get('last_name', ''),
+            'displayName': u.get('displayName', f"{u.get('first_name', '')} {u.get('last_name', '')}".strip()),
+            'phone': u.get('phone'),
+            'role': u.get('role', 'customer'),
+            'createdAt': u.get('createdAt') or u.get('created_at') or datetime.now(timezone.utc).isoformat(),
+            'updatedAt': u.get('updatedAt') or u.get('updated_at') or datetime.now(timezone.utc).isoformat(),
+            'password': None
+        }
+        transformed_users.append(UserResponse(**user_data))
+    
+    return transformed_users
 
 
 @api_router.put("/admin/users/{target_user_id}", response_model=UserResponse, tags=["Admin - Users"])
