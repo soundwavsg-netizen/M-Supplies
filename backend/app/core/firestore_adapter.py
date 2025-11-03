@@ -199,6 +199,15 @@ class FirestoreAdapter:
             print(f"Error in update_one: {e}")
             return False
     
+    def _delete_one_sync(self, doc_id: str) -> bool:
+        """Synchronous delete_one helper"""
+        try:
+            self.collection.document(doc_id).delete()
+            return True
+        except Exception as e:
+            print(f"Error in delete_one_sync: {e}")
+            return False
+    
     async def delete_one(self, query: Dict[str, Any]) -> bool:
         """
         Delete a single document
@@ -210,18 +219,14 @@ class FirestoreAdapter:
             True if document was deleted, False otherwise
         """
         try:
-            # Find the document first
             doc = await self.find_one(query)
             if not doc:
                 return False
             
-            # Extract document ID
             doc_id = doc.get('id') or doc.get('_id')
             
-            # Delete document
-            self.collection.document(doc_id).delete()
-            return True
-        
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(executor, self._delete_one_sync, doc_id)
         except Exception as e:
             print(f"Error in delete_one: {e}")
             return False
