@@ -49,9 +49,9 @@ const Users = () => {
   };
 
   const getRoleBadge = (role) => {
-    return role === 'admin' 
-      ? 'bg-purple-100 text-purple-800' 
-      : 'bg-blue-100 text-blue-800';
+    if (role === 'admin') return 'bg-purple-100 text-purple-800';
+    if (role === 'customer') return 'bg-blue-100 text-blue-800';
+    return 'bg-gray-100 text-gray-800'; // For any other role
   };
 
   const filteredUsers = users.filter(user => {
