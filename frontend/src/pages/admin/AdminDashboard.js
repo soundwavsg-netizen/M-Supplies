@@ -11,11 +11,14 @@ const AdminDashboard = () => {
   const { idToken } = useAuthenticatedAPI();
   const [skuCount, setSkuCount] = useState('--');
   const [couponCount, setCouponCount] = useState('--');
+  const [giftItemCount, setGiftItemCount] = useState('--');
+  const [giftTierCount, setGiftTierCount] = useState('--');
   
   useEffect(() => {
     if (idToken) {
       fetchInventoryCount();
       fetchCouponCount();
+      fetchGiftCounts();
     }
   }, [idToken]);
   
@@ -40,6 +43,25 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Error fetching coupon count:', error);
       setCouponCount(0);
+    }
+  };
+
+  const fetchGiftCounts = async () => {
+    try {
+      const [itemsRes, tiersRes] = await Promise.all([
+        axios.get(`${BACKEND_URL}/api/admin/gift-items`, {
+          headers: { Authorization: `Bearer ${idToken}` }
+        }),
+        axios.get(`${BACKEND_URL}/api/admin/gift-tiers`, {
+          headers: { Authorization: `Bearer ${idToken}` }
+        })
+      ]);
+      setGiftItemCount(itemsRes.data.length || 0);
+      setGiftTierCount(tiersRes.data.length || 0);
+    } catch (error) {
+      console.error('Error fetching gift counts:', error);
+      setGiftItemCount(0);
+      setGiftTierCount(0);
     }
   };
 
