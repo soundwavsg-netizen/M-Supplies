@@ -60,10 +60,13 @@ const GiftManagement = () => {
         axios.get(`${BACKEND_URL}/api/admin/gift-tiers`, { headers })
       ]);
 
-      setGiftItems(itemsResponse.data);
-      setGiftTiers(tiersResponse.data);
+      setGiftItems(itemsResponse.data || []);
+      setGiftTiers(tiersResponse.data || []);
     } catch (error) {
-      toast.error('Failed to load gift data');
+      // Only show error if it's not a 401 (handled by redirect)
+      if (error.response?.status !== 401) {
+        toast.error('Failed to load gift data');
+      }
       console.error('Error fetching gift data:', error);
     } finally {
       setLoading(false);
