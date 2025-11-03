@@ -14,10 +14,10 @@ const AddressBanner = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (userProfile) {
       checkUserHasDefaultAddress();
     }
-  }, [user]);
+  }, [userProfile]);
 
   const checkUserHasDefaultAddress = async () => {
     try {
@@ -26,7 +26,7 @@ const AddressBanner = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // If we get here, user has a default address
+      // If we get here, userProfile has a default address
       setShowBanner(false);
     } catch (error) {
       // 404 means no default address found
@@ -50,7 +50,7 @@ const AddressBanner = () => {
     sessionStorage.setItem('address-banner-dismissed', 'true');
   };
 
-  if (!showBanner || !user) {
+  if (!showBanner || !userProfile) {
     return null;
   }
 
