@@ -42,24 +42,24 @@ const Checkout = () => {
   });
 
   useEffect(() => {
-    if (user) {
+    if (userProfile) {
       fetchUserAddresses();
     } else {
-      // Guest user - suggest saving address
+      // Guest userProfile - suggest saving address
       setSaveToProfile(true);
     }
-  }, [user]);
+  }, [userProfile]);
 
-  // Check if user needs address setup on page load
+  // Check if userProfile needs address setup on page load
   useEffect(() => {
-    if (user && userAddresses.length === 0) {
+    if (userProfile && userAddresses.length === 0) {
       // Show modal after addresses are loaded and none found
       const timer = setTimeout(() => {
         setShowAddressModal(true);
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [user, userAddresses]);
+  }, [userProfile, userAddresses]);
 
   const fetchUserAddresses = async () => {
     try {
@@ -78,7 +78,7 @@ const Checkout = () => {
         autofillFromAddress(defaultAddress);
       }
     } catch (error) {
-      console.error('Error fetching user addresses:', error);
+      console.error('Error fetching userProfile addresses:', error);
     }
   };
 
@@ -104,8 +104,8 @@ const Checkout = () => {
     if (addressId === 'new') {
       // Clear form for new address
       setFormData({
-        fullName: user?.displayName || `${user?.first_name || ''} ${user?.last_name || ''}`.trim(),
-        phone: user?.phone || '',
+        fullName: userProfile?.displayName || `${userProfile?.first_name || ''} ${userProfile?.last_name || ''}`.trim(),
+        phone: userProfile?.phone || '',
         addressLine1: '',
         addressLine2: '',
         unit: '',
@@ -125,8 +125,8 @@ const Checkout = () => {
   };
       // Clear form for new address
       setFormData({
-        fullName: user?.displayName || `${user?.first_name || ''} ${user?.last_name || ''}`.trim(),
-        phone: user?.phone || '',
+        fullName: userProfile?.displayName || `${userProfile?.first_name || ''} ${userProfile?.last_name || ''}`.trim(),
+        phone: userProfile?.phone || '',
         addressLine1: '',
         addressLine2: '',
         unit: '',
@@ -192,8 +192,8 @@ const Checkout = () => {
       const response = await ordersAPI.create(orderData);
       const order = response.data;
       
-      // Save address to profile if requested and user is logged in
-      if (saveToProfile && user && selectedAddressId === 'new') {
+      // Save address to profile if requested and userProfile is logged in
+      if (saveToProfile && userProfile && selectedAddressId === 'new') {
         try {
           const token = localStorage.getItem('access_token');
           const addressData = {
@@ -213,7 +213,7 @@ const Checkout = () => {
       }
       
       // Update last used address in profile
-      if (user && selectedAddressId && selectedAddressId !== 'new') {
+      if (userProfile && selectedAddressId && selectedAddressId !== 'new') {
         try {
           const token = localStorage.getItem('access_token');
           await axios.put(`${BACKEND_URL}/api/users/me`, {
@@ -284,8 +284,8 @@ const Checkout = () => {
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <h2 className="text-xl font-semibold text-slate-900 mb-4">Shipping Information</h2>
                 
-                {/* Address Selector (if user has addresses) */}
-                {user && userAddresses.length > 0 && (
+                {/* Address Selector (if userProfile has addresses) */}
+                {userProfile && userAddresses.length > 0 && (
                   <div className="mb-6">
                     <Label htmlFor="address-select">Select Shipping Address</Label>
                     <Select value={selectedAddressId} onValueChange={handleAddressSelect}>
@@ -404,7 +404,7 @@ const Checkout = () => {
                 </div>
                 
                 {/* Save to Profile Checkbox */}
-                {user && (selectedAddressId === 'new' || selectedAddressId === '') && (
+                {userProfile && (selectedAddressId === 'new' || selectedAddressId === '') && (
                   <div className="mt-6 p-4 bg-teal-50 border border-teal-200 rounded-lg">
                     <label className="flex items-center space-x-2 cursor-pointer">
                       <input
