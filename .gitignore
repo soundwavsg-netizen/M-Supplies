@@ -115,3 +115,8 @@ frontend/node_modules/.cache/default-development/3.pack
 # Environment files
 *.env
 *.env.*
+
+# Security documentation with sensitive examples
+SECURITY_*.md
+GITHUB_CLEANUP_GUIDE.md
+WHICH_KEYS_TO_DELETE.md
