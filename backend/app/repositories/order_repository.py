@@ -41,15 +41,15 @@ class OrderRepository:
         query = {}
         if status:
             query['status'] = status
-        if search:
-            query['$or'] = [
-                {'order_number': {'$regex': search, '$options': 'i'}},
-                {'guest_email': {'$regex': search, '$options': 'i'}},
-                {'shipping_address.email': {'$regex': search, '$options': 'i'}}
-            ]
+        # Note: Firestore doesn't support $or and $regex like MongoDB
+        # Search functionality will need to be implemented differently
         
-        cursor = self.collection.find(query).skip(skip).limit(limit).sort('created_at', -1)
-        return await cursor.to_list(length=limit)
+        return await self.collection.find(
+            query=query if query else None,
+            skip=skip,
+            limit=limit,
+            sort=[('created_at', -1)]
+        )
     
     async def update(self, order_id: str, update_data: Dict[str, Any]) -> bool:
         update_data['updated_at'] = datetime.now(timezone.utc)
