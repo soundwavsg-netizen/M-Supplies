@@ -112,6 +112,22 @@ class FirestoreAdapter:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(executor, self._find_sync, query, skip, limit, sort)
     
+    def _insert_one_sync(self, document: Dict[str, Any]) -> str:
+        """Synchronous insert_one implementation"""
+        try:
+            doc_id = document.get('id')
+            doc_data = {k: v for k, v in document.items() if k != '_id'}
+            
+            if doc_id:
+                self.collection.document(doc_id).set(doc_data)
+                return doc_id
+            else:
+                doc_ref = self.collection.add(doc_data)
+                return doc_ref[1].id
+        except Exception as e:
+            print(f"Error in insert_one: {e}")
+            raise
+    
     async def insert_one(self, document: Dict[str, Any]) -> str:
         """
         Insert a single document
@@ -122,21 +138,8 @@ class FirestoreAdapter:
         Returns:
             Document ID
         """
-        try:
-            # Use 'id' field as document ID if available
-            doc_id = document.get('id')
-            doc_data = {k: v for k, v in document.items() if k != '_id'}
-            
-            if doc_id:
-                self.collection.document(doc_id).set(doc_data)
-                return doc_id
-            else:
-                doc_ref = self.collection.add(doc_data)
-                return doc_ref[1].id
-        
-        except Exception as e:
-            print(f"Error in insert_one: {e}")
-            raise
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(executor, self._insert_one_sync, document)
     
     async def update_one(self, query: Dict[str, Any], update: Dict[str, Any]) -> bool:
         """
