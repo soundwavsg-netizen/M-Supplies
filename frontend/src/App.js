@@ -200,7 +200,7 @@ function AppContent() {
             path="/admin/orders"
             element={
               <AdminRoute>
-                <Orders />
+                <AdminOrders />
               </AdminRoute>
             }
           />
@@ -208,7 +208,7 @@ function AppContent() {
             path="/admin/users"
             element={
               <AdminRoute>
-                <Users />
+                <AdminUsers />
               </AdminRoute>
             }
           />
