@@ -68,9 +68,9 @@ const Account = () => {
 
   const fetchUserData = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await axios.get(`${BACKEND_URL}/api/users/me`, {
-        headers: { Authorization: `Bearer ${token}` }
+      if (!idToken) return;
+      const response = await axios.get(`${BACKEND_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${idToken}` }
       });
       
       const userData = response.data;
