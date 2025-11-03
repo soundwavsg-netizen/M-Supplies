@@ -71,7 +71,7 @@ const AdminDashboard = () => {
             title="Coupons"
             value={couponCount}
             icon={<Tag className="w-8 h-8 text-teal-700" />}
-            link="/admin/coupons"
+            link="/admin/promotions"
           />
         </div>
 
@@ -90,7 +90,7 @@ const AdminDashboard = () => {
             </Link>
             <Link to="/admin/promotions">
               <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-                🎟️ Promotions
+                🎟️ Coupon Management
               </Button>
             </Link>
             <Link to="/admin/gifts">
