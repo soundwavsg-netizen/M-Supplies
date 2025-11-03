@@ -74,7 +74,7 @@ def verify_firebase_token(id_token: str) -> dict:
         raise ValueError(f"Invalid Firebase token: {str(e)}")
 
 
-def create_firebase_user(email: str, password: str, display_name: str = None, phone: str = None) -> dict:
+def create_firebase_user(email: str, password: str, display_name: str = None, phone: str = None, **kwargs) -> dict:
     """
     Create a new Firebase Auth user
     
@@ -83,6 +83,7 @@ def create_firebase_user(email: str, password: str, display_name: str = None, ph
         password: User password
         display_name: User display name (optional)
         phone: User phone number (optional)
+        **kwargs: Additional arguments (ignored for compatibility)
         
     Returns:
         User record information
@@ -93,7 +94,6 @@ def create_firebase_user(email: str, password: str, display_name: str = None, ph
         user_data = {
             'email': email,
             'password': password,
-            'email_verified': False,
         }
         
         if display_name:
