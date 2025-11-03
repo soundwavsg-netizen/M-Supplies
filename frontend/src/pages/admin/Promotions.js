@@ -10,8 +10,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { toast } from 'sonner';
 import { Percent, Gift, Plus, Edit2, Trash2, Tag, Calendar, Users } from 'lucide-react';
 import axios from 'axios';
+import { useAuthenticatedAPI } from '@/hooks/useAuthenticatedAPI';
 
 const Promotions = () => {
+  const { idToken } = useAuthenticatedAPI();
   const [coupons, setCoupons] = useState([]);
   const [giftItems, setGiftItems] = useState([]);
   const [giftTiers, setGiftTiers] = useState([]);
@@ -27,14 +29,15 @@ const Promotions = () => {
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
   useEffect(() => {
-    fetchAllData();
-  }, []);
+    if (idToken) {
+      fetchAllData();
+    }
+  }, [idToken]);
 
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('access_token');
-      const headers = { Authorization: `Bearer ${token}` };
+      const headers = { Authorization: `Bearer ${idToken}` };
 
       const [couponsRes, giftsRes, tiersRes, statsRes] = await Promise.all([
         axios.get(`${BACKEND_URL}/api/admin/coupons`, { headers }),
@@ -43,12 +46,15 @@ const Promotions = () => {
         axios.get(`${BACKEND_URL}/api/admin/promotions/stats`, { headers })
       ]);
 
-      setCoupons(couponsRes.data);
-      setGiftItems(giftsRes.data);
-      setGiftTiers(tiersRes.data);
-      setStats(statsRes.data);
+      setCoupons(couponsRes.data || []);
+      setGiftItems(giftsRes.data || []);
+      setGiftTiers(tiersRes.data || []);
+      setStats(statsRes.data || {});
     } catch (error) {
-      toast.error('Failed to load promotions data');
+      // Only show error if it's not a 401 (handled by redirect) and not empty data
+      if (error.response?.status !== 401) {
+        toast.error('Failed to load promotions data');
+      }
       console.error('Fetch error:', error);
     } finally {
       setLoading(false);
