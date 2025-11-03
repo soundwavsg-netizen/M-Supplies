@@ -79,7 +79,8 @@ class FirestoreAdapter:
             if sort:
                 for field, direction in sort:
                     # 1 for ascending, -1 for descending
-                    firestore_direction = 'ASCENDING' if direction == 1 else 'DESCENDING'
+                    from google.cloud.firestore import Query
+                    firestore_direction = Query.ASCENDING if direction == 1 else Query.DESCENDING
                     collection_ref = collection_ref.order_by(field, direction=firestore_direction)
             
             # Apply pagination
@@ -89,8 +90,8 @@ class FirestoreAdapter:
             if limit > 0:
                 collection_ref = collection_ref.limit(limit)
             
-            # Get documents
-            docs = collection_ref.stream()
+            # Get documents (synchronous)
+            docs = list(collection_ref.stream())
             
             results = []
             for doc in docs:
