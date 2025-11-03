@@ -87,9 +87,9 @@ const Account = () => {
 
   const fetchAddresses = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await axios.get(`${BACKEND_URL}/api/users/me/addresses`, {
-        headers: { Authorization: `Bearer ${token}` }
+      if (!idToken) return;
+      const response = await axios.get(`${BACKEND_URL}/api/auth/me/addresses`, {
+        headers: { Authorization: `Bearer ${idToken}` }
       });
       setAddresses(response.data);
     } catch (error) {
