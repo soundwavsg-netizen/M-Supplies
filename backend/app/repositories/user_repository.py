@@ -35,15 +35,9 @@ class UserRepository:
     
     async def list_users(self, skip: int = 0, limit: int = 50, search: Optional[str] = None) -> List[Dict[str, Any]]:
         query = {}
-        if search:
-            query['$or'] = [
-                {'email': {'$regex': search, '$options': 'i'}},
-                {'first_name': {'$regex': search, '$options': 'i'}},
-                {'last_name': {'$regex': search, '$options': 'i'}}
-            ]
+        # Note: Firestore doesn't support $or/$regex - simplified for now
         
-        cursor = self.collection.find(query).skip(skip).limit(limit).sort('created_at', -1)
-        return await cursor.to_list(length=limit)
+        return await self.collection.find(query=query if query else None, skip=skip, limit=limit, sort=[('created_at', -1)])
     
     async def count(self, search: Optional[str] = None) -> int:
         query = {}
