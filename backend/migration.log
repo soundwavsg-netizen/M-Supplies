@@ -1,0 +1,114 @@
+
+============================================================
+🚀 MONGODB TO FIREBASE MIGRATION
+============================================================
+✅ Connected to MongoDB: polymailer_db
+✅ Firebase initialized successfully with project: msupplies-ecommerce
+✅ Connected to Firestore
+
+📚 Found 13 collections to migrate
+
+📦 Migrating collection: variants
+   Total documents: 22
+✅ Completed: 22/22 documents migrated
+
+📦 Migrating collection: coupons
+   Total documents: 27
+✅ Completed: 27/27 documents migrated
+
+📦 Migrating collection: settings
+   Total documents: 1
+✅ Completed: 1/1 documents migrated
+
+📦 Migrating collection: user_addresses
+   Total documents: 2
+✅ Completed: 2/2 documents migrated
+
+📦 Migrating collection: orders
+   Total documents: 5
+✅ Completed: 5/5 documents migrated
+
+📦 Migrating collection: products
+   Total documents: 8
+✅ Completed: 8/8 documents migrated
+
+📦 Migrating collection: chat_messages
+   Total documents: 40
+✅ Completed: 40/40 documents migrated
+
+📦 Migrating collection: gift_tiers
+   Total documents: 6
+✅ Completed: 6/6 documents migrated
+
+📦 Migrating collection: gift_items
+   Total documents: 15
+✅ Completed: 15/15 documents migrated
+
+📦 Migrating collection: chat_sessions
+   Total documents: 17
+✅ Completed: 17/17 documents migrated
+
+📦 Migrating collection: inventory_ledger
+   Total documents: 320
+✅ Completed: 320/320 documents migrated
+
+📦 Migrating collection: carts
+   Total documents: 311
+✅ Completed: 311/311 documents migrated
+
+📦 Migrating collection: users
+   Total documents: 15
+✅ Completed: 15/15 documents migrated
+
+👤 Migrating users to Firebase Authentication
+   Total users: 15
+   ✅ Created Firebase user: admin@polymailer.com (UID: bc027ea4-0717-45c4-b8e7-917d3b144c38)
+   ✅ Created Firebase user: customer@example.com (UID: 5c812088-da49-4a37-a621-8887c11cc714)
+   ✅ Created Firebase user: glor-yeo@hotmail.com (UID: 63063a88-fc95-4bf3-838d-e47156ce0710)
+   ❌ Failed to migrate user testuser1761382728@example.com: The user with the provided phone number already exists (PHONE_NUMBER_EXISTS).
+   ❌ Failed to migrate user testuser1761382742@example.com: The user with the provided phone number already exists (PHONE_NUMBER_EXISTS).
+   ❌ Failed to migrate user emailtest1761382743@example.com: The user with the provided phone number already exists (PHONE_NUMBER_EXISTS).
+   ✅ Created Firebase user: bgtest1761382744@example.com (UID: a3269866-4851-4e44-a58b-724831c1c1b8)
+   ✅ Created Firebase user: failtest1761382745@example.com (UID: 8c44dac8-183e-486a-a74d-c85af068505c)
+   ❌ Failed to migrate user testuser1761382770@example.com: The user with the provided phone number already exists (PHONE_NUMBER_EXISTS).
+   ❌ Failed to migrate user emailtest1761382771@example.com: The user with the provided phone number already exists (PHONE_NUMBER_EXISTS).
+   ✅ Created Firebase user: bgtest1761382772@example.com (UID: d2f10e35-39bf-4d82-81e2-7b26f7a3ee83)
+   ✅ Created Firebase user: failtest1761382773@example.com (UID: 75a8e7c1-2e5b-4b74-8547-fa1be3ce9268)
+   ❌ Failed to migrate user test.user.20251025_174030@example.com: The user with the provided phone number already exists (PHONE_NUMBER_EXISTS).
+   ❌ Failed to migrate user test.user.20251025_174157@example.com: The user with the provided phone number already exists (PHONE_NUMBER_EXISTS).
+   ❌ Failed to migrate user test.user.20251025_180053@example.com: The user with the provided phone number already exists (PHONE_NUMBER_EXISTS).
+
+✅ Firebase Auth migration complete: 7 users created, 8 skipped
+
+============================================================
+📊 MIGRATION SUMMARY
+============================================================
+
+📦 Collections:
+   ✅ variants: 22/22 documents
+   ✅ coupons: 27/27 documents
+   ✅ settings: 1/1 documents
+   ✅ user_addresses: 2/2 documents
+   ✅ orders: 5/5 documents
+   ✅ products: 8/8 documents
+   ✅ chat_messages: 40/40 documents
+   ✅ gift_tiers: 6/6 documents
+   ✅ gift_items: 15/15 documents
+   ✅ chat_sessions: 17/17 documents
+   ✅ inventory_ledger: 320/320 documents
+   ✅ carts: 311/311 documents
+   ✅ users: 15/15 documents
+
+👤 Firebase Auth Users: 7 created
+
+❌ Errors (8):
+   - Failed to migrate user testuser1761382728@example.com: The user with the provided phone number already exists (PHONE_NUMBER_EXISTS).
+   - Failed to migrate user testuser1761382742@example.com: The user with the provided phone number already exists (PHONE_NUMBER_EXISTS).
+   - Failed to migrate user emailtest1761382743@example.com: The user with the provided phone number already exists (PHONE_NUMBER_EXISTS).
+   - Failed to migrate user testuser1761382770@example.com: The user with the provided phone number already exists (PHONE_NUMBER_EXISTS).
+   - Failed to migrate user emailtest1761382771@example.com: The user with the provided phone number already exists (PHONE_NUMBER_EXISTS).
+   - Failed to migrate user test.user.20251025_174030@example.com: The user with the provided phone number already exists (PHONE_NUMBER_EXISTS).
+   - Failed to migrate user test.user.20251025_174157@example.com: The user with the provided phone number already exists (PHONE_NUMBER_EXISTS).
+   - Failed to migrate user test.user.20251025_180053@example.com: The user with the provided phone number already exists (PHONE_NUMBER_EXISTS).
+
+✅ Migration complete!
