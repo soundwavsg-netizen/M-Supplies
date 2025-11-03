@@ -69,7 +69,7 @@ const AdminDashboard = () => {
           />
           <StatCard
             title="Coupons"
-            value="2"
+            value={couponCount}
             icon={<Tag className="w-8 h-8 text-teal-700" />}
             link="/admin/coupons"
           />
