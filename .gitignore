@@ -120,3 +120,7 @@ frontend/node_modules/.cache/default-development/3.pack
 SECURITY_*.md
 GITHUB_CLEANUP_GUIDE.md
 WHICH_KEYS_TO_DELETE.md
+-e 
+# Environment files
+*.env
+*.env.*
