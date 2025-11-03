@@ -44,7 +44,7 @@ const Promotions = () => {
     } catch (error) {
       // Only show error if it's not a 401 (handled by redirect) and not empty data
       if (error.response?.status !== 401) {
-        toast.error('Failed to load promotions data');
+        toast.error('Failed to load coupon data');
       }
       console.error('Fetch error:', error);
     } finally {
