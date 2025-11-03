@@ -126,7 +126,7 @@ const Header = () => {
           <div className="md:hidden py-4 border-t border-gray-200">
             <nav className="flex flex-col space-y-4">
               {/* Show products for admin users */}
-              {user && user.role !== 'customer' && (
+              {userProfile && userProfile.role !== 'customer' && (
                 <Link
                   to="/products"
                   className="text-gray-700 hover:text-teal-700 transition-colors font-medium"
@@ -156,7 +156,7 @@ const Header = () => {
               >
                 Contact
               </Link>
-              {user && (
+              {userProfile && (
                 <>
                   <Link
                     to="/orders"
@@ -165,7 +165,7 @@ const Header = () => {
                   >
                     My Orders
                   </Link>
-                  {user.role !== 'customer' && (
+                  {userProfile.role !== 'customer' && (
                     <Link
                       to="/admin"
                       className="text-gray-700 hover:text-teal-700 transition-colors font-medium"
