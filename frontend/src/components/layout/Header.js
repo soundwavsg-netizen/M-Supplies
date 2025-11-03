@@ -8,7 +8,7 @@ import { theme } from '@/theme.config';
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { userProfile, logout } = useFirebaseAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
