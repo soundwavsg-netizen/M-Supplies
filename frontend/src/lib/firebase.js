@@ -15,7 +15,7 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "AIz...ulI",
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "[REDACTED]",
   authDomain: "msupplies-ecommerce.firebaseapp.com",
   projectId: "msupplies-ecommerce",
   storageBucket: "msupplies-ecommerce.appspot.com",
