@@ -283,15 +283,15 @@ class PromotionRepository:
 
     async def get_available_gift_tiers_for_amount(self, amount: float) -> List[GiftTier]:
         """Get gift tiers available for given amount"""
-        cursor = self.gift_tiers.find({
-            "spending_threshold": {"$lte": amount},
-            "is_active": True
-        }).sort("spending_threshold", -1)  # Highest threshold first
+        # Note: Firestore doesn't support $lte operator directly
+        # We'll fetch all active tiers and filter in Python
+        all_tiers = await self.gift_tiers.find(query={"is_active": True}, limit=1000, sort=[("spending_threshold", -1)])
         
-        tiers = await cursor.to_list(length=None)
+        # Filter tiers where spending_threshold <= amount
+        eligible_tiers = [tier for tier in all_tiers if tier.get("spending_threshold", 0) <= amount]
         
         result = []
-        for tier in tiers:
+        for tier in eligible_tiers:
             tier_with_items = await self.get_gift_tier_by_id_with_items(tier["id"])
             if tier_with_items and tier_with_items.gift_items:
                 result.append(tier_with_items)
