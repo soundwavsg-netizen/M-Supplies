@@ -20,7 +20,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Checkout = () => {
   const { cart, appliedCoupon, discountAmount, availableGifts, nearbyGiftTiers, selectedGifts, selectGifts, finalTotal } = useCart();
-  const { user } = useAuth();
+  const { userProfile } = useFirebaseAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [userAddresses, setUserAddresses] = useState([]);
