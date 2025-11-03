@@ -55,7 +55,9 @@ const AdminDashboard = () => {
       const response = await axios.get(`${BACKEND_URL}/api/admin/users`, {
         headers: { Authorization: `Bearer ${idToken}` }
       });
-      setUserCount(response.data.length || 0);
+      // Count only customers, not admins
+      const customerCount = response.data.filter(user => user.role === 'customer').length;
+      setUserCount(customerCount);
     } catch (error) {
       console.error('Error fetching user count:', error);
       setUserCount(0);
