@@ -141,6 +141,42 @@ class FirestoreAdapter:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(executor, self._insert_one_sync, document)
     
+    def _update_one_sync(self, doc, update: Dict[str, Any]) -> bool:
+        """Synchronous update_one helper"""
+        try:
+            doc_id = doc.get('id') or doc.get('_id')
+            
+            update_data = {}
+            
+            if '$set' in update:
+                update_data.update(update['$set'])
+            
+            if '$inc' in update:
+                for field, value in update['$inc'].items():
+                    current_value = doc.get(field, 0)
+                    update_data[field] = current_value + value
+            
+            if '$push' in update:
+                for field, value in update['$push'].items():
+                    current_array = doc.get(field, [])
+                    if not isinstance(current_array, list):
+                        current_array = []
+                    current_array.append(value)
+                    update_data[field] = current_array
+            
+            if '$pull' in update:
+                for field, value in update['$pull'].items():
+                    current_array = doc.get(field, [])
+                    if isinstance(current_array, list) and value in current_array:
+                        current_array.remove(value)
+                    update_data[field] = current_array
+            
+            self.collection.document(doc_id).update(update_data)
+            return True
+        except Exception as e:
+            print(f"Error in update_one_sync: {e}")
+            return False
+    
     async def update_one(self, query: Dict[str, Any], update: Dict[str, Any]) -> bool:
         """
         Update a single document
@@ -153,47 +189,12 @@ class FirestoreAdapter:
             True if document was updated, False otherwise
         """
         try:
-            # Find the document first
             doc = await self.find_one(query)
             if not doc:
                 return False
             
-            # Extract document ID
-            doc_id = doc.get('id') or doc.get('_id')
-            
-            # Process update operations
-            update_data = {}
-            
-            if '$set' in update:
-                update_data.update(update['$set'])
-            
-            if '$inc' in update:
-                # For increment operations, we need to get current value
-                for field, value in update['$inc'].items():
-                    current_value = doc.get(field, 0)
-                    update_data[field] = current_value + value
-            
-            if '$push' in update:
-                # For array push operations
-                for field, value in update['$push'].items():
-                    current_array = doc.get(field, [])
-                    if not isinstance(current_array, list):
-                        current_array = []
-                    current_array.append(value)
-                    update_data[field] = current_array
-            
-            if '$pull' in update:
-                # For array pull operations
-                for field, value in update['$pull'].items():
-                    current_array = doc.get(field, [])
-                    if isinstance(current_array, list) and value in current_array:
-                        current_array.remove(value)
-                    update_data[field] = current_array
-            
-            # Perform update
-            self.collection.document(doc_id).update(update_data)
-            return True
-        
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(executor, self._update_one_sync, doc, update)
         except Exception as e:
             print(f"Error in update_one: {e}")
             return False
