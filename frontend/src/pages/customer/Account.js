@@ -63,10 +63,10 @@ const Account = () => {
   }, [idToken]);
 
   useEffect(() => {
-    if (activeTab === 'addresses') {
+    if (activeTab === 'addresses' && idToken) {
       fetchAddresses();
     }
-  }, [activeTab]);
+  }, [activeTab, idToken]);
 
   const fetchUserData = async () => {
     try {
