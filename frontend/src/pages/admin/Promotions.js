@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Percent, Gift, Plus, Edit2, Trash2, Tag, Calendar, Users } from 'lucide-react';
+import { Percent, Gift, Plus, Edit2, Trash2, Tag, Calendar, Users, Award } from 'lucide-react';
 import axios from 'axios';
 import { useAuthenticatedAPI } from '@/hooks/useAuthenticatedAPI';
 
