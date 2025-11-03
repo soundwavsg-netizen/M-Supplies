@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Users as UsersIcon, Search, Mail, Phone, Calendar } from 'lucide-react';
+import { Users as UsersIcon, Search, Mail, Phone, Calendar, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { useAuthenticatedAPI } from '@/hooks/useAuthenticatedAPI';
@@ -15,6 +17,14 @@ const Users = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAddAdminModal, setShowAddAdminModal] = useState(false);
+  const [addingAdmin, setAddingAdmin] = useState(false);
+  const [adminForm, setAdminForm] = useState({
+    email: '',
+    first_name: '',
+    last_name: '',
+    phone: ''
+  });
 
   useEffect(() => {
     if (idToken) {
