@@ -6,6 +6,11 @@ This module provides a wrapper around Firestore to make it compatible with exist
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from app.core.firebase import get_firestore_client
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+
+# Thread pool for running synchronous Firestore operations
+executor = ThreadPoolExecutor(max_workers=10)
 
 
 class FirestoreAdapter:
@@ -23,18 +28,9 @@ class FirestoreAdapter:
             self._collection_ref = self.db.collection(self.collection_name)
         return self._collection_ref
     
-    async def find_one(self, query: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        Find a single document matching the query
-        
-        Args:
-            query: Dictionary with field: value pairs
-            
-        Returns:
-            Document dict or None
-        """
+    def _find_one_sync(self, query: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Synchronous find_one implementation"""
         try:
-            # Build Firestore query (synchronous operation)
             collection_ref = self.collection
             
             for field, value in query.items():
@@ -45,14 +41,26 @@ class FirestoreAdapter:
             if docs:
                 doc = docs[0]
                 data = doc.to_dict()
-                data['_id'] = doc.id  # Add document ID for compatibility
+                data['_id'] = doc.id
                 return data
             
             return None
-        
         except Exception as e:
             print(f"Error in find_one: {e}")
             return None
+    
+    async def find_one(self, query: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+        Find a single document matching the query
+        
+        Args:
+            query: Dictionary with field: value pairs
+            
+        Returns:
+            Document dict or None
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(executor, self._find_one_sync, query)
     
     async def find(self, query: Dict[str, Any] = None, skip: int = 0, limit: int = 100, sort: List[tuple] = None) -> List[Dict[str, Any]]:
         """
