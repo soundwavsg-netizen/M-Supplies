@@ -62,6 +62,40 @@ class FirestoreAdapter:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(executor, self._find_one_sync, query)
     
+    def _find_sync(self, query: Dict[str, Any], skip: int, limit: int, sort: List[tuple]) -> List[Dict[str, Any]]:
+        """Synchronous find implementation"""
+        try:
+            collection_ref = self.collection
+            
+            if query:
+                for field, value in query.items():
+                    collection_ref = collection_ref.where(field, '==', value)
+            
+            if sort:
+                for field, direction in sort:
+                    from google.cloud.firestore import Query
+                    firestore_direction = Query.ASCENDING if direction == 1 else Query.DESCENDING
+                    collection_ref = collection_ref.order_by(field, direction=firestore_direction)
+            
+            if skip > 0:
+                collection_ref = collection_ref.offset(skip)
+            
+            if limit > 0:
+                collection_ref = collection_ref.limit(limit)
+            
+            docs = list(collection_ref.stream())
+            
+            results = []
+            for doc in docs:
+                data = doc.to_dict()
+                data['_id'] = doc.id
+                results.append(data)
+            
+            return results
+        except Exception as e:
+            print(f"Error in find: {e}")
+            return []
+    
     async def find(self, query: Dict[str, Any] = None, skip: int = 0, limit: int = 100, sort: List[tuple] = None) -> List[Dict[str, Any]]:
         """
         Find multiple documents matching the query
@@ -75,43 +109,8 @@ class FirestoreAdapter:
         Returns:
             List of document dicts
         """
-        try:
-            collection_ref = self.collection
-            
-            # Apply filters
-            if query:
-                for field, value in query.items():
-                    collection_ref = collection_ref.where(field, '==', value)
-            
-            # Apply sorting
-            if sort:
-                for field, direction in sort:
-                    # 1 for ascending, -1 for descending
-                    from google.cloud.firestore import Query
-                    firestore_direction = Query.ASCENDING if direction == 1 else Query.DESCENDING
-                    collection_ref = collection_ref.order_by(field, direction=firestore_direction)
-            
-            # Apply pagination
-            if skip > 0:
-                collection_ref = collection_ref.offset(skip)
-            
-            if limit > 0:
-                collection_ref = collection_ref.limit(limit)
-            
-            # Get documents (synchronous)
-            docs = list(collection_ref.stream())
-            
-            results = []
-            for doc in docs:
-                data = doc.to_dict()
-                data['_id'] = doc.id
-                results.append(data)
-            
-            return results
-        
-        except Exception as e:
-            print(f"Error in find: {e}")
-            return []
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(executor, self._find_sync, query, skip, limit, sort)
     
     async def insert_one(self, document: Dict[str, Any]) -> str:
         """
