@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import logging
 from typing import Optional, List
+from datetime import datetime, timezone
 
 from app.core.database import connect_to_mongo, close_mongo_connection, get_database, connect_to_firestore
 from app.core.config import settings
