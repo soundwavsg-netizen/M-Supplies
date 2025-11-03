@@ -64,6 +64,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    role: str = "customer"  # Default to customer role
 
 class UserLogin(BaseModel):
     email: EmailStr
