@@ -34,15 +34,16 @@ class FirestoreAdapter:
             Document dict or None
         """
         try:
-            # Build Firestore query
+            # Build Firestore query (synchronous operation)
             collection_ref = self.collection
             
             for field, value in query.items():
                 collection_ref = collection_ref.where(field, '==', value)
             
-            docs = collection_ref.limit(1).stream()
+            docs = list(collection_ref.limit(1).stream())
             
-            for doc in docs:
+            if docs:
+                doc = docs[0]
                 data = doc.to_dict()
                 data['_id'] = doc.id  # Add document ID for compatibility
                 return data
