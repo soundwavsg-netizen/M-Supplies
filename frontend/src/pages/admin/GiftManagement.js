@@ -11,10 +11,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from 'sonner';
 import { formatPrice } from '@/lib/utils';
 import axios from 'axios';
+import { useAuthenticatedAPI } from '@/hooks/useAuthenticatedAPI';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const GiftManagement = () => {
+  const { idToken } = useAuthenticatedAPI();
   const [giftItems, setGiftItems] = useState([]);
   const [giftTiers, setGiftTiers] = useState([]);
   const [loading, setLoading] = useState(false);
