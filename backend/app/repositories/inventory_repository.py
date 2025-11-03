@@ -18,11 +18,10 @@ class InventoryLedgerRepository:
         return await self.collection.find(query={'variant_id': variant_id}, skip=skip, limit=limit, sort=[('created_at', -1)])
     
     async def get_by_reference(self, reference_id: str) -> List[Dict[str, Any]]:
-        return await self.collection.find(query={'reference_id': reference_id})
-        return await cursor.to_list(length=100)
+        return await self.collection.find(query={'reference_id': reference_id}, limit=100)
     
     async def get_recent(self, skip: int = 0, limit: int = 50) -> List[Dict[str, Any]]:
-        cursor = self.collection.find(, skip=skip, limit=limit, sort=[('created_at', -1)])
+        return await self.collection.find(query=None, skip=skip, limit=limit, sort=[('created_at', -1)])
 
 class ChannelMappingRepository:
     def __init__(self, db: AsyncIOMotorDatabase):
