@@ -136,10 +136,11 @@ class ChatRepository:
         if active_only:
             query["is_active"] = True
         
-        sessions_data = await self.sessions.find(query)\
-            .sort("updated_at", -1)\
-            .limit(limit)\
-            .to_list(length=None)
+        sessions_data = await self.sessions.find(
+            query=query,
+            limit=limit,
+            sort=[("updated_at", -1)]
+        )
         
         sessions = []
         for session_data in sessions_data:
