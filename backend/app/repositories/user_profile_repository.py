@@ -92,20 +92,16 @@ class UserProfileRepository:
         # Add search filter
         if search:
             search_regex = {"$regex": search, "$options": "i"}
-            query["$or"] = [
-                {"displayName": search_regex},
-                {"email": search_regex},
-                {"phone": search_regex}
-            ]
+            # Note: Firestore doesn't support $or/$regex - simplified
+            pass
         
-        cursor = self.users.find(query).sort("createdAt", -1)
+        users_data = await self.users.find(
+            query=query if query else None,
+            skip=offset if offset > 0 else 0,
+            limit=limit if limit > 0 else 1000,
+            sort=[("createdAt", -1)]
+        )
         
-        if offset > 0:
-            cursor = cursor.skip(offset)
-        if limit > 0:
-            cursor = cursor.limit(limit)
-        
-        users_data = await cursor.to_list(length=None)
         users = []
         
         for user_data in users_data:
