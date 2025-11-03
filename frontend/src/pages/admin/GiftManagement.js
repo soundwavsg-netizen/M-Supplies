@@ -44,8 +44,10 @@ const GiftManagement = () => {
   const [editingTier, setEditingTier] = useState(null);
 
   useEffect(() => {
-    fetchAllData();
-  }, []);
+    if (idToken) {
+      fetchAllData();
+    }
+  }, [idToken]);
 
   const fetchAllData = async () => {
     try {
