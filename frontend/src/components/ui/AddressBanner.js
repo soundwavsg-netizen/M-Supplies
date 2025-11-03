@@ -8,7 +8,7 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const AddressBanner = () => {
-  const { user } = useAuth();
+  const { userProfile } = useFirebaseAuth();
   const navigate = useNavigate();
   const [showBanner, setShowBanner] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
