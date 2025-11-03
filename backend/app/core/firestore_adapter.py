@@ -231,6 +231,21 @@ class FirestoreAdapter:
             print(f"Error in delete_one: {e}")
             return False
     
+    def _count_documents_sync(self, query: Dict[str, Any]) -> int:
+        """Synchronous count_documents implementation"""
+        try:
+            collection_ref = self.collection
+            
+            if query:
+                for field, value in query.items():
+                    collection_ref = collection_ref.where(field, '==', value)
+            
+            docs = list(collection_ref.stream())
+            return len(docs)
+        except Exception as e:
+            print(f"Error in count_documents: {e}")
+            return 0
+    
     async def count_documents(self, query: Dict[str, Any] = None) -> int:
         """
         Count documents matching the query
@@ -241,21 +256,8 @@ class FirestoreAdapter:
         Returns:
             Number of matching documents
         """
-        try:
-            collection_ref = self.collection
-            
-            # Apply filters
-            if query:
-                for field, value in query.items():
-                    collection_ref = collection_ref.where(field, '==', value)
-            
-            # Get all documents and count
-            docs = list(collection_ref.stream())
-            return len(docs)
-        
-        except Exception as e:
-            print(f"Error in count_documents: {e}")
-            return 0
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(executor, self._count_documents_sync, query)
 
 
 class FirestoreDB:
