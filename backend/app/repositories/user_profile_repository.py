@@ -146,7 +146,11 @@ class AddressRepository:
 
     async def get_user_addresses(self, uid: str) -> List[UserAddress]:
         """Get all addresses for a user"""
-        addresses_data = await self.addresses.find({"uid": uid}).sort("isDefault", -1).to_list(length=None)
+        addresses_data = await self.addresses.find(
+            query={"uid": uid},
+            limit=10,
+            sort=[("isDefault", -1)]
+        )
         addresses = []
         
         for addr_data in addresses_data:
