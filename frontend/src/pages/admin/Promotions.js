@@ -34,16 +34,12 @@ const Promotions = () => {
       setLoading(true);
       const headers = { Authorization: `Bearer ${idToken}` };
 
-      const [couponsRes, giftsRes, tiersRes, statsRes] = await Promise.all([
+      const [couponsRes, statsRes] = await Promise.all([
         axios.get(`${BACKEND_URL}/api/admin/coupons`, { headers }),
-        axios.get(`${BACKEND_URL}/api/admin/gift-items`, { headers }),
-        axios.get(`${BACKEND_URL}/api/admin/gift-tiers`, { headers }),
         axios.get(`${BACKEND_URL}/api/admin/promotions/stats`, { headers })
       ]);
 
       setCoupons(couponsRes.data || []);
-      setGiftItems(giftsRes.data || []);
-      setGiftTiers(tiersRes.data || []);
       setStats(statsRes.data || {});
     } catch (error) {
       // Only show error if it's not a 401 (handled by redirect) and not empty data
