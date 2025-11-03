@@ -104,8 +104,7 @@ class PromotionRepository:
 
     async def list_coupons(self, skip: int = 0, limit: int = 100) -> List[Coupon]:
         """List all coupons"""
-        cursor = self.coupons.find().skip(skip).limit(limit).sort("created_at", -1)
-        coupons = await cursor.to_list(length=limit)
+        coupons = await self.coupons.find(query=None, skip=skip, limit=limit, sort=[("created_at", -1)])
         
         # Transform main coupon schema to promotion coupon schema
         transformed_coupons = []
