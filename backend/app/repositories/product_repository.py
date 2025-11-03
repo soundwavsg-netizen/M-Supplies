@@ -32,8 +32,7 @@ class ProductRepository:
         return await self.variants.find_one({'id': variant_id})
     
     async def get_variants_by_product(self, product_id: str) -> List[Dict[str, Any]]:
-        cursor = self.variants.find({'product_id': product_id})
-        return await cursor.to_list(length=100)
+        return await self.variants.find({'product_id': product_id}, limit=100)
     
     async def list_products(self, skip: int = 0, limit: int = 50, category: Optional[str] = None, 
                            search: Optional[str] = None, is_active: Optional[bool] = None) -> List[Dict[str, Any]]:
