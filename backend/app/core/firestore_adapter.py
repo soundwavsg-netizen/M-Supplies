@@ -258,6 +258,33 @@ class FirestoreAdapter:
         """
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(executor, self._count_documents_sync, query)
+    
+    def _distinct_sync(self, field: str) -> List[Any]:
+        """Synchronous distinct implementation"""
+        try:
+            docs = list(self.collection.stream())
+            values = set()
+            for doc in docs:
+                data = doc.to_dict()
+                if field in data and data[field] is not None:
+                    values.add(data[field])
+            return list(values)
+        except Exception as e:
+            print(f"Error in distinct: {e}")
+            return []
+    
+    async def distinct(self, field: str) -> List[Any]:
+        """
+        Get distinct values for a field
+        
+        Args:
+            field: Field name to get distinct values for
+            
+        Returns:
+            List of distinct values
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(executor, self._distinct_sync, field)
 
 
 class FirestoreDB:
