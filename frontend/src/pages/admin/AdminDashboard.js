@@ -107,13 +107,13 @@ const AdminDashboard = () => {
           />
           <StatCard
             title="Orders"
-            value="--"
+            value={orderCount}
             icon={<ShoppingBag className="w-8 h-8 text-teal-700" />}
             link="/admin/orders"
           />
           <StatCard
             title="Customers"
-            value="--"
+            value={userCount}
             icon={<Users className="w-8 h-8 text-teal-700" />}
             link="/admin/users"
           />
