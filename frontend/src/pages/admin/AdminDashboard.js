@@ -3,26 +3,43 @@ import { Link } from 'react-router-dom';
 import { Package, ShoppingBag, Users, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
+import { useAuthenticatedAPI } from '@/hooks/useAuthenticatedAPI';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const AdminDashboard = () => {
+  const { idToken } = useAuthenticatedAPI();
   const [skuCount, setSkuCount] = useState('--');
+  const [couponCount, setCouponCount] = useState('--');
   
   useEffect(() => {
-    fetchInventoryCount();
-  }, []);
+    if (idToken) {
+      fetchInventoryCount();
+      fetchCouponCount();
+    }
+  }, [idToken]);
   
   const fetchInventoryCount = async () => {
     try {
-      const token = localStorage.getItem('access_token');
       const response = await axios.get(`${BACKEND_URL}/api/admin/inventory`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${idToken}` }
       });
       setSkuCount(`${response.data.length} SKUs`);
     } catch (error) {
       console.error('Error fetching inventory count:', error);
       setSkuCount('0 SKUs');
+    }
+  };
+
+  const fetchCouponCount = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/admin/coupons`, {
+        headers: { Authorization: `Bearer ${idToken}` }
+      });
+      setCouponCount(response.data.length || 0);
+    } catch (error) {
+      console.error('Error fetching coupon count:', error);
+      setCouponCount(0);
     }
   };
 
