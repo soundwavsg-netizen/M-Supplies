@@ -41,14 +41,14 @@ class ProductRepository:
             query['category'] = category
         if is_active is not None:
             query['is_active'] = is_active
-        if search:
-            query['$or'] = [
-                {'name': {'$regex': search, '$options': 'i'}},
-                {'description': {'$regex': search, '$options': 'i'}}
-            ]
+        # Note: Search functionality simplified for Firestore (no $or/$regex support)
         
-        cursor = self.products.find(query).skip(skip).limit(limit).sort('created_at', -1)
-        return await cursor.to_list(length=limit)
+        return await self.products.find(
+            query=query if query else None,
+            skip=skip,
+            limit=limit,
+            sort=[('created_at', -1)]
+        )
     
     async def update_product(self, product_id: str, update_data: Dict[str, Any]) -> bool:
         update_data['updated_at'] = datetime.now(timezone.utc)
