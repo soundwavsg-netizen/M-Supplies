@@ -197,6 +197,22 @@ function AppContent() {
             }
           />
           <Route
+            path="/admin/orders"
+            element={
+              <AdminRoute>
+                <Orders />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <AdminRoute>
+                <Users />
+              </AdminRoute>
+            }
+          />
+          <Route
             path="/admin/gifts"
             element={
               <AdminRoute>
