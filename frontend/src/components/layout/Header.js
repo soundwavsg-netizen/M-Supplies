@@ -26,7 +26,7 @@ const Header = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             {/* Show Products link for admin users */}
-            {user && user.role !== 'customer' && (
+            {userProfile && userProfile.role !== 'customer' && (
               <Link
                 to="/products"
                 className="text-gray-700 hover:text-teal-700 transition-colors font-medium"
