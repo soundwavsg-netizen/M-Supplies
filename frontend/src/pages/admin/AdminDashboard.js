@@ -70,7 +70,7 @@ const AdminDashboard = () => {
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-slate-900 mb-8">Admin Dashboard</h1>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <StatCard
             title="Inventory"
             value={skuCount}
@@ -92,8 +92,20 @@ const AdminDashboard = () => {
           <StatCard
             title="Coupons"
             value={couponCount}
-            icon={<Tag className="w-8 h-8 text-teal-700" />}
-            link="/admin/promotions"
+            icon={<Tag className="w-8 h-8 text-purple-700" />}
+            link="/admin/coupons"
+          />
+          <StatCard
+            title="Gift Items"
+            value={giftItemCount}
+            icon={<Package className="w-8 h-8 text-pink-700" />}
+            link="/admin/gifts"
+          />
+          <StatCard
+            title="Gift Tiers"
+            value={giftTierCount}
+            icon={<Tag className="w-8 h-8 text-orange-700" />}
+            link="/admin/gifts"
           />
         </div>
 
