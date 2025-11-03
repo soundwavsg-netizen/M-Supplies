@@ -124,3 +124,7 @@ WHICH_KEYS_TO_DELETE.md
 # Environment files
 *.env
 *.env.*
+-e 
+# Environment files
+*.env
+*.env.*
