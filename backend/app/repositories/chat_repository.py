@@ -170,11 +170,18 @@ class ChatRepository:
         """Cleanup sessions older than specified days"""
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_old)
         
-        # First, get session IDs to cleanup
-        old_sessions = await self.sessions.find(
-            {"updated_at": {"$lt": cutoff_date.isoformat()}},
-            {"id": 1}
-        ).to_list(length=None)
+        # Note: Firestore doesn't support $lt operator directly
+        # Get all sessions and filter in Python
+        all_sessions = await self.sessions.find(query=None, limit=10000)
+        
+        old_sessions = [
+            session for session in all_sessions
+            if session.get("updated_at") and 
+               (isinstance(session["updated_at"], str) and 
+                datetime.fromisoformat(session["updated_at"]) < cutoff_date or
+                isinstance(session["updated_at"], datetime) and
+                session["updated_at"] < cutoff_date)
+        ]
         
         session_ids = [session["id"] for session in old_sessions]
         
