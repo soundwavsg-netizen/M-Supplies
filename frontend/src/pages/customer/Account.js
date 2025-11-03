@@ -101,10 +101,10 @@ const Account = () => {
   const handleProfileUpdate = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('access_token');
+      if (!idToken) return;
       
-      await axios.put(`${BACKEND_URL}/api/users/me`, profileForm, {
-        headers: { Authorization: `Bearer ${token}` }
+      await axios.put(`${BACKEND_URL}/api/auth/me`, profileForm, {
+        headers: { Authorization: `Bearer ${idToken}` }
       });
       
       toast.success('Profile updated successfully.');
