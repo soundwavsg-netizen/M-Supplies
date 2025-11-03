@@ -26,8 +26,7 @@ class CouponRepository:
         if is_active is not None:
             query['is_active'] = is_active
         
-        cursor = self.collection.find(query).skip(skip).limit(limit).sort('created_at', -1)
-        return await cursor.to_list(length=limit)
+        return await self.collection.find(query=query if query else None, skip=skip, limit=limit, sort=[('created_at', -1)])
     
     async def update(self, coupon_id: str, update_data: Dict[str, Any]) -> bool:
         result = await self.collection.update_one(
