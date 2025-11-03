@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, Edit, Trash2, Gift, Award, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,10 +18,11 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const GiftManagement = () => {
   const { idToken } = useAuthenticatedAPI();
+  const [searchParams] = useSearchParams();
   const [giftItems, setGiftItems] = useState([]);
   const [giftTiers, setGiftTiers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedTab, setSelectedTab] = useState('items'); // 'items' or 'tiers'
+  const [selectedTab, setSelectedTab] = useState(searchParams.get('tab') || 'items'); // Read from URL
 
   // Gift Item Form State
   const [giftItemForm, setGiftItemForm] = useState({
