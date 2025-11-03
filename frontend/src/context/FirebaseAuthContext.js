@@ -119,12 +119,17 @@ export const FirebaseAuthProvider = ({ children }) => {
       try {
         // Try to get user profile
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        await api.get('/auth/me');
+        const profileResponse = await api.get('/auth/me');
+        setUserProfile(profileResponse.data);
       } catch (error) {
         // If user doesn't exist in backend, create them
         if (error.response?.status === 404) {
           const [firstName, ...lastNameParts] = (result.user.displayName || '').split(' ');
           const lastName = lastNameParts.join(' ');
+          
+          // Auto-assign admin role for specific emails
+          const adminEmails = ['soundwavsg@gmail.com', 'msuppliessg@gmail.com'];
+          const role = adminEmails.includes(result.user.email) ? 'admin' : 'customer';
           
           await api.post('/auth/firebase/register', {
             email: result.user.email,
@@ -132,8 +137,14 @@ export const FirebaseAuthProvider = ({ children }) => {
             first_name: firstName || 'User',
             last_name: lastName || '',
             phone: result.user.phoneNumber || '',
-            role: 'customer'
+            role: role
           });
+          
+          // Fetch the newly created profile
+          const newProfileResponse = await api.get('/auth/me');
+          setUserProfile(newProfileResponse.data);
+        } else {
+          throw error;
         }
       }
       
