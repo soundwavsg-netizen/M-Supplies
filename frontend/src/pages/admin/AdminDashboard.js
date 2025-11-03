@@ -105,7 +105,7 @@ const AdminDashboard = () => {
             title="Gift Tiers"
             value={giftTierCount}
             icon={<Tag className="w-8 h-8 text-orange-700" />}
-            link="/admin/gifts"
+            link="/admin/gifts?tab=tiers"
           />
         </div>
 
