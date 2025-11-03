@@ -56,8 +56,7 @@ class FirebaseAuthService:
                 firebase_user_data = {
                     'email': user_data.email,
                     'password': user_data.password,
-                    'display_name': display_name,
-                    'email_verified': False
+                    'display_name': display_name
                 }
                 
                 # Only add phone if provided
